@@ -86,6 +86,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'aries_community_demo.wsgi.application'
 
+AUTH_USER_MODEL = 'aries_community.AriesUser'
+
 DEFAULT_USER_ROLE = 'User'
 DEFAULT_ORG_ROLE = 'Admin'
 
