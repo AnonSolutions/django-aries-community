@@ -39,6 +39,8 @@ ARIES_CONFIG = {
     'storage_credentials': {'account': 'postgres', 'password': 'mysecretpassword', 'admin_account': 'postgres', 'admin_password': 'mysecretpassword'},
     'register_dids': True,
     'ledger_url': 'http://localhost:9000',
+    'default_enterprise_seed': 'aries_community_enterprise_00000',
+    'default_institution_seed': 'aries_community_institution_0000',
 }
 
 REST_FRAMEWORK = {
@@ -87,6 +89,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'aries_community_demo.wsgi.application'
 
 AUTH_USER_MODEL = 'aries_community.AriesUser'
+
+# override to create app-specific models during data loading
+ARIES_ORGANIZATION_MODEL = 'aries_community.AriesOrganization'
+ARIES_ORG_RELATION_MODEL = 'aries_community.AriesOrgRelationship'
 
 DEFAULT_USER_ROLE = 'User'
 DEFAULT_ORG_ROLE = 'Admin'
