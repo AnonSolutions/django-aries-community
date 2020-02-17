@@ -8,3 +8,5 @@ aiohttp~=3.3.0
 pyyaml
 pyqrcode
 pypng
+requests
+aries-cloudagent

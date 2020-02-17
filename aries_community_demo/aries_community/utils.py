@@ -100,3 +100,14 @@ def run_coroutine_with_kwargs(coroutine, *args, **kwargs):
     finally:
         loop.close()
 
+
+######################################################################
+# other misc
+######################################################################
+
+def flatten(args):
+    for arg in args:
+        if isinstance(arg, (list, tuple)):
+            yield from flatten(arg)
+        else:
+            yield arg

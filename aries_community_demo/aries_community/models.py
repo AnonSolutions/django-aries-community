@@ -18,7 +18,9 @@ USER_ROLES = (
 # base class for Aries Agents
 class AriesAgent(models.Model):
     agent_name = models.CharField(max_length=60, unique=True)
-    agent_config = models.TextField(max_length=4000, blank=True)
+    agent_config = models.TextField(max_length=4000, blank=True, null=True)
+    agent_admin_port = models.IntegerField(null=True)
+    agent_http_port = models.IntegerField(null=True)
 
     def __str__(self):
         return self.agent_name
