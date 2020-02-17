@@ -33,8 +33,6 @@ INSTALLED_APPS = [
 ]
 
 ARIES_CONFIG = {
-    'wallet_config': {'id': '', 'storage_type': 'postgres_storage'},
-    'wallet_credentials': {'key': ''},
     'storage_config': {'url': 'localhost:5432'},
     'storage_credentials': {'account': 'postgres', 'password': 'mysecretpassword', 'admin_account': 'postgres', 'admin_password': 'mysecretpassword'},
     'register_dids': True,

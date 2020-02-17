@@ -33,6 +33,7 @@ async def register_did_on_ledger(ledger_url, alias, seed):
                 json={"alias": alias, "seed": seed, "role": "TRUST_ANCHOR"},
             )
             nym_info = await response.json()
+            print("Registered", nym_info)
     except Exception as e:
         raise Exception(str(e)) from None
     if not nym_info or not nym_info["did"]:
@@ -42,20 +43,19 @@ async def register_did_on_ledger(ledger_url, alias, seed):
     return nym_info
 
 
-def create_and_register_did(wallet_name, org_role):
+def create_and_register_did(alias, did_seed, org_role=None):
     """
     Register DID on ledger (except Trustee which is assumed already there)
     """
 
-    if org_role == 'Trustee':
+    if org_role and org_role == 'Trustee':
         # don't register Trustee role
-        return
+        return None
 
     if not settings.ARIES_CONFIG['register_dids']:
-        return
+        return None
 
-    enterprise_seed = calc_did_seed(wallet_name, org_role)
     ledger_url = settings.ARIES_CONFIG['ledger_url']
-    nym_info = run_coroutine_with_args(register_did_on_ledger, ledger_url, wallet_name, enterprise_seed)
+    nym_info = run_coroutine_with_args(register_did_on_ledger, ledger_url, alias, did_seed)
 
     return nym_info

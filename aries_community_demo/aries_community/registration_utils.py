@@ -1,6 +1,7 @@
 
 from .models import *
 from .utils import *
+from .agent_utils import *
 from .wallet_utils import *
 from .indy_utils import *
 
@@ -11,12 +12,12 @@ def user_provision(user, raw_password):
     """
 
     agent_name = get_user_wallet_name(user.email)
-    #res = create_agent(agent_name, raw_password)
-    #if res != 0:
-    #    raise Exception("Error agent create failed: " + str(res))
 
     # save everything to our database
-    agent = AriesAgent.objects.create(agent_name=agent_name, agent_config = '')
+    agent = initialize_and_provision_agent(
+            agent_name, 
+            raw_password
+        )
     agent.save()
     user.agent = agent
     user.save()
@@ -36,11 +37,13 @@ def org_provision(org, raw_password, org_role=None):
 
     # create a did for this org
     did_seed = calc_did_seed(agent_name)
-    if org_role != "Trustee":
-        create_and_register_did(agent_name, org_role)
 
     # save everything to our database
-    agent = AriesAgent.objects.create(agent_name=agent_name, agent_config = '')
+    agent = initialize_and_provision_agent(
+            agent_name, 
+            raw_password,
+            did_seed=did_seed
+        )
     agent.save()
     org.agent = agent
     org.save()

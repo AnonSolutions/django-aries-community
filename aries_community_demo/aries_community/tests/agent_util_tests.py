@@ -68,25 +68,23 @@ class AgentInteractionTests(TestCase):
         print("Done!!!")
 
 
-    """
-    def create_user_and_org_with_agents(self):
-        # create, register and provision a user and org
-        # create, register and provision a user
-        email = random_alpha_string(10) + "@agent_utils.com"
-        user_agent_name = get_user_wallet_name(email)
-        user = get_user_model().objects.create(
-            email=email,
-            first_name='Test',
-            last_name='Registration',
-        )
-        user.save()
-        raw_password = random_alpha_string(8)
-        user_provision(user, raw_password)
+    def test_provision_and_start_agent_3(self):
+        agent1 = initialize_and_provision_agent(
+                "test_agent_5", 
+                "secret_password",
+                did_seed="test_agent_5_did_000000000000000",
+                start_agent_proc=True
+            )
 
-        # now org
-        org_name = 'Agent Utils ' + random_alpha_string(10)
-        org = org_signup(user, raw_password, org_name)
+        agent2 = initialize_and_provision_agent(
+                "test_agent_6", 
+                "secret_password",
+                did_seed="test_agent_6_did_000000000000000",
+                start_agent_proc=True
+            )
 
-        return (user, org, raw_password)
-    """
+        stop_agent(agent1)
+        stop_agent(agent2)
+
+        print("Done!!!")
 

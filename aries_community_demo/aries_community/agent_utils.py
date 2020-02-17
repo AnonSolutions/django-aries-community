@@ -15,12 +15,14 @@ from django.conf import settings
 
 from .models import *
 from .utils import *
+from .indy_utils import *
 
 
 DEFAULT_INTERNAL_HOST = "127.0.0.1"
 DEFAULT_EXTERNAL_HOST = "localhost"
 
 DUMMY_SEED = "00000000000000000000000000000000"
+
 
 ######################################################################
 # utilities to provision Aries agents
@@ -51,8 +53,8 @@ def aries_provision_config(
     wallet_type = "indy"
     wallet_name = agent_name.lower().replace(" ", "") + rand_name
     postgres = True
-    postgres_config = {'url': 'localhost:5432'}
-    postgres_creds = {'account': 'postgres', 'password': 'mysecretpassword', 'admin_account': 'postgres', 'admin_password': 'mysecretpassword'}
+    postgres_config = settings.ARIES_CONFIG['storage_config']
+    postgres_creds = settings.ARIES_CONFIG['storage_credentials']
 
     # endpoint exposed by ngrok
     #endpoint = "https://9f3a6083.ngrok.io"
@@ -99,57 +101,49 @@ def aries_provision_config(
 
 def get_unused_ports(count: int) -> []:
     ret = []
-    for i in range[count]:
+    for i in range(count):
         port = random.randrange(16000, 32000)
         ret.append(port)
     return ret
 
 
 def initialize_and_provision_agent(
-        agent: AriesAgent, raw_password, did_seed=None, org_role=''
+        agent_name: str, raw_password, did_seed=None, org_role='', start_agent_proc=False
     ) -> AriesAgent:
     """
     Initialize and provision a new Aries Agent.
     """
 
+    agent = AriesAgent(agent_name=agent_name)
+
     ports = get_unused_ports(2)
     agent.agent_admin_port = ports[0]
     agent.agent_http_port = ports[1]
+    endpoint = "http://localhost:" + str(agent.agent_admin_port)
 
-    provisionConfig = aries_provision_config(
-                            agent.agent_name, 
-                            raw_password, 
-                            agent.agent_http_port,
-                            agent.agent_admin_port,
-                            did_seed=did_seed,
-                            start_agent=False
-                        )
     startConfig = aries_provision_config(
                             agent.agent_name, 
                             raw_password, 
                             agent.agent_http_port,
                             agent.agent_admin_port,
+                            endpoint,
                             did_seed=did_seed,
                             start_agent=True
                         )
     startConfig_json = json.dumps(startConfig)
     agent.agent_config = startConfig_json
+    agent.endpoint = endpoint
 
-    print(" >>> Provision an agent and wallet, get back configuration details")
-    try:
-        config = provision_agent(agent, provisionConfig)
-    except:
-        raise
+    if did_seed:
+        nym_info = create_and_register_did(agent.agent_name, did_seed)
+
+    if start_agent_proc:
+        try:
+            start_agent(agent, config=startConfig)
+        except:
+            raise
 
     return agent
-
-
-def provision_agent(agent, provisionConfig):
-    """
-    Provision an instance of an Aries Agent.
-    """
-    start_agent(agent, cmd='provision', config=provisionConfig)
-    pass
 
 
 def start_agent(agent, cmd: str='start', config=None):
@@ -157,16 +151,22 @@ def start_agent(agent, cmd: str='start', config=None):
     Start up an instance of an Aries Agent.
     """
     if not config:
-        config = agent.agent_config
-    pass
+        config = json.loads(agent.agent_config)
+
+    start_aca_py(agent.agent_name, config, agent.endpoint)
 
 
 def stop_agent(agent):
     """
     Shut down a running Aries Agent.
     """
-    pass
+    stop_aca_py(agent.agent_name)
 
+
+
+######################################################################
+# low-level utilities to manage aca-py processes
+######################################################################
 
 DEFAULT_BIN_PATH = "../venv/bin"
 DEFAULT_PYTHON_PATH = ".."
@@ -306,6 +306,9 @@ def stop_aca_py(proc_name):
 
 
 def stop_all_aca_py():
+    """
+    Shut down all aca-py processes
+    """
     while 0 < len(running_procs):
         proc_name = next(iter(running_procs))
         stop_aca_py(proc_name)
