@@ -1,0 +1,21 @@
+{% extends request.session.ARIES_PROFILE %}
+
+{% load i18n %}
+{% load static %}
+
+{% block profile_content %}
+	<div class='profile-tabs profile-tabs-profile'>
+		<div id='profileprofile'>
+			TBD
+		</div>
+	</div>
+{% endblock %}
+
+{% block profile_script %}
+	<script>
+		$(document).ready(function() {
+			$(".profile-tabs-profile").show();
+			$(".profile-nav-btn-profile").addClass("active-profile-nav");
+		});
+	</script>
+{% endblock %}

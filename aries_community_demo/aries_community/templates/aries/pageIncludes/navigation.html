@@ -1,0 +1,92 @@
+{% load i18n %}
+{% load static %}
+
+<div class='site-nav'>
+
+	<div class='topnav'>
+		<div class='topnav-con topnav-title'>
+			<div class='topnav-item'>
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'aries_profile' %}">
+                   <img src="{% static "/anon/Anon5-letters.png" %}">
+                </a>
+            {% else %}
+                <a href="{% url 'login' %}">
+                   <img src="{% static "/anon/Anon5-letters.png" %}">
+                </a>
+            {% endif %}
+			</div>
+		</div>
+
+		<div class='topnav-con'>
+			{% if request.user.is_authenticated %}
+				<div class='topnav-item topnav-accountnamecon'>
+					<a href="{% url 'aries_profile' %}">
+						{{ request.user }} 
+                        {% if request.session.ACTIVE_ROLE %}
+                           [ {{ request.session.ACTIVE_ROLE }} ]
+                        {% endif %}
+                        {% if request.session.ACTIVE_ORG %}
+                          [ {{ request.session.ACTIVE_ORG }} ]
+                        {% endif %}
+					</a>
+				</div>
+			{% else %}
+				<!-- TODO anon user -->
+			{% endif %}
+		</div>
+	</div> <!-- top nav ends -->
+
+	{% if request.user.is_authenticated %}
+		<div class='sidenav'>
+			<i class='fas fa-bars'></i>
+			<div class='sidenav-con sidenav-top'>
+				<ul>
+					<li>TBD</li>
+				</ul>
+			</div>
+
+			<div class='sidenav-con sidenav-bottom'>
+				<ul>
+					<li>TBD</li>
+					<li><a href="{% url 'logout' %}?next={% url 'login' %}">{% trans "Log Out" %}</a></li>
+				</ul>
+			</div>
+		</div> <!-- side nav ends -->
+	{% else %}
+		<!-- TODO anon user -->
+	{% endif %}
+</div>
+
+<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+
+<script>
+	$(document).ready(function() {
+
+		$("#topNavSearch").click(function() {
+			$(".topnav-search-dropdown").slideToggle("fast");
+			$(".topnav-notificat-dropdown").hide();
+			$(".sidenavShow").addClass("sidenav");
+			$(".sidenav").removeClass("sidenavShow");
+			$(".fa-bars").removeClass("fa-times");
+		});
+
+		$("#notifications").click(function() {
+			$(".topnav-notificat-dropdown").slideToggle("fast");
+			$(".topnav-search-dropdown").hide();
+			$(".sidenavShow").addClass("sidenav");
+			$(".sidenav").removeClass("sidenavShow");
+			$(".fa-bars").removeClass("fa-times");
+		});
+
+		$(".fa-bars").click(function() {
+			$(".sidenav").toggleClass("sidenavShow");
+			$(".fa-bars").toggleClass("fa-times");
+			$(".topnav-search-dropdown").hide();
+			$(".topnav-notificat-dropdown").hide();
+		});
+
+	});
+
+</script>

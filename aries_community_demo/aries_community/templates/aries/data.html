@@ -1,0 +1,21 @@
+{% extends request.session.ARIES_PROFILE %}
+
+{% load i18n %}
+{% load static %}
+
+{% block profile_content %}
+	<div class='profile-tabs profile-tabs-data'>
+		<div id='profiledata'>
+			{% include "aries/pageIncludes/profileuserdata.html" %}
+		</div>
+	</div>
+{% endblock %}
+
+{% block profile_script %}
+	<script>
+		$(document).ready(function() {
+			$(".profile-tabs-data").show();
+			$(".profile-nav-btn-data").addClass("active-profile-nav");
+		});
+	</script>
+{% endblock %}

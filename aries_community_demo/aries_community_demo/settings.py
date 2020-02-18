@@ -41,6 +41,10 @@ ARIES_CONFIG = {
     'default_institution_seed': 'aries_community_institution_0000',
 }
 
+ARIES_PROFILE_VIEW = 'aries_community.views.profile_view'
+ARIES_DATA_VIEW = 'aries_community.views.data_view'
+ARIES_WALLET_VIEW = 'aries_community.views.wallet_view'
+
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
