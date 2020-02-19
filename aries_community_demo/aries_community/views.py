@@ -80,7 +80,7 @@ def org_signup_view(
             org_name = form.cleaned_data.get('org_name')
             org_role_name = form.cleaned_data.get('org_role_name')
             org_ico_url = form.cleaned_data.get('ico_url')
-            org_role, created = IndyOrgRole.objects.get_or_create(name=org_role_name)
+            org_role, created = AriesOrgRole.objects.get_or_create(name=org_role_name)
             org = org_signup(user, raw_password, org_name, org_role=org_role, org_ico_url=org_ico_url)
 
             # TODO need to auto-login with Atria custom user
