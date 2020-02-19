@@ -390,7 +390,7 @@ def create_schema(agent, schema_name, schema_version, schema_attrs, schema_templ
         schema_id = response.json()
 
         indy_schema = IndySchema(
-                            ledger_schema_id = schema_id,
+                            ledger_schema_id = schema_id["schema_id"],
                             schema_name = schema_name,
                             schema_version = schema_version,
                             schema = schema_attrs,
@@ -409,8 +409,14 @@ def create_creddef(agent, indy_schema, creddef_name, creddef_template, initializ
     Note that the agent must be running.
     """
 
+    ADMIN_REQUEST_HEADERS = {}
+    # TODO set admin header per agent
+    #if AGENT_ADMIN_API_KEY is not None:
+    #   ADMIN_REQUEST_HEADERS = {"x-api-key": AGENT_ADMIN_API_KEY}
+
     try:
         cred_def_request = {"schema_id": indy_schema.ledger_schema_id}
+        print(cred_def_request)
         response = agent_post_with_retry(
             agent.admin_endpoint + "/credential-definitions",
             json.dumps(cred_def_request),

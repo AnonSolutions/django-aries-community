@@ -118,7 +118,7 @@ class AgentInteractionTests(TestCase):
 
         return (user, org, raw_password)
 
-    def delete_user_and_org_wallets(self, user, org, raw_password):
+    def delete_user_and_org_agents(self, user, org, raw_password):
         # cleanup after ourselves
         # TODO
         #org_wallet_name = org.wallet.wallet_name
