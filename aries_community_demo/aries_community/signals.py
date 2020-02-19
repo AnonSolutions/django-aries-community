@@ -57,7 +57,7 @@ def user_logged_in_handler(sender, user, request, **kwargs):
 def user_logged_out_handler(sender, user, request, **kwargs):
     print("Logout user {} {}".format(user.email, request.session.session_key))
     #AriesSession.objects.get(user=user, session_id=request.session.session_key).delete()
-    # TODO
+    # TODO create session?
 
 
 def handle_agent_login_internal(request, user, agent_name, raw_password):
@@ -68,7 +68,7 @@ def handle_agent_login_internal(request, user, agent_name, raw_password):
         raise Exception('Error Agent with no owner {}'.format(agent_name))
 
     # now try to open the agent - will throw an exception if it fails
-    # TODO
+    # TODO provision agent?
     #wallet_handle = open_wallet(agent_name, raw_password)
     #close_wallet(wallet_handle)
 
@@ -106,7 +106,7 @@ def init_user_session(sender, user, request, **kwargs):
             request.session['ACTIVE_ORG'] = str(sel_org.id)
 
             # login as org wallet
-            # TODO
+            # TODO start agent?
             #if sel_org.wallet is not None:
             #    sel_wallet = sel_org.wallet
             #    config = json.loads(sel_wallet.wallet_config)
@@ -119,7 +119,7 @@ def init_user_session(sender, user, request, **kwargs):
             request.session['ACTIVE_ROLE'] = USER_ROLE
 
         # try to login as user wallet
-        # TODO
+        # TODO start agent?
         #if user.wallet is not None:
         #    sel_wallet = user.wallet
         #    config = json.loads(sel_wallet.wallet_config)
