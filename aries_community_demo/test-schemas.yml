@@ -1,0 +1,101 @@
+Transcript:
+  type: schema
+  version: $generate
+  issuing_roles:
+    - School
+  attributes:
+    - first_name
+    - last_name
+    - degree
+    - status
+    - year
+    - average
+    - ssn
+Job Certificate:
+  type: schema
+  version: $generate
+  issuing_roles:
+    - Employer
+  attributes:
+    - first_name
+    - last_name
+    - ssn
+    - salary
+    - employee_status
+    - experience
+Drivers License:
+  type: schema
+  version: $generate
+  issuing_roles:
+    - Goverment
+  attributes:
+    - last_name
+    - first_name
+    - middle_name
+    - dl_number
+    - dl_class
+    - issued_date
+    - expire_date
+    - birth_date
+    - age
+    - height
+    - weight
+    - sex
+    - eyes
+    - hair
+    - address
+Passport:
+  type: schema
+  version: $generate
+  issuing_roles:
+    - Goverment
+  attributes:
+    - last_name
+    - first_name
+    - middle_name
+    - passport_no
+    - ppt_type
+    - issued_date
+    - issued_location
+    - expire_date
+    - nationality
+    - birth_date
+    - age
+    - issuing_country
+    - issuing_authority
+Proof of Education:
+  type: proof_request
+  description: Proof of Education for Employment Application
+  revealed_attributes:
+    - {'name':'first_name'}
+    - {'name':'last_name'}
+    - {'name':'degree', 'restrictions': [{'cred_def_id': $CRED_DEF_ID}]}
+    - {'name':'status','restrictions': [{'cred_def_id': $CRED_DEF_ID}]}
+    - {'name':'ssn', 'restrictions': [{'cred_def_id': $CRED_DEF_ID}]}
+    - {'name':'phone_number'}
+  predicates:
+    - {'name': 'average','p_type': '>=','p_value': '$VALUE', 'restrictions':[{'issuer_did': '$ISSUER_DID'}]}
+Proof of Employment:
+  type: proof_request
+  description: Proof of Employment and Earning
+  revealed_attributes:
+    - {'name':'employee_status', 'restrictions': [{'cred_def_id': $CRED_DEF_ID}]}
+  predicates:
+    - {'name': 'salary','p_type': '>=','p_value': '$VALUE', 'restrictions':[{'issuer_did': '$ISSUER_DID'}]}
+    - {'name': 'experience','p_type': '>=','p_value': '$VALUE', 'restrictions':[{'issuer_did': '$ISSUER_DID'}]}
+Proof of Age:
+  type: proof_request
+  description: Proof of Age
+  revealed_attributes:
+    - {'name':'first_name', 'restrictions':[{'issuer_did': '$ISSUER_DID'}]}
+    - {'name':'last_name', 'restrictions':[{'issuer_did': '$ISSUER_DID'}]}
+  predicates:
+    - {'name': 'age','p_type': '>=','p_value': '$VALUE', 'restrictions':[{'issuer_did': '$ISSUER_DID'}]}
+Proof of DOB:
+  type: proof_request
+  description: Proof of DOB
+  revealed_attributes:
+    - {'name':'first_name', 'restrictions':[{'issuer_did': '$ISSUER_DID'}]}
+    - {'name':'last_name', 'restrictions':[{'issuer_did': '$ISSUER_DID'}]}
+  predicates:
+    - {'name': 'birth_date','p_type': '>=','p_value': '$VALUE', 'restrictions':[{'issuer_did': '$ISSUER_DID'}]}

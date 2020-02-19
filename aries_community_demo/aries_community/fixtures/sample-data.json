@@ -1,0 +1,36 @@
+[
+{
+    "model": "auth.group",
+    "pk": 1,
+    "fields": {
+        "name": "Admin",
+        "permissions": []
+    }
+},
+{
+    "model": "auth.group",
+    "pk": 2,
+    "fields": {
+        "name": "User",
+        "permissions": []
+    }
+},
+{
+    "model": "aries_community.ariesuser",
+    "pk": 1,
+    "fields": {
+        "password": "pbkdf2_sha256$120000$3RkPTsKyCYsj$6b1co+ufXlZIg6e5taEdvwpfjO62pUkNe/rdih7T58M=",
+        "is_superuser": true,
+        "email": "admin@mail.com",
+        "first_name": "",
+        "last_name": "",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2019-03-23T17:33:33.375Z",
+        "last_login": "2019-03-23T17:33:52.554Z",
+        "agent": null,
+        "groups": [],
+        "user_permissions": []
+    }
+}
+]

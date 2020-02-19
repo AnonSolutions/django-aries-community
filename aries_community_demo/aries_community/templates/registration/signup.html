@@ -1,0 +1,32 @@
+{% extends 'base_nav.html' %}
+
+{% load i18n %}
+{% load static %}
+
+{% block main_content %}
+  <div class='inside-body'>
+    <div class='center-body'>
+      <div class='innercont-center-body'>
+        <div class='innercont-center-inner'>
+          <div class='form-cont'>
+            <h2>Signup</h2>
+            <div class='newsfeed-post-seperator'></div>
+            <form method="POST">
+              {% csrf_token %}
+              {% for field in form %}
+                <div>
+                  <h5>{{ field.label_tag }}</h5>
+                  {{ field }}
+                  {% for error in field.errors %}
+                    <p style="color: red">{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endfor %}
+              <button class='btn' type="submit">Sign up</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

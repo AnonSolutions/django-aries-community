@@ -1,0 +1,29 @@
+Faber College:
+  first_name: Faber
+  last_name: College
+  email: faber@mail.com
+  password: pass12345
+  role: School
+  ico_url: http://blog.simplejustice.us/wp-content/uploads/2016/04/faber_college_seal.gif
+Acme Inc:
+  first_name: Acme
+  last_name: Inc
+  email: acme@mail.com
+  password: pass12345
+  role: Employer
+  ico_url: https://vignette.wikia.nocookie.net/looneytunes/images/5/56/Comp_2.jpg/revision/latest?cb=20121102161419
+Thrift Bank:
+  first_name: Thrift
+  last_name: Bank
+  email: thrift@mail.com
+  password: pass12345
+  role: Bank
+  ico_url: https://i.pinimg.com/236x/a9/b6/5e/a9b65ecedf1fbea11958b5805f132fac--logos-design.jpg
+Province of BC:
+  first_name: British
+  last_name: Columbia
+  email: bc@mail.com
+  password: pass12345
+  role: Goverment
+  ico_url: https://www2.gov.bc.ca/favicon.ico
+

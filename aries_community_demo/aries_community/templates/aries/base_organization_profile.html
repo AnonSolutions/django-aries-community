@@ -1,0 +1,45 @@
+{% extends 'base_nav.html' %}
+
+{% load i18n %}
+{% load static %}
+
+{% block main_content %}
+
+	<div class='profile profile-anon'>
+		<div class='profile-org-top-cont profile-anon-top-cont'>
+			<div class='profile-org-top-info-bar profile-anon-top-info-bar'>
+						<h2 class='profile-name'>{{ request.session.wallet_owner }} ({{ request.session.wallet_name }})</h2>
+				<div class='profile-top-bar-right'>
+					<div class='btn btn-connect'><i class="fas fa-user-plus"></i>Connect</div>
+					<div class='btn btn-connect'><i class="fas fa-comment"></i>Message</div>
+				</div>
+			</div>
+		</div>
+
+		<div class='profile-bottom-cont profile-anon-bottom-cont'>
+			<div class='profile-nav-cont profile-anon-nav-cont'>
+				<div class='profile-nav'>
+					<div class='profile-nav-btn profile-nav-btn-profile active-profile-nav'>
+						<a href="{% url 'aries_profile' %}"><h5>Profile</h5><i class="fas fa-plus"></i></a>
+					</div>
+				</div>
+			</div>
+
+			<div class='profile-tab-cont'>
+				<div class='profile-search-input'>
+					<input placeholder='Search'>
+					<div class='btn btn-search-input'>
+						<i class='fas fa-search'></i>
+					</div>
+				</div>
+
+				{% block profile_content %}
+				{% endblock %}
+			</div>
+		</div>
+	</div>
+
+	{% block profile_script %}
+	{% endblock %}
+
+{% endblock %}
