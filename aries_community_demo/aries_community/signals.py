@@ -6,6 +6,7 @@ import json
 
 from .models import *
 from .wallet_utils import *
+from .agent_utils import *
 
 
 USER_ROLE = getattr(settings, "DEFAULT_USER_ROLE", 'User')
@@ -28,21 +29,6 @@ def is_organization_login(user, path):
         return True
     return False
 
-def user_agent_logged_in_handler(request, user, agent_name):
-    #print("Login wallet, {} {} {}".format(user.email, request.session.session_key, agent_name))
-    #(session, session_created) = AriesSession.objects.get_or_create(user=user, session_id=request.session.session_key)
-    #session.agent_name = agent_name
-    #session.save()
-    # TODO start aca-py agent for user
-    pass
-
-def user_agent_logged_out_handler(request, user):
-    #print("Logout wallet, {} {}".format(user.email, request.session.session_key))
-    #session = AriesSession.objects.get(user=user, session_id=request.session.session_key)
-    #session.agent_name = None
-    #session.save()
-    # TODO shut down aca-py agent for user
-    pass
 
 def user_logged_in_handler(sender, user, request, **kwargs):
     if 'agent_name' in request.session:
@@ -50,27 +36,20 @@ def user_logged_in_handler(sender, user, request, **kwargs):
     else:
         agent_name = None
     print("Login user {} {} {}".format(user.email, request.session.session_key, agent_name))
-    #(session, session_created) = AriesSession.objects.get_or_create(user=user, session_id=request.session.session_key, agent_name=agent_name)
-    #agent_background_task("Started by user login", user.id, request.session.session_key, repeat=AGENT_POLL_INTERVAL)
 
 
 def user_logged_out_handler(sender, user, request, **kwargs):
-    print("Logout user {} {}".format(user.email, request.session.session_key))
-    #AriesSession.objects.get(user=user, session_id=request.session.session_key).delete()
-    # TODO create session?
+    if 'agent_name' in request.session:
+        agent = AriesAgent.objects.filter(agent_name=request.session['agent_name']).get()
+        stop_agent(agent)
 
 
-def handle_agent_login_internal(request, user, agent_name, raw_password):
+def handle_agent_login_internal(request, agent):
     # get user or org associated with this agent
-    related_user = get_user_model().objects.filter(agent__agent_name=agent_name).all()
-    related_org = AriesOrganization.objects.filter(agent__agent_name=agent_name).all()
+    related_user = get_user_model().objects.filter(agent__agent_name=agent.agent_name).all()
+    related_org = AriesOrganization.objects.filter(agent__agent_name=agent.agent_name).all()
     if len(related_user) == 0 and len(related_org) == 0:
-        raise Exception('Error Agent with no owner {}'.format(agent_name))
-
-    # now try to open the agent - will throw an exception if it fails
-    # TODO provision agent?
-    #wallet_handle = open_wallet(agent_name, raw_password)
-    #close_wallet(wallet_handle)
+        raise Exception('Error Agent with no owner {}'.format(agent.agent_name))
 
     if len(related_user) > 0:
         request.session['agent_type'] = 'user'
@@ -78,10 +57,9 @@ def handle_agent_login_internal(request, user, agent_name, raw_password):
     elif len(related_org) > 0:
         request.session['agent_type'] = 'org'
         request.session['agent_owner'] = related_org[0].org_name
-    request.session['agent_name'] = agent_name
-    request.session['agent_password'] = raw_password
+    request.session['agent_name'] = agent.agent_name
 
-    user_agent_logged_in_handler(request, user, agent_name)
+    start_agent(agent)
 
 
 def handle_agent_logout_internal(request):
@@ -90,8 +68,6 @@ def handle_agent_logout_internal(request):
         del request.session['agent_type']
     if 'agent_name' in request.session:
         del request.session['agent_name']
-    if 'raw_password' in request.session:
-        del request.session['raw_password']
     if 'agent_owner' in request.session:
         del request.session['agent_owner']
 
@@ -105,12 +81,9 @@ def init_user_session(sender, user, request, **kwargs):
             sel_org = orgs[0].org
             request.session['ACTIVE_ORG'] = str(sel_org.id)
 
-            # login as org wallet
-            # TODO start agent?
-            #if sel_org.wallet is not None:
-            #    sel_wallet = sel_org.wallet
-            #    config = json.loads(sel_wallet.wallet_config)
-            #    handle_wallet_login_internal(request, user, config['agent_name'], config['wallet_key'])
+            # login as agent
+            if sel_org.agent is not None:
+                handle_agent_login_internal(request, sel_org.agent)
     else:
         if user.has_role(USER_ROLE):
             request.session['ACTIVE_ROLE'] = USER_ROLE
@@ -118,12 +91,9 @@ def init_user_session(sender, user, request, **kwargs):
             # TODO for now just set a dummy default - logged in user with no role assigned
             request.session['ACTIVE_ROLE'] = USER_ROLE
 
-        # try to login as user wallet
-        # TODO start agent?
-        #if user.wallet is not None:
-        #    sel_wallet = user.wallet
-        #    config = json.loads(sel_wallet.wallet_config)
-        #    handle_wallet_login_internal(request, user, config['agent_name'], config['wallet_key'])
+        # try to start agent
+        if user.agent is not None:
+            handle_agent_login_internal(request, user.agent)
 
     role = request.session['ACTIVE_ROLE']
     request.session['ARIES_PROFILE'] = url_aries_profile(role)

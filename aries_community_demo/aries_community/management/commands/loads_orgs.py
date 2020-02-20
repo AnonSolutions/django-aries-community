@@ -56,45 +56,37 @@ class Command(BaseCommand):
         if orgs:
             for name in orgs:
                 org = orgs[name]
-                try:
-                    # startup the agent for that org
-                    start_agent(org.agent)
+                first_name = org['first_name']
+                last_name = org['last_name']
+                email = org['email']
+                password = org['password']
+                role_name = org['role']
+                if 'ico_url' in org:
+                    ico_url = org['ico_url']
+                else:
+                    ico_url = None
 
-                    first_name = org['first_name']
-                    last_name = org['last_name']
-                    email = org['email']
-                    password = org['password']
-                    role_name = org['role']
-                    if 'ico_url' in org:
-                        ico_url = org['ico_url']
-                    else:
-                        ico_url = None
+                if "$random" in name:
+                    name = name.replace("$random", random_alpha_string(12))
+                if "$random" in email:
+                    email = email.replace("$random", random_alpha_string(12))
 
-                    if "$random" in name:
-                        name = name.replace("$random", random_alpha_string(12))
-                    if "$random" in email:
-                        email = email.replace("$random", random_alpha_string(12))
+                user_attrs = {}
+                if 'user' in org:
+                    for attr in org['user']:
+                        user_attrs[attr] = get_attr_value(org['user'][attr])
+                user = get_user_model().objects.create_user(first_name=first_name, last_name=last_name, email=email, password=password, **user_attrs)
+                user.groups.add(Group.objects.get(name=ORG_ROLE))
+                user.save()
 
-                    user_attrs = {}
-                    if 'user' in org:
-                        for attr in org['user']:
-                            user_attrs[attr] = get_attr_value(org['user'][attr])
-                    user = get_user_model().objects.create_user(first_name=first_name, last_name=last_name, email=email, password=password, **user_attrs)
-                    user.groups.add(Group.objects.get(name=ORG_ROLE))
-                    user.save()
-
-                    org_attrs = {}
-                    if 'org' in org:
-                        for attr in org['org']:
-                            org_attrs[attr] = get_attr_value(org['org'][attr])
-                    relation_attrs = {}
-                    if 'relation' in org:
-                        for attr in org['relation']:
-                            relation_attrs[attr] = get_attr_value(org['relation'][attr])
-                    org_role, created = AriesOrgRole.objects.get_or_create(name=role_name)
-                    org = org_signup(user, password, name, org_attrs=org_attrs, org_relation_attrs=relation_attrs, org_role=org_role, org_ico_url=ico_url)
-
-                finally:
-                    # shut down the agent for that org
-                    stop_agent(org.agent)
+                org_attrs = {}
+                if 'org' in org:
+                    for attr in org['org']:
+                        org_attrs[attr] = get_attr_value(org['org'][attr])
+                relation_attrs = {}
+                if 'relation' in org:
+                    for attr in org['relation']:
+                        relation_attrs[attr] = get_attr_value(org['relation'][attr])
+                org_role, created = AriesOrgRole.objects.get_or_create(name=role_name)
+                org = org_signup(user, password, name, org_attrs=org_attrs, org_relation_attrs=relation_attrs, org_role=org_role, org_ico_url=ico_url)
 
