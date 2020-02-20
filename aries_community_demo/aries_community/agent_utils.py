@@ -56,6 +56,7 @@ def aries_provision_config(
     postgres = True
     postgres_config = settings.ARIES_CONFIG['storage_config']
     postgres_creds = settings.ARIES_CONFIG['storage_credentials']
+    genesis_url = settings.ARIES_CONFIG['genesis_url']
 
     # endpoint exposed by ngrok
     #endpoint = "https://9f3a6083.ngrok.io"
@@ -83,7 +84,7 @@ def aries_provision_config(
     if genesis_data:
         provisionConfig.append(("--genesis-transactions", genesis_data))
     else:
-        provisionConfig.append(("--genesis-url",  "http://localhost:9000/genesis"))
+        provisionConfig.append(("--genesis-url",  genesis_url))
     if did_seed:
         provisionConfig.append(("--seed", did_seed))
     if storage_type:

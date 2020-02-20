@@ -37,6 +37,7 @@ ARIES_CONFIG = {
     'storage_credentials': {'account': 'postgres', 'password': 'mysecretpassword', 'admin_account': 'postgres', 'admin_password': 'mysecretpassword'},
     'register_dids': True,
     'ledger_url': 'http://localhost:9000',
+    'genesis_url': 'http://localhost:9000/genesis',
     'default_enterprise_seed': 'aries_community_enterprise_00000',
     'default_institution_seed': 'aries_community_institution_0000',
 }
