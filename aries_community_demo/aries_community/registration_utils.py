@@ -50,9 +50,14 @@ def org_provision(org, raw_password, org_role=None):
 
     # if the org has a role, check if there are any schemas associated with that role
     if org_role:
-        role_schemas = IndySchema.objects.filter(roles=org_role).all()
-        for schema in role_schemas:
-            creddef = create_creddef(org.agent, schema, schema.schema_name + '-' + org.agent.agent_name, schema.schema_template)
+        try:
+            start_agent(org.agent)
+
+            role_schemas = IndySchema.objects.filter(roles=org_role).all()
+            for schema in role_schemas:
+                creddef = create_creddef(org.agent, schema, schema.schema_name + '-' + org.agent.agent_name, schema.schema_template)
+        finally:
+            stop_agent(org.agent)
 
     return org
 
