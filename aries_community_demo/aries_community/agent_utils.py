@@ -75,6 +75,7 @@ def aries_provision_config(
             ("--outbound-transport", "http"),
             ("--admin", "0.0.0.0", str(admin_port)),
             "--admin-insecure-mode",
+            "--webhook-url", "http://localhost:8000/agent_cb",
         ])
     provisionConfig.extend([
         ("--wallet-type", wallet_type),
@@ -623,4 +624,88 @@ def check_connection_status(agent, connection_id, initialize_agent=False):
 
     return connection["state"]
 
+
+######################################################################
+# utilities to offer, request, send and receive credentials
+######################################################################
+
+def send_credential_offer(agent, connection, credential_tag, schema_attrs, cred_def, credential_name, initialize_agent=False):
+    """
+    Send a Credential Offer.
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    try:
+        my_connection = run_coroutine_with_args(Connection.deserialize, json.loads(connection.connection_data))
+        my_cred_def = run_coroutine_with_args(CredentialDef.deserialize, json.loads(cred_def.creddef_data))
+        cred_def_handle = my_cred_def.handle
+
+        # create a credential (the last '0' is the 'price')
+        credential = run_coroutine_with_args(IssuerCredential.create, credential_tag, schema_attrs, int(cred_def_handle), credential_name, '0')
+
+        run_coroutine_with_args(credential.send_offer, my_connection)
+
+        # serialize/deserialize credential - waiting for Alice to rspond with Credential Request
+        credential_data = run_coroutine(credential.serialize)
+
+        conversation = AgentConversation(
+            connection = connection,
+            conversation_type = 'CredentialOffer',
+            message_id = 'N/A',
+            status = 'Sent',
+            conversation_data = json.dumps(credential_data))
+        conversation.save()
+    except:
+        raise
+    finally:
+        if initialize_vcx:
+            try:
+                shutdown(False)
+            except:
+                raise
+
+    return conversation
+    
+
+def send_credential_request(wallet, connection, conversation, initialize_vcx=True):
+    """
+    Respond to a Credential Offer by sending a Credentia Request.
+    """
+
+    if initialize_vcx:
+        try:
+            config_json = wallet.wallet_config
+            run_coroutine_with_args(vcx_init_with_config, config_json)
+        except:
+            raise
+
+    # create connection and generate invitation
+    try:
+        my_connection = run_coroutine_with_args(Connection.deserialize, json.loads(connection.connection_data))
+        #my_offer = run_coroutine_with_args()
+    
+        offer_json = [json.loads(conversation.conversation_data),]
+        credential = run_coroutine_with_args(Credential.create, 'credential', offer_json)
+
+        run_coroutine_with_args(credential.send_request, my_connection, 0)
+
+        # serialize/deserialize credential - wait for Faber to send credential
+        credential_data = run_coroutine(credential.serialize)
+
+        conversation.status = 'Sent'
+        conversation.conversation_data = json.dumps(credential_data)
+        conversation.conversation_type = 'CredentialRequest'
+        conversation.save()
+    except:
+        raise
+    finally:
+        if initialize_vcx:
+            try:
+                shutdown(False)
+            except:
+                raise
+
+    return conversation
 
