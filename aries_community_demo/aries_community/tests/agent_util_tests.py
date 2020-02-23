@@ -199,16 +199,12 @@ class AgentInteractionTests(TestCase):
         try:
             # startup the agent for that org
             start_agent(org.agent)
-            (schema, cred_def, proof_request) = self.schema_and_cred_def_for_org(org)
-        finally:
-            # shut down the agent for that org
-            stop_agent(org.agent)
-
-        try:
-            start_agent(org.agent)
             start_agent(user.agent)
 
+            (schema, cred_def, proof_request) = self.schema_and_cred_def_for_org(org)
+
             (org_connection_state, user_connection_state) = self.establish_agent_connection(org, user)
+
             self.assertEqual(org_connection_state, 'active')
             self.assertEqual(user_connection_state, 'active')
         finally:

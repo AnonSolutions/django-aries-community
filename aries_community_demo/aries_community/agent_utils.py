@@ -569,15 +569,15 @@ def receive_connection_invitation(agent, partner_name, invitation, initialize_ag
     return connection
 
 
-def check_connection_status(agent, connection_id, initialize_agent=False):
+def get_agent_connection(agent, connection_id, initialize_agent=False):
     """
-    Check status of the Connection.
-    Called when an invitation has been sent and confirmation has not yet been received.
-    Called from the Django background task, but can also be called from a view directly.
+    Fetches the Connection object from the agent.
     """
 
     # start the agent if requested (and necessary)
     (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    connection = None
 
     # create connection and check status
     try:
@@ -594,6 +594,24 @@ def check_connection_status(agent, connection_id, initialize_agent=False):
         )
         response.raise_for_status()
         connection = response.json()
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+
+    return connection
+
+
+def check_connection_status(agent, connection_id, initialize_agent=False):
+    """
+    Check status of the Connection.
+    Called when an invitation has been sent and confirmation has not yet been received.
+    """
+
+    # create connection and check status
+    try:
+        connection = get_agent_connection(agent, connection_id, initialize_agent)
 
         connections = AgentConnection.objects.filter(agent=agent, guid=connection_id).all()
         if 0 < len(connections):
@@ -602,9 +620,6 @@ def check_connection_status(agent, connection_id, initialize_agent=False):
             my_connection.save()
     except:
         raise
-    finally:
-        if agent_started:
-            stop_agent(agent)
 
     return connection["state"]
 
