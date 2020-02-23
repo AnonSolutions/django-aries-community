@@ -17,7 +17,7 @@ USER_ROLES = (
 
 # base class for Aries Agents
 class AriesAgent(models.Model):
-    agent_name = models.CharField(max_length=60, unique=True)
+    agent_name = models.CharField(max_length=200, unique=True)
     agent_config = models.TextField(max_length=4000, blank=True, null=True)
     agent_admin_port = models.IntegerField(null=True)
     agent_http_port = models.IntegerField(null=True)
@@ -187,8 +187,9 @@ class IndyProofRequest(models.Model):
 class AgentConnection(models.Model):
     guid = models.CharField(max_length=80, primary_key=True)
     agent = models.ForeignKey(AriesAgent, to_field="agent_name", on_delete=models.CASCADE)
-    partner_name = models.CharField(max_length=60)
+    partner_name = models.CharField(max_length=200)
     invitation = models.TextField(max_length=4000, blank=True)
+    status = models.CharField(max_length=80, blank=True)
 
     def __str__(self):
         return self.agent.agent_name + ":" + self.partner_name + ", " +  self.guid

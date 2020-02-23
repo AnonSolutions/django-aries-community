@@ -118,6 +118,21 @@ class AgentInteractionTests(TestCase):
 
         return (user, org, raw_password)
 
+    def establish_agent_connection(self, org, user, init_org_agent=False, init_user_agent=False):
+        # send connection request (org -> user)
+        org_connection_1 = request_connection_invitation(org, user.email, initialize_agent=init_org_agent)
+        sleep(1)
+
+        # accept connection request (user -> org)
+        user_connection_1 = receive_connection_invitation(user.agent, org.org_name, org_connection_1.invitation, initialize_agent=init_user_agent)
+        sleep(1)
+
+        # update connection status (org)
+        org_connection_state = check_connection_status(org.agent, org_connection_1.guid, initialize_agent=init_org_agent)
+        user_connection_state = check_connection_status(user.agent, user_connection_1.guid, initialize_agent=init_user_agent)
+
+        return (org_connection_state, user_connection_state)
+
     def delete_user_and_org_agents(self, user, org, raw_password):
         # cleanup after ourselves
         # TODO
@@ -177,4 +192,30 @@ class AgentInteractionTests(TestCase):
         self.delete_user_and_org_agents(user, org, raw_password)
 
 
+    def test_agent_connection(self):
+        # establish a connection between two agents
+        (user, org, raw_password) = self.create_user_and_org()
+
+        try:
+            # startup the agent for that org
+            start_agent(org.agent)
+            (schema, cred_def, proof_request) = self.schema_and_cred_def_for_org(org)
+        finally:
+            # shut down the agent for that org
+            stop_agent(org.agent)
+
+        try:
+            start_agent(org.agent)
+            start_agent(user.agent)
+
+            (org_connection_state, user_connection_state) = self.establish_agent_connection(org, user)
+            self.assertEqual(org_connection_state, 'active')
+            self.assertEqual(user_connection_state, 'active')
+        finally:
+            # shut down the agent for that org
+            stop_agent(user.agent)
+            stop_agent(org.agent)
+
+        # clean up after ourself
+        self.delete_user_and_org_agents(user, org, raw_password)
 

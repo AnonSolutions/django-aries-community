@@ -202,7 +202,7 @@ def stderr_reader(proc_name, proc):
         else:
             break
 
-def detect_process(admin_url):
+def detect_process(admin_url, start_timeout=START_TIMEOUT):
     text = None
 
     def fetch_swagger(url: str, timeout: float):
@@ -222,7 +222,7 @@ def detect_process(admin_url):
         return text
 
     status_url = admin_url + "/status"
-    status_text = fetch_swagger(status_url, START_TIMEOUT)
+    status_text = fetch_swagger(status_url, start_timeout)
     print("Agent running with admin url", admin_url)
 
     if not status_text:
@@ -456,4 +456,156 @@ def create_proof_request(name, description, attrs, predicates):
     proof_request.save()
 
     return proof_request
+
+
+######################################################################
+# utilities to create and confirm agent-to-agent connections
+######################################################################
+def start_agent_if_necessary(agent, initialize_agent) -> (AriesAgent, bool):
+    # start agent if necessary
+    if initialize_agent:
+        try:
+            detect_process(agent.admin_endpoint, start_timeout=1.0)
+            # didn't start it (assume it's already running)
+            return (agent, False)
+        except:
+            # not running, try to start
+            start_agent(agent)
+            return (agent, True)
+    else:
+        # didn't start it (assume it's already running)
+        return (agent, False)
+
+
+def request_connection_invitation(org, requestee_name, initialize_agent=False):
+    """
+    Request an Aries Connection Invitation from <partner org>.
+    Creates a connection record for the requestor only 
+    (receiver connection record is created when receiving the invitation).
+    """
+
+    # start the agent if requested (and necessary)
+    (partner_agent, agent_started) = start_agent_if_necessary(org.agent, initialize_agent)
+
+    # create connection and generate invitation
+    try:
+        ADMIN_REQUEST_HEADERS = {}
+        # TODO set admin header per agent
+        #if AGENT_ADMIN_API_KEY is not None:
+        #   ADMIN_REQUEST_HEADERS = {"x-api-key": AGENT_ADMIN_API_KEY}
+
+        response = requests.post(
+                partner_agent.admin_endpoint + "/connections/create-invitation",
+                headers=ADMIN_REQUEST_HEADERS,
+        )
+        response.raise_for_status()
+        my_invitation = response.json()
+        print(my_invitation)
+        my_status = check_connection_status(partner_agent, my_invitation["connection_id"])
+        print(my_status)
+
+        connection = AgentConnection(
+            guid = my_invitation["connection_id"],
+            agent = partner_agent,
+            partner_name = requestee_name,
+            invitation = json.dumps(my_invitation["invitation"]),
+            status = my_status
+        )
+        connection.save()
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(partner_agent)
+
+    return connection
+
+
+def receive_connection_invitation(agent, partner_name, invitation, initialize_agent=False):
+    """
+    Receive an Aries Connection Invitation.
+    Creates a receiver connection record.
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    # create connection and generate invitation
+    try:
+        ADMIN_REQUEST_HEADERS = {}
+        # TODO set admin header per agent
+        #if AGENT_ADMIN_API_KEY is not None:
+        #   ADMIN_REQUEST_HEADERS = {"x-api-key": AGENT_ADMIN_API_KEY}
+
+        response = requests.post(
+            agent.admin_endpoint
+            + "/connections/receive-invitation?alias="
+            + partner_name,
+            invitation,
+            headers=ADMIN_REQUEST_HEADERS
+        )
+        response.raise_for_status()
+        my_connection = response.json()
+        print(my_connection)
+
+        connections = AgentConnection.objects.filter(agent=agent, guid=my_connection["connection_id"]).all()
+        if 0 < len(connections):
+            connection = connections[0]
+        else:
+            connection = AgentConnection(
+                guid = my_connection["connection_id"],
+                agent = agent,
+                partner_name = partner_name,
+                invitation = invitation,
+                status = my_connection["state"]
+            )
+        connection.save()
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+
+    return connection
+
+
+def check_connection_status(agent, connection_id, initialize_agent=False):
+    """
+    Check status of the Connection.
+    Called when an invitation has been sent and confirmation has not yet been received.
+    Called from the Django background task, but can also be called from a view directly.
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    # create connection and check status
+    try:
+        ADMIN_REQUEST_HEADERS = {}
+        # TODO set admin header per agent
+        #if AGENT_ADMIN_API_KEY is not None:
+        #   ADMIN_REQUEST_HEADERS = {"x-api-key": AGENT_ADMIN_API_KEY}
+
+        response = requests.get(
+            agent.admin_endpoint
+            + "/connections/"
+            + connection_id,
+            headers=ADMIN_REQUEST_HEADERS
+        )
+        response.raise_for_status()
+        connection = response.json()
+
+        connections = AgentConnection.objects.filter(agent=agent, guid=connection_id).all()
+        if 0 < len(connections):
+            my_connection = connections[0]
+            my_connection.status = connection["state"]
+            my_connection.save()
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+
+    return connection["state"]
+
 
