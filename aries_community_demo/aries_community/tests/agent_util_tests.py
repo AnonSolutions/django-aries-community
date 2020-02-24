@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, LiveServerTestCase
 from django.urls import reverse
 from django.views.generic.edit import UpdateView
 
@@ -14,7 +14,11 @@ from ..registration_utils import *
 from ..agent_utils import *
 
 
-class AgentInteractionTests(TestCase):
+# Use LiveServerTestCase to force the Agent Callback API to run, so we can get callbacks from
+# the test agents during the test scenarios
+class AgentInteractionTests(LiveServerTestCase):
+    # override port for the LiveServer (default is 8081)
+    port = 8000
 
     ##############################################################
     # agent process control tests
@@ -118,6 +122,21 @@ class AgentInteractionTests(TestCase):
 
         return (user, org, raw_password)
 
+    def establish_agent_connection(self, org, user, init_org_agent=False, init_user_agent=False):
+        # send connection request (org -> user)
+        org_connection_1 = request_connection_invitation(org, user.email, initialize_agent=init_org_agent)
+        sleep(1)
+
+        # accept connection request (user -> org)
+        user_connection_1 = receive_connection_invitation(user.agent, org.org_name, org_connection_1.invitation, initialize_agent=init_user_agent)
+        sleep(1)
+
+        # update connection status (org)
+        org_connection_state = check_connection_status(org.agent, org_connection_1.guid, initialize_agent=init_org_agent)
+        user_connection_state = check_connection_status(user.agent, user_connection_1.guid, initialize_agent=init_user_agent)
+
+        return (org_connection_state, user_connection_state)
+
     def delete_user_and_org_agents(self, user, org, raw_password):
         # cleanup after ourselves
         # TODO
@@ -153,6 +172,63 @@ class AgentInteractionTests(TestCase):
         return (schema, cred_def, proof_request)
 
 
+    def issue_credential_from_org_to_user(self, org, user, org_connection, user_connection, cred_def, schema_attrs, cred_name, cred_tag):
+        # issue a credential based on the default schema/credential definition
+        org_conversation_1 = send_credential_offer(org.wallet, org_connection,  
+                                            cred_tag, schema_attrs, cred_def, 
+                                            cred_name)
+        sleep(2)
+
+        i = 0
+        while True:
+            handled_count = handle_inbound_messages(user.wallet, user_connection)
+            i = i + 1
+            if handled_count > 0 or i > 3:
+                break
+            sleep(2)
+        user_conversations = AgentConversation.objects.filter(connection__wallet=user.wallet, conversation_type="CredentialOffer", status='Pending').all()
+        user_conversation_1 = user_conversations[0]
+
+        # send credential request (user -> org)
+        user_conversation_2 = send_credential_request(user.wallet, user_connection, user_conversation_1)
+        sleep(2)
+
+        # send credential (org -> user)
+        i = 0
+        message = org_conversation_1
+        while True:
+            message = poll_message_conversation(org.wallet, org_connection, message, initialize_vcx=True)
+            i = i + 1
+            if message.conversation_type == 'IssueCredential' or i > 3:
+                break
+            sleep(2)
+        org_conversation_2 = message
+        sleep(2)
+
+        # accept credential and update status (user)
+        i = 0
+        message = user_conversation_2
+        while True:
+            message = poll_message_conversation(user.wallet, user_connection, message, initialize_vcx=True)
+            i = i + 1
+            if message.status == 'Accepted' or i > 3:
+                break
+            sleep(2)
+        user_conversation_3 = message
+        sleep(2)
+
+        # update credential offer status (org)
+        i = 0
+        message = org_conversation_2
+        while True:
+            message = poll_message_conversation(org.wallet, org_connection, message, initialize_vcx=True)
+            i = i + 1
+            if message.status == 'Accepted' or i > 3:
+                break
+            sleep(2)
+        org_conversation_3 = message
+
+
     def test_register_org_with_schema_and_cred_def(self):
         # try creating a schema and credential definition under the organization
         (user, org, raw_password) = self.create_user_and_org()
@@ -177,4 +253,26 @@ class AgentInteractionTests(TestCase):
         self.delete_user_and_org_agents(user, org, raw_password)
 
 
+    def test_agent_connection(self):
+        # establish a connection between two agents
+        (user, org, raw_password) = self.create_user_and_org()
+
+        try:
+            # startup the agent for that org
+            start_agent(org.agent)
+            start_agent(user.agent)
+
+            (schema, cred_def, proof_request) = self.schema_and_cred_def_for_org(org)
+
+            (org_connection_state, user_connection_state) = self.establish_agent_connection(org, user)
+
+            self.assertEqual(org_connection_state, 'active')
+            self.assertEqual(user_connection_state, 'active')
+        finally:
+            # shut down the agent for that org
+            stop_agent(user.agent)
+            stop_agent(org.agent)
+
+        # clean up after ourself
+        self.delete_user_and_org_agents(user, org, raw_password)
 

@@ -1,0 +1,53 @@
+version: '3'
+services:
+  # 
+  # indy-django
+  # 
+  indy-django:
+    image: anonsolutions/indy-base
+    networks:
+      - anon
+    ports:
+      - 8000:8000
+    volumes:
+      - "..:/home/indy/indy_community_demo"
+    depends_on:
+      - wallet-db
+    command: >
+        /bin/bash -c "
+        echo waiting for dependencies ...;
+        sleep 5;
+        cd indy_community_demo/indy_community_demo;
+        touch db.sqlite3;
+        DJANGO_SETTINGS_MODULE=indy_community_demo.stn_settings ./reload_db.sh;
+        sleep 5;
+        DJANGO_SETTINGS_MODULE=indy_community_demo.stn_settings ./init_data.sh;
+        sleep 5;
+        DJANGO_SETTINGS_MODULE=indy_community_demo.stn_settings python manage.py runserver 0.0.0.0:8000 & disown;
+        sleep 5;
+        DJANGO_SETTINGS_MODULE=indy_community_demo.stn_settings python manage.py process_tasks;"
+
+  # 
+  # wallet-db
+  # 
+  wallet-db:
+    image: postgres:latest
+    environment:
+      - POSTGRESQL_USER=${POSTGRESQL_USER}
+      - POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
+      - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}
+      - POSTGRESQL_ADMIN_PASSWORD=${POSTGRESQL_ADMIN_PASSWORD}
+    networks:
+      - anon
+    ports:
+      - 5432:5432
+    volumes:
+      - indy-wallet-db:/var/lib/pgsql/data     
+    #command:
+    #  postgres -c 'log_statement=all' -c 'logging_collector=on' -c 'log_destination=stderr'
+
+networks:
+  anon:
+
+volumes:
+  indy-wallet-db:

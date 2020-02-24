@@ -4,6 +4,10 @@ from django.contrib.auth import authenticate, get_user_model, login
 from django.urls import reverse
 from django.conf import settings
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+
 import uuid
 
 from .forms import *
@@ -90,6 +94,46 @@ def org_signup_view(
     else:
         form = OrganizationSignUpForm()
     return render(request, 'registration/signup.html', {'form': form})
+
+
+###############################################################
+# Agent callback web service
+###############################################################
+TOPIC_CONNECTIONS = "connections"
+TOPIC_CONNECTIONS_ACTIVITY = "connections_actvity"
+TOPIC_CREDENTIALS = "credentials"
+TOPIC_PRESENTATIONS = "presentations"
+TOPIC_GET_ACTIVE_MENU = "get-active-menu"
+TOPIC_PERFORM_MENU_ACTION = "perform-menu-action"
+TOPIC_PROBLEM_REPORT = "problem-report"
+
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def agent_cb_view(
+    request,
+    topic,
+    format=None
+    ):
+    """
+    Handle callbacks from the Aries agents
+    """
+    payload = request.data
+
+    if topic == TOPIC_CONNECTIONS:
+        # handle connections callbacks
+        return handle_agent_connections_callback(topic, payload)
+
+    elif topic == TOPIC_CONNECTIONS_ACTIVITY:
+        # handle connections activity callbacks
+        return handle_agent_connections_activity_callback(topic, payload)
+
+    elif topic == TOPIC_CREDENTIALS:
+        # handle credentials callbacks
+        return handle_agent_credentials_callback(topic, payload)
+
+    # not yet handled message types
+    print(">>> callback:", topic, payload)
+    return Response("{}")
 
 
 ###############################################################

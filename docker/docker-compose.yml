@@ -1,0 +1,57 @@
+version: '3'
+services:
+  # 
+  # aries-django
+  # 
+  aries-django:
+    build:
+      context: ../aries_community_demo
+      dockerfile: Dockerfile
+    networks:
+      - anon
+      - von
+    ports:
+      - 8000:8000
+    volumes:
+      - "..:/home/aries/aries_community_demo"
+    depends_on:
+      - wallet-db
+    entrypoint: >
+        /bin/bash -c "
+        echo waiting for dependencies ...;
+        sleep 5;
+        cd /home/aries/aries_community_demo/aries_community_demo;
+        touch db.sqlite3;
+        DJANGO_SETTINGS_MODULE=aries_community_demo.docker_settings ./reload_db.sh;
+        sleep 5;
+        DJANGO_SETTINGS_MODULE=aries_community_demo.docker_settings ./init_data.sh;
+        sleep 5;
+        DJANGO_SETTINGS_MODULE=aries_community_demo.docker_settings python manage.py runserver 0.0.0.0:8000;"
+
+  # 
+  # wallet-db
+  # 
+  wallet-db:
+    image: postgres:latest
+    environment:
+      - POSTGRESQL_USER=${POSTGRESQL_USER}
+      - POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
+      - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}
+      - POSTGRESQL_ADMIN_PASSWORD=${POSTGRESQL_ADMIN_PASSWORD}
+    networks:
+      - anon
+    ports:
+      - 5432:5432
+    volumes:
+      - aries-wallet-db:/var/lib/pgsql/data     
+    #command:
+    #  postgres -c 'log_statement=all' -c 'logging_collector=on' -c 'log_destination=stderr'
+
+networks:
+  anon:
+  von:
+    external:
+      name: von_von
+
+volumes:
+  aries-wallet-db:
