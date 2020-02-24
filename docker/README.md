@@ -23,6 +23,7 @@ git clone https://github.com/AnonSolutions/django-aries-community.git
 # this is necessary only on 'nix since we are mounting local directories
 chmod -R a+rwx django-aries-community/aries_community_demo
 cd django-aries-community/docker
+./manage build
 ./manage start
 ```
 
