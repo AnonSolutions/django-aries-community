@@ -13,6 +13,8 @@ import requests
 
 from django.conf import settings
 
+from rest_framework.response import Response
+
 from .models import *
 from .utils import *
 from .indy_utils import *
@@ -625,6 +627,25 @@ def check_connection_status(agent, connection_id, initialize_agent=False):
     return connection["state"]
 
 
+def handle_agent_connections_callback(topic, payload):
+    """
+    Handle connections processing callbacks from the agent
+    """
+    # TODO handle callbacks during connections protocol handshake
+    # - update connection status
+    print(">>> callback:", topic, payload)
+    return Response("{}")
+
+
+def handle_agent_connections_activity_callback(topic, payload):
+    """
+    Handle connections activity callbacks from the agent
+    """
+    # TODO determine use cases where this is called
+    print(">>> callback:", topic, payload)
+    return Response("{}")
+
+
 ######################################################################
 # utilities to offer, request, send and receive credentials
 ######################################################################
@@ -708,4 +729,15 @@ def send_credential_request(wallet, connection, conversation, initialize_vcx=Tru
                 raise
 
     return conversation
+
+
+def handle_agent_credentials_callback(topic, payload):
+    """
+    Handle credential processing callbacks from the agent
+    """
+    # TODO handle callbacks during credential exchange protocol handshake
+    # - update credential status
+    print(">>> callback:", topic, payload)
+    return Response("{}")
+
 

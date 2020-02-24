@@ -105,7 +105,6 @@ TOPIC_CREDENTIALS = "credentials"
 TOPIC_PRESENTATIONS = "presentations"
 TOPIC_GET_ACTIVE_MENU = "get-active-menu"
 TOPIC_PERFORM_MENU_ACTION = "perform-menu-action"
-TOPIC_ISSUER_REGISTRATION = "issuer_registration"
 TOPIC_PROBLEM_REPORT = "problem-report"
 
 @api_view(['GET', 'POST'])
@@ -119,8 +118,21 @@ def agent_cb_view(
     Handle callbacks from the Aries agents
     """
     payload = request.data
-    print(">>> callback:", topic, payload)
 
+    if topic == TOPIC_CONNECTIONS:
+        # handle connections callbacks
+        return handle_agent_connections_callback(topic, payload)
+
+    elif topic == TOPIC_CONNECTIONS_ACTIVITY:
+        # handle connections activity callbacks
+        return handle_agent_connections_activity_callback(topic, payload)
+
+    elif topic == TOPIC_CREDENTIALS:
+        # handle credentials callbacks
+        return handle_agent_credentials_callback(topic, payload)
+
+    # not yet handled message types
+    print(">>> callback:", topic, payload)
     return Response("{}")
 
 
