@@ -1,9 +1,11 @@
 # Install and run the Django Aries Community Demo Application
 
+*** Note that this documentation is in active development.  If you are interested in running the demo, run the docker version.
+
 There are two options to run the application locally - running in docker (recommended) or running all the services locally on "bare metal".
 
 
-## Running Django Indy Community - Docker Version (recommended)
+## Running Django Aries Community - Docker Version (recommended)
 
 1. Open two bash shells, and run the following commands:
 
@@ -32,12 +34,12 @@ To shut down the environment, CTRL-C to stop the docker services and then in eac
 ./manage rm
 ```
 
-Note that you need to run this (`./manage rm`) in BOTH shells (von-network and indy-community), it's important to keep the data in both sets of docker images in sync.
+Note that you need to run this (`./manage rm`) in BOTH shells (von-network and aries-community), it's important to keep the data in both sets of docker images in sync.
 
 
 ### Running Django Aries Community - "Bare Metal" Version
 
-****** TODO update these steps as appropriate  ******
+****** TODO update these steps as appropriate - note that this content is in active development, use at your own risk ******
 
 These are basically all the steps executed to build the docker environment.
 
@@ -46,14 +48,12 @@ Note it is recommended to build/run on either Ubuntu 16.04 or on the latest Mac 
 1. Check out the following github repositories:
 
 ```bash
-git clone https://github.com/ianco/indy-sdk.git
+git clone https://github.com/hyperledger/indy-sdk.git
 cd indy-sdk
 git checkout master
 cd ..
 git clone https://github.com/bcgov/von-network.git
 ```
-
-Note that these are the "ianco" forks of the master repositories as they contain updates/fixes that are not yet PR'ed.
 
 1a. Install dependencies in von-network:
 
@@ -81,20 +81,6 @@ cd ../../..
 cd cli
 cargo build
 cd ..
-
-cd libnulpay
-cargo build
-ln -s target/debug/libnullpay.so /use/local/lib/
-cd ..
-
-cd vcx
-cd libvcx
-cargo build
-ln -s target/debug/libvcx.so /use/local/lib/
-cd ..
-
-cd dummy-cloud-agent
-cargo build
 ```
 
 3. In the root indy-sdk directory, build and run the indy nodes:
@@ -110,21 +96,22 @@ docker run -itd -p 9701-9708:9701-9708 indy_pool
 docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d -p 5432:5432 postgres -c 'log_statement=all' -c 'logging_collector=on' -c 'log_destination=stderr'
 ```
 
-4. In a separate shell, run the VCX cloud agent:
+4. In a separate shell, check out the aries-cloudagent-python reposirtory:
 
 ```bash
-cd indy-sdk/vcx/dummy-cloud-agent
-cargo run config.json
+git clone ...
+cd ...
+etc ...
 ```
 
 5. TODO install the Python requirements
 
-TODO ...  also check the VCX Python library dependency
+TODO ...  
 
-6. Open 2 shells to run the Django Indy Community edition:
+6. Open 2 shells to run the Django Aries Community edition:
 
 ```bash
-cd django-indy-community/indy_community_demo
+cd django-aries-community/aries_community_demo
 ./reload_db.sh
 python manage.py runserver
 ```
@@ -132,7 +119,7 @@ python manage.py runserver
 ... and run the "virtual agent" bot:
 
 ```bash
-cd django-indy-community/indy_community_demo
+cd django-aries-community/aries_community_demo
 python manage.py process_tasks
 ```
 
@@ -143,10 +130,10 @@ cd von-network
 GENESIS_FILE=/tmp/atria-genesis.txt PORT=9000 python -m server.server
 ```
 
-Note that the genesis file at the above location is created by Django Indy Community on startup.
+Note that the genesis file at the above location is created by Django Aries Community on startup.
 
 
-### Reset the Django Indy Community environment
+### Reset the Django Aries Community environment
 
 To reset the environment and start from scratch:
 
@@ -159,7 +146,7 @@ rm -rf ~/.indy_client/
 2. Kill the two Django processes (CTRL-C) and reload the Test database:
 
 ```bash
-cd django-indy-community/indy_community_demo
+cd django-aries-community/aries_community_demo
 ./reload_db.sh
 ```
 
