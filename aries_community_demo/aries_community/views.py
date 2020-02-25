@@ -111,6 +111,7 @@ TOPIC_PROBLEM_REPORT = "problem-report"
 @permission_classes([AllowAny])
 def agent_cb_view(
     request,
+    cb_key,
     topic,
     format=None
     ):
@@ -118,21 +119,22 @@ def agent_cb_view(
     Handle callbacks from the Aries agents
     """
     payload = request.data
+    agent = AriesAgent.objects.filter(callback_key=cb_key).get()
 
     if topic == TOPIC_CONNECTIONS:
         # handle connections callbacks
-        return handle_agent_connections_callback(topic, payload)
+        return handle_agent_connections_callback(agent, topic, payload)
 
     elif topic == TOPIC_CONNECTIONS_ACTIVITY:
         # handle connections activity callbacks
-        return handle_agent_connections_activity_callback(topic, payload)
+        return handle_agent_connections_activity_callback(agent, topic, payload)
 
     elif topic == TOPIC_CREDENTIALS:
         # handle credentials callbacks
-        return handle_agent_credentials_callback(topic, payload)
+        return handle_agent_credentials_callback(agent, topic, payload)
 
     # not yet handled message types
-    print(">>> callback:", topic, payload)
+    print(">>> callback:", agent.agent_name, topic, payload)
     return Response("{}")
 
 

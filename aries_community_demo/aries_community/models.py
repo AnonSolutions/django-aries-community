@@ -18,11 +18,14 @@ USER_ROLES = (
 # base class for Aries Agents
 class AriesAgent(models.Model):
     agent_name = models.CharField(max_length=200, unique=True)
+    api_key = models.CharField(max_length=40, unique=True)
+    callback_key = models.CharField(max_length=40, unique=True)
     agent_config = models.TextField(max_length=4000, blank=True, null=True)
     agent_admin_port = models.IntegerField(null=True)
     agent_http_port = models.IntegerField(null=True)
     public_endpoint = models.CharField(max_length=200, blank=True, null=True)
     admin_endpoint = models.CharField(max_length=200, blank=True, null=True)
+    managed_agent = models.BooleanField(default=True)
 
     def __str__(self):
         return self.agent_name
@@ -80,7 +83,6 @@ class AriesUser(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(default=timezone.now)
     last_login = models.DateTimeField(blank=True, null=True)
     agent = models.ForeignKey(AriesAgent, to_field="agent_name", related_name='agent_user', blank = True, null=True, on_delete=models.CASCADE)
-    managed_wallet = models.BooleanField(default=True)
 
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'email'

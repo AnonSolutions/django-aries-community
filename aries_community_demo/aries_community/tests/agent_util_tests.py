@@ -26,6 +26,8 @@ class AgentInteractionTests(LiveServerTestCase):
     def test_provision_and_start_agent_1(self):
         config1 = aries_provision_config(
                 "test_agent_1", 
+                "test_api_key_1",
+                "test_conn_key_1",
                 "secret_password",
                 10000,
                 10010,
@@ -33,10 +35,12 @@ class AgentInteractionTests(LiveServerTestCase):
                 "localhost:10010",
                 start_agent=True
             )
-        proc1_info = start_aca_py("test_agent_1", config1, "http://localhost:10010")
+        proc1_info = start_aca_py("test_agent_1", config1, "http://localhost:10010", "test_api_key_1")
 
         config2 = aries_provision_config(
                 "test_agent_2", 
+                "test_api_key_2",
+                "test_conn_key_2",
                 "secret_password",
                 10020,
                 10030,
@@ -44,7 +48,7 @@ class AgentInteractionTests(LiveServerTestCase):
                 "localhost:10030",
                 start_agent=True
             )
-        proc2_info = start_aca_py("test_agent_2", config2, "http://localhost:10030")
+        proc2_info = start_aca_py("test_agent_2", config2, "http://localhost:10030", "test_api_key_2")
 
         stop_aca_py(proc1_info["name"])
         stop_aca_py(proc2_info["name"])
@@ -54,6 +58,8 @@ class AgentInteractionTests(LiveServerTestCase):
     def test_provision_and_start_agent_2(self):
         config1 = aries_provision_config(
                 "test_agent_3", 
+                "test_api_key_3",
+                "test_conn_key_3",
                 "secret_password",
                 10040,
                 10050,
@@ -61,10 +67,12 @@ class AgentInteractionTests(LiveServerTestCase):
                 "localhost:10050",
                 start_agent=True
             )
-        proc1_info = start_aca_py("test_agent_1", config1, "http://localhost:10050")
+        proc1_info = start_aca_py("test_agent_1", config1, "http://localhost:10050", "test_api_key_3")
 
         config2 = aries_provision_config(
                 "test_agent_4", 
+                "test_api_key_4",
+                "test_conn_key_4",
                 "secret_password",
                 10060,
                 10070,
@@ -72,7 +80,7 @@ class AgentInteractionTests(LiveServerTestCase):
                 "localhost:10070",
                 start_agent=True
             )
-        proc2_info = start_aca_py("test_agent_2", config2, "http://localhost:10070")
+        proc2_info = start_aca_py("test_agent_2", config2, "http://localhost:10070", "test_api_key_4")
 
         stop_all_aca_py()
 
