@@ -230,7 +230,8 @@ def list_connections(
     # expects a agent to be opened in the current session
     (agent, agent_type, agent_owner) = agent_for_current_session(request)
     connections = AgentConnection.objects.filter(agent=agent).all()
-    return render(request, template, {'agent_name': agent.agent_name, 'connections': connections})
+    invitations = AgentInvitation.objects.filter(agent=agent, connecion_guid='').all()
+    return render(request, template, {'agent_name': agent.agent_name, 'connections': connections, 'invitations': invitations})
 
 
 def handle_connection_request(
@@ -317,7 +318,7 @@ def handle_connection_response(
             return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
         else:
             cd = form.cleaned_data
-            connection_id = cd.get('connection_id')
+            invitation_id = cd.get('invitation_id')
             partner_name = cd.get('partner_name')
             invitation_details = cd.get('invitation_details')
 
@@ -329,7 +330,11 @@ def handle_connection_response(
 
             # build the connection and get the invitation data back
             try:
-                my_connection = send_connection_confirmation(agent, connection_id, partner_name, invitation_details)
+                my_connection = receive_connection_invitation(agent, partner_name, invitation_details)
+
+                invitation = AgentInvitation.objects.filter(id=invitation_id, agent=agent).get()
+                invitation.connecion_guid = my_connection.guid
+                invitation.save()
 
                 return render(request, response_template, {'msg': 'Updated connection for ' + agent.agent_name})
             except IndyError:
@@ -340,18 +345,18 @@ def handle_connection_response(
     else:
         # find connection request
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
-        connection_id = request.GET.get('id', None)
-        connections = []
-        if connection_id:
-            connections = AgentConnection.objects.filter(id=connection_id, agent=agent).all()
-        if len(connections) > 0:
-            form = SendConnectionResponseForm(initial={ 'connection_id': connection_id,
-                                                        'agent_name': connections[0].agent.agent_name, 
-                                                        'partner_name': connections[0].partner_name, 
-                                                        'invitation_details': connections[0].invitation })
+        invitation_id = request.GET.get('id', None)
+        invitations = []
+        if invitation_id:
+            invitations = AgentInvitation.objects.filter(id=invitation_id, agent=agent).all()
+        if len(invitations) > 0:
+            form = SendConnectionResponseForm(initial={ 'invitation_id': invitation_id,
+                                                        'agent_name': invitations[0].agent.agent_name, 
+                                                        'partner_name': invitations[0].partner_name, 
+                                                        'invitation_details': invitations[0].invitation })
         else:
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
-            form = SendConnectionResponseForm(initial={'connection_id': 0, 'agent_name': agent.agent_name})
+            form = SendConnectionResponseForm(initial={'invitation_id': 0, 'agent_name': agent.agent_name})
 
         return render(request, form_template, {'form': form})
     
@@ -379,7 +384,7 @@ def poll_connection_status(
             # set agent password
             # TODO vcx_config['something'] = raw_password
 
-            connections = AgentConnection.objects.filter(id=connection_id, agent=agent).all()
+            connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
             # TODO validate connection id
             my_connection = connections[0]
 
@@ -388,7 +393,7 @@ def poll_connection_status(
                 my_connection = check_connection_status(agent, my_connection)
 
                 return render(request, response_template, {'msg': 'Updated connection for ' + agent.agent_name + ', ' + my_connection.partner_name})
-            except IndyError:
+            except:
                 # ignore errors for now
                 print(" >>> Failed to update request for", agent.agent_name)
                 return render(request, 'aries/form_response.html', {'msg': 'Failed to update request for ' + agent.agent_name})
@@ -397,7 +402,7 @@ def poll_connection_status(
         # find connection request
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
         connection_id = request.GET.get('id', None)
-        connections = AgentConnection.objects.filter(id=connection_id, agent=agent).all()
+        connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
 
         form = PollConnectionStatusForm(initial={ 'connection_id': connection_id,
                                                   'agent_name': connections[0].agent.agent_name })

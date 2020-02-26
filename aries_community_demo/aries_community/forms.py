@@ -60,16 +60,16 @@ class SendConnectionInvitationForm(AgentNameForm):
 
 
 class SendConnectionResponseForm(SendConnectionInvitationForm):
-    connection_id = forms.IntegerField(widget=forms.HiddenInput())
+    invitation_id = forms.IntegerField(widget=forms.HiddenInput())
     invitation_details = forms.CharField(label='Invitation', max_length=4000, widget=forms.Textarea)
 
     def __init__(self, *args, **kwargs):
         super(SendConnectionResponseForm, self).__init__(*args, **kwargs)
-        self.fields['connection_id'].widget.attrs['readonly'] = True
+        self.fields['invitation_id'].widget.attrs['readonly'] = True
 
 
 class PollConnectionStatusForm(VisibleAgentNameForm):
-    connection_id = forms.IntegerField(label="Id")
+    connection_id = forms.CharField(label="Id")
 
     def __init__(self, *args, **kwargs):
         super(PollConnectionStatusForm, self).__init__(*args, **kwargs)
