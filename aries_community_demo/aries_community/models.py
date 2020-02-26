@@ -185,6 +185,13 @@ class IndyProofRequest(models.Model):
         return self.proof_req_name
 
 
+# base class for (unresponded) invitations
+class AgentInvitation(models.Model):
+    agent = models.ForeignKey(AriesAgent, to_field="agent_name", on_delete=models.CASCADE)
+    partner_name = models.CharField(max_length=200)
+    invitation = models.TextField(max_length=4000, blank=True)
+    connecion_guid = models.CharField(max_length=80, blank=True)
+
 # base class for Agent connections
 class AgentConnection(models.Model):
     guid = models.CharField(max_length=80, primary_key=True)

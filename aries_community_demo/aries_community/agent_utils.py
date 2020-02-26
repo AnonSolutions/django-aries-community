@@ -323,7 +323,10 @@ def stop_aca_py(proc_name):
         for tn in threads:
             tn.join()
     finally:
-        running_procs.pop(proc_name)
+        try:
+            running_procs.pop(proc_name)
+        except:
+            pass
 
 
 def stop_all_aca_py():

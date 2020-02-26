@@ -24,13 +24,13 @@ ORG_ROLE = getattr(settings, "DEFAULT_ORG_ROLE", 'Admin')
 # UI views to support user and organization registration
 ###############################################################
 
-# Sign up as a site user, and create a wallet
+# Sign up as a site user, and create an agent
 def user_signup_view(
     request,
     template=''
     ):
     """
-    Create a user account with a managed wallet.
+    Create a user account with a managed agent.
     """
 
     if request.method == 'POST':
@@ -45,7 +45,7 @@ def user_signup_view(
                 user.groups.add(Group.objects.get(name=USER_ROLE))
             user.save()
 
-            # create an Indy wallet - derive wallet name from email, and re-use raw password
+            # create an Indy agent - derive agent name from email, and re-use raw password
             user = user_provision(user, raw_password)
 
             # TODO need to auto-login with Atria custom user
@@ -57,13 +57,13 @@ def user_signup_view(
     return render(request, 'registration/signup.html', {'form': form})
 
 
-# Sign up as an org user, and create a wallet
+# Sign up as an org user, and create a agent
 def org_signup_view(
     request,
     template=''
     ):
     """
-    Signup an Organization with a managed wallet.
+    Signup an Organization with a managed agent.
     Creates a user account and links to the Organization.
     """
 
@@ -74,13 +74,13 @@ def org_signup_view(
             username = form.cleaned_data.get('email')
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=raw_password)
-            user.managed_wallet = False
+            user.managed_agent = False
 
             if Group.objects.filter(name='Admin').exists():
                 user.groups.add(Group.objects.get(name='Admin'))
             user.save()
 
-            # create and provision org, including org wallet
+            # create and provision org, including org agent
             org_name = form.cleaned_data.get('org_name')
             org_role_name = form.cleaned_data.get('org_role_name')
             org_ico_url = form.cleaned_data.get('ico_url')
@@ -116,7 +116,8 @@ def agent_cb_view(
     format=None
     ):
     """
-    Handle callbacks from the Aries agents
+    Handle callbacks from the Aries agents.
+    cb_key maps the callback to a specific agent.
     """
     payload = request.data
     agent = AriesAgent.objects.filter(callback_key=cb_key).get()
@@ -136,6 +137,35 @@ def agent_cb_view(
     # not yet handled message types
     print(">>> callback:", agent.agent_name, topic, payload)
     return Response("{}")
+
+
+###############################################################
+# UI views to support Django wallet login/logoff
+###############################################################
+def agent_for_current_session(request):
+    """
+    Determine the current active agent
+    """
+
+    agent_name = request.session['agent_name']
+    agent = AriesAgent.objects.filter(agent_name=agent_name).first()
+
+    # validate it is the correct wallet
+    agent_type = request.session['agent_type']
+    agent_owner = request.session['agent_owner']
+    if agent_type == 'user':
+        # verify current user owns agent
+        if agent_owner == request.user.email:
+            return (agent, agent_type, agent_owner)
+        raise Exception('Error agent/session config is not valid')
+    elif agent_type == 'org':
+        # verify current user has relationship to org that owns agent
+        for org in request.user.ariesrelationship_set.all():
+            if org.org.org_name == agent_owner:
+                return (agent, agent_type, agent_owner)
+        raise Exception('Error agent/session config is not valid')
+    else:
+        raise Exception('Error agent/session config is not valid')
 
 
 ###############################################################
@@ -184,4 +214,233 @@ def plugin_view(request, view_name):
     func = getattr(mod, func_name)
 
     return func(request)
+
+
+######################################################################
+# views to create and confirm agent-to-agent connections
+######################################################################
+def list_connections(
+    request,
+    template='aries/connection/list.html'
+    ):
+    """
+    List Connections for the current agent.
+    """
+
+    # expects a agent to be opened in the current session
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
+    connections = AgentConnection.objects.filter(agent=agent).all()
+    return render(request, template, {'agent_name': agent.agent_name, 'connections': connections})
+
+
+def handle_connection_request(
+    request,
+    form_template='aries/connection/request.html',
+    response_template='aries/connection/form_connection_info.html'
+    ):
+    """
+    Send a Connection request (i.e. an Invitation).
+    """
+
+    if request.method=='POST':
+        form = SendConnectionInvitationForm(request.POST)
+        if not form.is_valid():
+            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+        else:
+            cd = form.cleaned_data
+            partner_name = cd.get('partner_name')
+
+            # get user or org associated with this agent
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+            if agent_type == 'org':
+                org = AriesOrganization.objects.filter(org_name=agent_owner).get()
+            else:
+                return render(request, response_template, {'msg': 'Invitations are available for org only', 'msg_txt': 'You are logged in as ' + agent_owner })
+
+            # get user or org associated with target partner
+            target_user = get_user_model().objects.filter(email=partner_name).all()
+            target_org = AriesOrganization.objects.filter(org_name=partner_name).all()
+
+            if 0 < len(target_user):
+                their_agent = target_user[0].agent
+            elif 0 < len(target_org):
+                their_agent = target_org[0].agent
+            else:
+                their_agent = None
+
+            # set agent password
+            # TODO vcx_config['something'] = raw_password
+
+            # build the connection and get the invitation data back
+            try:
+                my_connection = request_connection_invitation(org, partner_name)
+
+                if their_agent is not None:
+                    their_invitation = AgentInvitation(
+                        agent = their_agent,
+                        partner_name = agent_owner,
+                        invitation = my_connection.invitation)
+                    their_invitation.save()
+
+                if my_connection.agent.agent_org.get():
+                    source_name = my_connection.agent.agent_org.get().org_name
+                else:
+                    source_name = my_connection.agent.agent_user.get().email
+                target_name = my_connection.partner_name
+                institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
+                return render(request, response_template, {'msg': 'Created invitation for ' + target_name, 'msg_txt': my_connection.invitation})
+            except Exception as e:
+                # ignore errors for now
+                print(" >>> Failed to create request for", agent.agent_name)
+                print(e)
+                return render(request, 'aries/form_response.html', {'msg': 'Failed to create invitation for ' + agent.agent_name})
+
+    else:
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+        form = SendConnectionInvitationForm(initial={'agent_name': agent.agent_name})
+
+        return render(request, form_template, {'form': form})
+    
+
+def handle_connection_response(
+    request,
+    form_template='aries/connection/response.html',
+    response_template='aries/form_response.html'
+    ):
+    """
+    Respond to (Accept) a Connection request.
+    """
+
+    if request.method=='POST':
+        form = SendConnectionResponseForm(request.POST)
+        if not form.is_valid():
+            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+        else:
+            cd = form.cleaned_data
+            connection_id = cd.get('connection_id')
+            partner_name = cd.get('partner_name')
+            invitation_details = cd.get('invitation_details')
+
+            # get user or org associated with this agent
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+            # set agent password
+            # TODO vcx_config['something'] = raw_password
+
+            # build the connection and get the invitation data back
+            try:
+                my_connection = send_connection_confirmation(agent, connection_id, partner_name, invitation_details)
+
+                return render(request, response_template, {'msg': 'Updated connection for ' + agent.agent_name})
+            except IndyError:
+                # ignore errors for now
+                print(" >>> Failed to update request for", agent.agent_name)
+                return render(request, 'aries/form_response.html', {'msg': 'Failed to update request for ' + agent.agent_name})
+
+    else:
+        # find connection request
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+        connection_id = request.GET.get('id', None)
+        connections = []
+        if connection_id:
+            connections = AgentConnection.objects.filter(id=connection_id, agent=agent).all()
+        if len(connections) > 0:
+            form = SendConnectionResponseForm(initial={ 'connection_id': connection_id,
+                                                        'agent_name': connections[0].agent.agent_name, 
+                                                        'partner_name': connections[0].partner_name, 
+                                                        'invitation_details': connections[0].invitation })
+        else:
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+            form = SendConnectionResponseForm(initial={'connection_id': 0, 'agent_name': agent.agent_name})
+
+        return render(request, form_template, {'form': form})
+    
+
+def poll_connection_status(
+    request,
+    form_template='aries/connection/status.html',
+    response_template='aries/form_response.html'
+    ):
+    """
+    Poll Connection status (normally a background task).
+    """
+
+    if request.method=='POST':
+        form = PollConnectionStatusForm(request.POST)
+        if not form.is_valid():
+            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+        else:
+            cd = form.cleaned_data
+            connection_id = cd.get('connection_id')
+
+            # log out of current agent, if any
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+            # set agent password
+            # TODO vcx_config['something'] = raw_password
+
+            connections = AgentConnection.objects.filter(id=connection_id, agent=agent).all()
+            # TODO validate connection id
+            my_connection = connections[0]
+
+            # validate connection and get the updated status
+            try:
+                my_connection = check_connection_status(agent, my_connection)
+
+                return render(request, response_template, {'msg': 'Updated connection for ' + agent.agent_name + ', ' + my_connection.partner_name})
+            except IndyError:
+                # ignore errors for now
+                print(" >>> Failed to update request for", agent.agent_name)
+                return render(request, 'aries/form_response.html', {'msg': 'Failed to update request for ' + agent.agent_name})
+
+    else:
+        # find connection request
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+        connection_id = request.GET.get('id', None)
+        connections = AgentConnection.objects.filter(id=connection_id, agent=agent).all()
+
+        form = PollConnectionStatusForm(initial={ 'connection_id': connection_id,
+                                                  'agent_name': connections[0].agent.agent_name })
+
+        return render(request, form_template, {'form': form})
+
+
+def connection_qr_code(
+    request, 
+    token
+    ):
+    """
+    Display a QR code for the given invitation.
+    """
+
+    # find connection for requested token
+    connections = AgentConnection.objects.filter(token=token, connection_type='Outbound').all()
+    if 0 == len(connections):
+        return render(request, 'aries/form_response.html', {'msg': 'No connection found'})
+
+    connection = connections[0]
+    #qr = qrcode.QRCode(version=27, box_size=4)
+    #qr.add_data(connection.invitation_shortform())
+    #qr.make(fit=True)
+    #image = qr.make_image()
+    source_name = connection.partner_name
+    target_name = connection.partner_name
+    if connection.agent.agent_org.get():
+        source_name = connection.agent.agent_org.get().org_name
+        institution_logo_url = connection.agent.agent_org.get().ico_url
+    else:
+        source_name = connection.agent.agent_user.get().email
+        institution_logo_url = None
+    if not institution_logo_url:
+        institution_logo_url = 'http://robohash.org/456'
+    qr = pyqrcode.create(connection.invitation_shortform(source_name, target_name, institution_logo_url))
+    path_to_image = '/tmp/'+token+'qr-offer.png'
+    qr.png(path_to_image, scale=2, module_color=[0, 0, 0, 128], background=[0xff, 0xff, 0xff])
+    image_data = open(path_to_image, "rb").read()
+
+    # serialize to HTTP response
+    response = HttpResponse(image_data, content_type="image/png")
+    #image.save(response, "PNG")
+    return response
+
 
