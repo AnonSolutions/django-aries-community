@@ -12,19 +12,16 @@ Note that this library is in early development stage.  It s suitable for develop
 
 This repository is in active development.  A curated TODO list includes:
 
-- add connection functionality to UI
-- add api key to agent startup (add key as attribute on aries_agent model)
-- add api key to all agent calls
 - add credential exchange functionality
 - add credential exchange functionality to UI
-- add callbacks for connections and credential exchange
+- add callbacks for credential exchange
 - add support for non-managed agents (static agents for orgs and mobile agents for individuals)
 - add fixed port ranges for agents (org vs individual)
 - add router for individual agents
 - potential to add router for org agents?
-- update endpoints for existing connections (agent defect)
-- issue invitations via router (agent defect)
-- for router, hold messages if target agent is not available (agent defect?)
+- update endpoints for existing connections (Aries defect)
+- issue invitations via router (Aries defect)
+- for router, hold messages if target agent is not available (Aries defect?)
 
 
 ## Features
