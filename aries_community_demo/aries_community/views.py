@@ -377,9 +377,11 @@ def poll_connection_status(
         else:
             cd = form.cleaned_data
             connection_id = cd.get('connection_id')
+            print("connection_id", connection_id)
 
             # log out of current agent, if any
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
+            print("agent", agent)
 
             # set agent password
             # TODO vcx_config['something'] = raw_password
@@ -387,15 +389,16 @@ def poll_connection_status(
             connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
             # TODO validate connection id
             my_connection = connections[0]
+            print("my_connection", my_connection)
 
             # validate connection and get the updated status
             try:
-                my_connection = check_connection_status(agent, my_connection)
+                my_state = check_connection_status(agent, my_connection.guid)
 
                 return render(request, response_template, {'msg': 'Updated connection for ' + agent.agent_name + ', ' + my_connection.partner_name})
-            except:
+            except Exception as e:
                 # ignore errors for now
-                print(" >>> Failed to update request for", agent.agent_name)
+                print(" >>> Failed to update request for", agent.agent_name, e)
                 return render(request, 'aries/form_response.html', {'msg': 'Failed to update request for ' + agent.agent_name})
 
     else:

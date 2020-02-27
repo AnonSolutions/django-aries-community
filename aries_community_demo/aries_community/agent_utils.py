@@ -635,6 +635,8 @@ def check_connection_status(agent, connection_id, initialize_agent=False):
             my_connection = connections[0]
             my_connection.status = connection["state"]
             my_connection.save()
+        else:
+            my_connection = None
     except:
         raise
 
@@ -646,9 +648,17 @@ def handle_agent_connections_callback(agent, topic, payload):
     Handle connections processing callbacks from the agent
     """
     # TODO handle callbacks during connections protocol handshake
-    # - update connection status
-    print(">>> callback:", agent.agent_name, topic, payload)
-    return Response("{}")
+    # - for now only update connection status
+    print(">>> callback:", agent.agent_name, topic)
+    try:
+        connection_id = payload["connection_id"]
+        connection = AgentConnection.objects.filter(guid=connection_id, agent=agent).get()
+        connection.status = payload["state"]
+        connection.save()
+        return Response("{}")
+    except Exception as e:
+        print(e)
+        return Response("{}")
 
 
 def handle_agent_connections_activity_callback(agent, topic, payload):
