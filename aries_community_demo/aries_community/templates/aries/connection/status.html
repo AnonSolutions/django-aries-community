@@ -1,0 +1,34 @@
+{% extends 'base_nav.html' %}
+
+{% load i18n %}
+{% load static %}
+
+{% block main_content %}
+  <div class='inside-body'>
+    <div class='center-body'>
+      <div class='innercont-center-body'>
+        <div class='innercont-center-inner'>
+          <div class='form-cont'>
+            <h2>Connection Status</h2>
+            <div class='newsfeed-post-seperator'></div>
+            <form action="{% url 'check_connection' %}" method="POST">
+              {% csrf_token %}
+              {% for field in form %}
+                <div>
+                  {% if not field.is_hidden %}
+                    <h5>{{ field.label_tag }}</h5>
+                  {% endif %}
+                  {{ field }}
+                  {% for error in field.errors %}
+                    <p style="color: red">{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endfor %}
+              <button class='btn' type="submit">Submit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

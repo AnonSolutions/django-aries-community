@@ -95,6 +95,8 @@ class AriesOrgRelationshipTests(TestCase):
         # tests creating a relationship between a user and organization
         user_agent = AriesAgent.objects.create(
             agent_name='user_agent',
+            api_key='my_test_000',
+            callback_key='my_callback_000',
             agent_config='{"some":"test", "string":"."}',
         )
         user_agent.save()
@@ -106,6 +108,8 @@ class AriesOrgRelationshipTests(TestCase):
         )
         org_agent = AriesAgent.objects.create(
             agent_name='org_agent',
+            api_key='my_test_001',
+            callback_key='my_callback_111',
             agent_config='{"some":"test", "string":"."}',
         )
         org_agent.save()
@@ -211,6 +215,8 @@ class AgentConnectionTests(TestCase):
     def test_connection_create(self):
         agent = AriesAgent.objects.create(
             agent_name='test_agent',
+            api_key='my_test_002',
+            callback_key='my_callback_222',
             agent_config='{"some":"test", "string":"."}',
         )
         agent.save()
@@ -234,6 +240,8 @@ class AgentConversationTests(TestCase):
     def test_conversation_create(self):
         agent = AriesAgent.objects.create(
             agent_name='test_agent',
+            api_key='my_test_003',
+            callback_key='my_callback_333',
             agent_config='{"some":"test", "string":"."}',
         )
         agent.save()

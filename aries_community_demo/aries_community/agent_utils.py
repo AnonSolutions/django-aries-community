@@ -31,6 +31,8 @@ DUMMY_SEED = "00000000000000000000000000000000"
 ######################################################################
 def aries_provision_config(
         agent_name: str, 
+        api_key: str,
+        callback_key: str,
         wallet_key: str,
         http_port: int,
         admin_port: int,
@@ -76,8 +78,9 @@ def aries_provision_config(
             ("--inbound-transport", "http", "0.0.0.0", str(http_port)),
             ("--outbound-transport", "http"),
             ("--admin", "0.0.0.0", str(admin_port)),
-            "--admin-insecure-mode",
-            "--webhook-url", "http://localhost:8000/agent_cb",
+            ("--admin-api-key", api_key),
+            #"--admin-insecure-mode",
+            ("--webhook-url", "http://localhost:8000/agent_cb/" + callback_key),
         ])
     provisionConfig.extend([
         ("--wallet-type", wallet_type),
@@ -122,6 +125,8 @@ def initialize_and_provision_agent(
     """
 
     agent = AriesAgent(agent_name=agent_name)
+    agent.api_key = random_an_string(40)
+    agent.callback_key = random_an_string(20)
 
     ports = get_unused_ports(2)
     agent.agent_admin_port = ports[0]
@@ -130,7 +135,9 @@ def initialize_and_provision_agent(
     admin_endpoint = "http://localhost:" + str(agent.agent_admin_port)
 
     startConfig = aries_provision_config(
-                            agent.agent_name, 
+                            agent.agent_name,
+                            agent.api_key, 
+                            agent.callback_key,
                             raw_password, 
                             agent.agent_http_port,
                             agent.agent_admin_port,
@@ -163,7 +170,7 @@ def start_agent(agent, cmd: str='start', config=None):
     if not config:
         config = json.loads(agent.agent_config)
 
-    start_aca_py(agent.agent_name, config, agent.admin_endpoint)
+    start_aca_py(agent.agent_name, config, agent.admin_endpoint, agent.api_key)
 
 
 def stop_agent(agent):
@@ -205,16 +212,20 @@ def stderr_reader(proc_name, proc):
         else:
             break
 
-def detect_process(admin_url, start_timeout=START_TIMEOUT):
+def detect_process(admin_url, api_key, start_timeout=START_TIMEOUT):
     text = None
 
-    def fetch_swagger(url: str, timeout: float):
+    def fetch_swagger(url: str, api_key: str, timeout: float):
+        ADMIN_REQUEST_HEADERS = {}
+        # set admin header per agent
+        if api_key is not None:
+           ADMIN_REQUEST_HEADERS = {"x-api-key": api_key}
+
         text = None
         wait_time = START_TIMEOUT
         while wait_time > 0:
             try:
-                resp = requests.get(url)
-                print(resp, resp.status_code)
+                resp = requests.get(url, headers=ADMIN_REQUEST_HEADERS)
                 resp.raise_for_status()
                 text = resp.text
                 return text
@@ -225,7 +236,7 @@ def detect_process(admin_url, start_timeout=START_TIMEOUT):
         return text
 
     status_url = admin_url + "/status"
-    status_text = fetch_swagger(status_url, start_timeout)
+    status_text = fetch_swagger(status_url, api_key, start_timeout)
     print("Agent running with admin url", admin_url)
 
     if not status_text:
@@ -244,7 +255,7 @@ def detect_process(admin_url, start_timeout=START_TIMEOUT):
             f"Unexpected response from agent process. Admin URL: {status_url}"
         )
 
-def start_aca_py(agent_name, agent_args, admin_endpoint, bin_path=None, python_path=None, wait=True):
+def start_aca_py(agent_name, agent_args, admin_endpoint, api_key, bin_path=None, python_path=None, wait=True):
     """
     Start an aca-py process and record the process handle by agent name
     """
@@ -277,7 +288,7 @@ def start_aca_py(agent_name, agent_args, admin_endpoint, bin_path=None, python_p
     print("Started, waiting for status check ...")
     if wait:
         time.sleep(1.0)
-        detect_process(admin_endpoint)
+        detect_process(admin_endpoint, api_key)
 
     proc_info = {"name": agent_name, "proc": proc, "threads": [t1, t2,]}
     running_procs[agent_name] = proc_info
@@ -312,7 +323,10 @@ def stop_aca_py(proc_name):
         for tn in threads:
             tn.join()
     finally:
-        running_procs.pop(proc_name)
+        try:
+            running_procs.pop(proc_name)
+        except:
+            pass
 
 
 def stop_all_aca_py():
@@ -375,9 +389,9 @@ def create_schema(agent, schema_name, schema_version, schema_attrs, schema_templ
     """
 
     ADMIN_REQUEST_HEADERS = {}
-    # TODO set admin header per agent
-    #if AGENT_ADMIN_API_KEY is not None:
-    #   ADMIN_REQUEST_HEADERS = {"x-api-key": AGENT_ADMIN_API_KEY}
+    # set admin header per agent
+    if agent.api_key is not None:
+       ADMIN_REQUEST_HEADERS = {"x-api-key": agent.api_key}
 
     try:
         schema_request = {
@@ -414,9 +428,9 @@ def create_creddef(agent, indy_schema, creddef_name, creddef_template, initializ
     """
 
     ADMIN_REQUEST_HEADERS = {}
-    # TODO set admin header per agent
-    #if AGENT_ADMIN_API_KEY is not None:
-    #   ADMIN_REQUEST_HEADERS = {"x-api-key": AGENT_ADMIN_API_KEY}
+    # set admin header per agent
+    if agent.api_key is not None:
+       ADMIN_REQUEST_HEADERS = {"x-api-key": agent.api_key}
 
     try:
         cred_def_request = {"schema_id": indy_schema.ledger_schema_id}
@@ -468,7 +482,7 @@ def start_agent_if_necessary(agent, initialize_agent) -> (AriesAgent, bool):
     # start agent if necessary
     if initialize_agent:
         try:
-            detect_process(agent.admin_endpoint, start_timeout=1.0)
+            detect_process(agent.admin_endpoint, agent.api_key, start_timeout=1.0)
             # didn't start it (assume it's already running)
             return (agent, False)
         except:
@@ -493,9 +507,9 @@ def request_connection_invitation(org, requestee_name, initialize_agent=False):
     # create connection and generate invitation
     try:
         ADMIN_REQUEST_HEADERS = {}
-        # TODO set admin header per agent
-        #if AGENT_ADMIN_API_KEY is not None:
-        #   ADMIN_REQUEST_HEADERS = {"x-api-key": AGENT_ADMIN_API_KEY}
+        # set admin header per agent
+        if partner_agent.api_key is not None:
+           ADMIN_REQUEST_HEADERS = {"x-api-key": partner_agent.api_key}
 
         response = requests.post(
                 partner_agent.admin_endpoint + "/connections/create-invitation",
@@ -536,9 +550,9 @@ def receive_connection_invitation(agent, partner_name, invitation, initialize_ag
     # create connection and generate invitation
     try:
         ADMIN_REQUEST_HEADERS = {}
-        # TODO set admin header per agent
-        #if AGENT_ADMIN_API_KEY is not None:
-        #   ADMIN_REQUEST_HEADERS = {"x-api-key": AGENT_ADMIN_API_KEY}
+        # set admin header per agent
+        if agent.api_key is not None:
+           ADMIN_REQUEST_HEADERS = {"x-api-key": agent.api_key}
 
         response = requests.post(
             agent.admin_endpoint
@@ -585,9 +599,9 @@ def get_agent_connection(agent, connection_id, initialize_agent=False):
     # create connection and check status
     try:
         ADMIN_REQUEST_HEADERS = {}
-        # TODO set admin header per agent
-        #if AGENT_ADMIN_API_KEY is not None:
-        #   ADMIN_REQUEST_HEADERS = {"x-api-key": AGENT_ADMIN_API_KEY}
+        # set admin header per agent
+        if agent.api_key is not None:
+           ADMIN_REQUEST_HEADERS = {"x-api-key": agent.api_key}
 
         response = requests.get(
             agent.admin_endpoint
@@ -621,28 +635,38 @@ def check_connection_status(agent, connection_id, initialize_agent=False):
             my_connection = connections[0]
             my_connection.status = connection["state"]
             my_connection.save()
+        else:
+            my_connection = None
     except:
         raise
 
     return connection["state"]
 
 
-def handle_agent_connections_callback(topic, payload):
+def handle_agent_connections_callback(agent, topic, payload):
     """
     Handle connections processing callbacks from the agent
     """
     # TODO handle callbacks during connections protocol handshake
-    # - update connection status
-    print(">>> callback:", topic, payload)
-    return Response("{}")
+    # - for now only update connection status
+    print(">>> callback:", agent.agent_name, topic)
+    try:
+        connection_id = payload["connection_id"]
+        connection = AgentConnection.objects.filter(guid=connection_id, agent=agent).get()
+        connection.status = payload["state"]
+        connection.save()
+        return Response("{}")
+    except Exception as e:
+        print(e)
+        return Response("{}")
 
 
-def handle_agent_connections_activity_callback(topic, payload):
+def handle_agent_connections_activity_callback(agent, topic, payload):
     """
     Handle connections activity callbacks from the agent
     """
     # TODO determine use cases where this is called
-    print(">>> callback:", topic, payload)
+    print(">>> callback:", agent.agent_name, topic, payload)
     return Response("{}")
 
 
@@ -731,13 +755,13 @@ def send_credential_request(wallet, connection, conversation, initialize_vcx=Tru
     return conversation
 
 
-def handle_agent_credentials_callback(topic, payload):
+def handle_agent_credentials_callback(agent, topic, payload):
     """
     Handle credential processing callbacks from the agent
     """
     # TODO handle callbacks during credential exchange protocol handshake
     # - update credential status
-    print(">>> callback:", topic, payload)
+    print(">>> callback:", agent.agent_name, topic, payload)
     return Response("{}")
 
 

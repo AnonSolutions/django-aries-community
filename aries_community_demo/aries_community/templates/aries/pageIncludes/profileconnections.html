@@ -1,0 +1,80 @@
+{% load i18n %}
+{% load static %}
+
+<div class='newsfeed-posted-cont'>
+	<div class='newsfeed-posted-info'>
+		<div>
+			<a href=''>
+				<h2>Agent Connections</h2>
+			</a>
+		</div>
+		<div>
+			<h5>
+                {% if request.session.ACTIVE_ORG %}
+				<a href="{% url 'send_invitation' %}">{% trans "Send Connection Invite" %}</a>
+                or:
+                {% endif %}
+				<a href="{% url 'connection_response' %}?id=0">{% trans "Respond to (External) Invite" %}</a>
+            </h5>
+		</div>
+	</div>
+    <div class='newsfeed-post-seperator'></div>
+
+{% for invitation in invitations %}
+    <div class='newsfeed-posted-top-cont'>
+        <div class='newsfeed-posted-img-info'>
+            <div class='newsfeed-posted-img'>
+                <img src="{% static "/aries/accounticon.png" %}">
+            </div>
+            <div class='newsfeed-posted-info'>
+                <div>
+                    <a href=''>
+                        <h2>{{ invitation.partner_name }}</h2>
+                    </a>
+                </div>
+                <div>
+                    <a href="{% url 'connection_response' %}?id={{invitation.id}}"}>Accept</a>
+                    <a href="{% url 'connection_qr' token=invitation.id %}"}>Mobile QR</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class='newsfeed-post-seperator'></div>
+{% endfor %}
+
+{% for connection in connections %}
+    <div class='newsfeed-posted-top-cont'>
+        <div class='newsfeed-posted-img-info'>
+            <div class='newsfeed-posted-img'>
+                <img src="{% static "/aries/accounticon.png" %}">
+            </div>
+            <div class='newsfeed-posted-info'>
+        		<div>
+        			<a href=''>
+        				<h2>{{ connection.partner_name }}</h2>
+        			</a>
+        		</div>
+        		<div>
+        			<h5>Connection Type: {{ connection.connection_type }}</h5>
+        		</div>
+        		<div>
+        			<h5>Connection Status: {{ connection.status }}
+        		        {% if connection.status == 'invitation' %}
+                            <a href="{% url 'check_connection' %}?id={{connection.guid}}">Check Status</a>
+        		        {% endif %}
+        		        {% if connection.status == 'request' %}
+        		            <a href="{% url 'check_connection' %}?id={{connection.guid}}">Check Status</a>
+        		        {% endif %}
+                        {% if connection.status == 'active' %}
+                            <a href="{ % url 'select_credential_offer' % }?connection_id={{connection.guid}}">Send Credential</a>
+                            or:
+                            <a href="{ % url 'select_proof_request' % }?connection_id={{connection.guid}}">Send Proof Request</a>
+                        {% endif %}
+        			</h5>
+        		</div>
+            </div>
+        </div>
+    </div>
+    <div class='newsfeed-post-seperator'></div>
+{% endfor %}
+</div>

@@ -36,7 +36,7 @@ async def register_did_on_ledger(ledger_url, alias, seed):
             print("Registered", nym_info)
     except Exception as e:
         raise Exception(str(e)) from None
-    if not nym_info or not nym_info["did"]:
+    if not nym_info or not "did" in nym_info or not nym_info["did"]:
         raise Exception(
             "DID registration failed: {}".format(nym_info)
         )

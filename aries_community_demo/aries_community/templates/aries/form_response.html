@@ -1,0 +1,26 @@
+{% extends 'base_nav.html' %}
+
+{% load i18n %}
+
+{% block page_title %} {% trans "Form Response" %} {% endblock %}
+
+{% block main_content %} 
+
+  <div class='inside-body'>
+    <div class='center-body'>
+      <div class='innercont-center-body'>
+        <div class='innercont-center-inner'>
+          <div class='form-cont'>
+            <h2>{{ msg }}</h2>
+              <div>
+                <h5>{{ msg_txt }}</h5>
+              </div>
+              <div>
+                <h5>{{ msg_txt2 }}</h5>
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
