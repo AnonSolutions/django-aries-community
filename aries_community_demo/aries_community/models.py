@@ -25,7 +25,8 @@ class AriesAgent(models.Model):
     agent_http_port = models.IntegerField(null=True)
     public_endpoint = models.CharField(max_length=200, blank=True, null=True)
     admin_endpoint = models.CharField(max_length=200, blank=True, null=True)
-    managed_agent = models.BooleanField(default=True)
+    managed_agent = models.BooleanField(default=False)
+    mobile_agent = models.BooleanField(default=False)
 
     def __str__(self):
         return self.agent_name

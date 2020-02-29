@@ -39,6 +39,8 @@ def user_signup_view(
             form.save()
             username = form.cleaned_data.get('email')
             raw_password = form.cleaned_data.get('password1')
+            mobile_agent = form.cleaned_data.get('mobile_agent')
+
             user = authenticate(username=username, password=raw_password)
 
             if Group.objects.filter(name=USER_ROLE).exists():
@@ -46,7 +48,7 @@ def user_signup_view(
             user.save()
 
             # create an Indy agent - derive agent name from email, and re-use raw password
-            user = user_provision(user, raw_password)
+            user = user_provision(user, raw_password, mobile_agent=mobile_agent)
 
             # TODO need to auto-login with Atria custom user
             #login(request, user)
@@ -73,6 +75,12 @@ def org_signup_view(
             form.save()
             username = form.cleaned_data.get('email')
             raw_password = form.cleaned_data.get('password1')
+            managed_agent = form.cleaned_data.get('managed_agent')
+            admin_port = form.cleaned_data.get('admin_port')
+            admin_endpoint = form.cleaned_data.get('admin_endpoint')
+            http_port = form.cleaned_data.get('http_port')
+            http_endpoint = form.cleaned_data.get('http_endpoint')
+
             user = authenticate(username=username, password=raw_password)
             user.managed_agent = False
 
@@ -85,7 +93,9 @@ def org_signup_view(
             org_role_name = form.cleaned_data.get('org_role_name')
             org_ico_url = form.cleaned_data.get('ico_url')
             org_role, created = AriesOrgRole.objects.get_or_create(name=org_role_name)
-            org = org_signup(user, raw_password, org_name, org_role=org_role, org_ico_url=org_ico_url)
+            org = org_signup(user, raw_password, org_name, org_role=org_role, org_ico_url=org_ico_url,
+                managed_agent=managed_agent, admin_port=admin_port, admin_endpoint=admin_endpoint,
+                http_port=http_port, http_endpoint=http_endpoint)
 
             # TODO need to auto-login with Atria custom user
             #login(request, user)

@@ -61,6 +61,8 @@ def aries_provision_config(
     postgres_config = settings.ARIES_CONFIG['storage_config']
     postgres_creds = settings.ARIES_CONFIG['storage_credentials']
     genesis_url = settings.ARIES_CONFIG['genesis_url']
+    webhook_host = settings.ARIES_CONFIG['webhook_host']
+    webhook_url = "http://" + webhook_host + ":8000/agent_cb/" + callback_key
 
     # endpoint exposed by ngrok
     #endpoint = "https://9f3a6083.ngrok.io"
@@ -80,7 +82,7 @@ def aries_provision_config(
             ("--admin", "0.0.0.0", str(admin_port)),
             ("--admin-api-key", api_key),
             #"--admin-insecure-mode",
-            ("--webhook-url", "http://localhost:8000/agent_cb/" + callback_key),
+            ("--webhook-url", webhook_url),
         ])
     provisionConfig.extend([
         ("--wallet-type", wallet_type),
@@ -118,7 +120,9 @@ def get_unused_ports(count: int) -> []:
 
 
 def initialize_and_provision_agent(
-        agent_name: str, raw_password, did_seed=None, org_role='', start_agent_proc=False
+        agent_name: str, raw_password, did_seed=None, org_role='', start_agent_proc=False,
+        mobile_agent=False, managed_agent=None, admin_port=None, admin_endpoint=None,
+        http_port=None, http_endpoint=None
     ) -> AriesAgent:
     """
     Initialize and provision a new Aries Agent.
@@ -127,29 +131,36 @@ def initialize_and_provision_agent(
     agent = AriesAgent(agent_name=agent_name)
     agent.api_key = random_an_string(40)
     agent.callback_key = random_an_string(20)
+    agent.mobile_agent = mobile_agent
+    agent.managed_agent = managed_agent
 
-    ports = get_unused_ports(2)
-    agent.agent_admin_port = ports[0]
-    agent.agent_http_port = ports[1]
-    public_endpoint = "http://localhost:" + str(agent.agent_http_port)
-    admin_endpoint = "http://localhost:" + str(agent.agent_admin_port)
+    if mobile_agent or (not managed_agent):
+        start_agent_proc = False
 
-    startConfig = aries_provision_config(
-                            agent.agent_name,
-                            agent.api_key, 
-                            agent.callback_key,
-                            raw_password, 
-                            agent.agent_http_port,
-                            agent.agent_admin_port,
-                            public_endpoint,
-                            admin_endpoint,
-                            did_seed=did_seed,
-                            start_agent=True
-                        )
-    startConfig_json = json.dumps(startConfig)
-    agent.agent_config = startConfig_json
-    agent.public_endpoint = public_endpoint
-    agent.admin_endpoint = admin_endpoint
+    if not mobile_agent:
+        ports = get_unused_ports(2)
+        agent.agent_admin_port = admin_port if admin_port else ports[0]
+        agent.agent_http_port = http_port if http_port else ports[1]
+        managed_agent_host = settings.ARIES_CONFIG['managed_agent_host']
+        public_endpoint = http_endpoint if http_endpoint else "http://" + managed_agent_host + ":" + str(agent.agent_http_port)
+        admin_endpoint = admin_endpoint if admin_endpoint else "http://" + managed_agent_host + ":" + str(agent.agent_admin_port)
+
+        startConfig = aries_provision_config(
+                                agent.agent_name,
+                                agent.api_key, 
+                                agent.callback_key,
+                                raw_password, 
+                                agent.agent_http_port,
+                                agent.agent_admin_port,
+                                public_endpoint,
+                                admin_endpoint,
+                                did_seed=did_seed,
+                                start_agent=True
+                            )
+        startConfig_json = json.dumps(startConfig)
+        agent.agent_config = startConfig_json
+        agent.public_endpoint = public_endpoint
+        agent.admin_endpoint = admin_endpoint
 
     if did_seed:
         nym_info = create_and_register_did(agent.agent_name, did_seed)
@@ -167,6 +178,9 @@ def start_agent(agent, cmd: str='start', config=None):
     """
     Start up an instance of an Aries Agent.
     """
+    if agent.mobile_agent or (not agent.managed_agent):
+        return
+
     if not config:
         config = json.loads(agent.agent_config)
 
@@ -177,6 +191,9 @@ def stop_agent(agent):
     """
     Shut down a running Aries Agent.
     """
+    if agent.mobile_agent or (not agent.managed_agent):
+        return
+
     stop_aca_py(agent.agent_name)
 
 

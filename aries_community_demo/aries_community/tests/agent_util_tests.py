@@ -140,10 +140,10 @@ class AgentInteractionTests(LiveServerTestCase):
         sleep(1)
 
         # update connection status (org)
-        org_connection_s = check_connection_status(org.agent, org_connection_1.guid, initialize_agent=init_org_agent)
-        user_connection_s = check_connection_status(user.agent, user_connection_1.guid, initialize_agent=init_user_agent)
+        org_connection_state = check_connection_status(org.agent, org_connection_1.guid, initialize_agent=init_org_agent)
+        user_connection_state = check_connection_status(user.agent, user_connection_1.guid, initialize_agent=init_user_agent)
 
-        return (org_connection_s.state, user_connection_s.state)
+        return (org_connection_state, user_connection_state)
 
     def delete_user_and_org_agents(self, user, org, raw_password):
         # cleanup after ourselves

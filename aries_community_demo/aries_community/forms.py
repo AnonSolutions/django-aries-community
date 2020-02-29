@@ -11,7 +11,7 @@ from .models import *
 ###############################################################
 # Forms to support user and organization registration
 ###############################################################
-class UserSignUpForm(UserCreationForm):
+class BaseSignUpForm(UserCreationForm):
     first_name = forms.CharField(max_length=80, label='First Name', required=False,
                                  help_text='Optional.')
     last_name = forms.CharField(max_length=150, label='Last Name', required=False,
@@ -19,17 +19,32 @@ class UserSignUpForm(UserCreationForm):
     email = forms.EmailField(max_length=254, label='Email Address', required=True,
                                  help_text='Required. Provide a valid email address.')
 
+
+class UserSignUpForm(BaseSignUpForm):
+    mobile_agent = forms.BooleanField(required=False, initial=False, label='Mobile Agent')
+
     class Meta:
         model = get_user_model()
-        fields = ('first_name', 'last_name', 'email', 'password1', 'password2')
+        fields = ('first_name', 'last_name', 'email', 'password1', 'password2', 'mobile_agent')
 
 
-class OrganizationSignUpForm(UserSignUpForm):
+class OrganizationSignUpForm(BaseSignUpForm):
     org_name = forms.CharField(max_length=60, label='Company Name', required=True,
                                  help_text='Required.')
     org_role_name = forms.CharField(max_length=40, label='Company Role', required=True,
                                  help_text='Required.')
     ico_url = forms.CharField(max_length=120, label="URL for company logo", required=False)
+
+    managed_agent = forms.BooleanField(required=False, initial=True, label='Managed Agent')
+    admin_port = forms.IntegerField(label='Agent Admin Port', required=False)
+    admin_endpoint = forms.CharField(max_length=200, label='Agent Admin Endpoint', required=False)
+    http_port = forms.IntegerField(label='Agent Http Port', required=False)
+    http_endpoint = forms.CharField(max_length=200, label='Agent Http Endpoint', required=False)
+
+    class Meta:
+        model = get_user_model()
+        fields = ('first_name', 'last_name', 'email', 'password1', 'password2', 'managed_agent',
+            'admin_port', 'admin_endpoint', 'http_port', 'http_endpoint')
 
 
 ######################################################################
