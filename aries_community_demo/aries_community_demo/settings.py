@@ -42,6 +42,7 @@ ARIES_CONFIG = {
     'default_institution_seed': 'aries_community_institution_0000',
     'managed_agent_host': 'localhost',
     'webhook_host': 'localhost',
+    'webhook_port': '8000',
 }
 
 ARIES_PROFILE_VIEW = 'aries_community.views.profile_view'

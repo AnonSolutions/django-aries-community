@@ -40,11 +40,15 @@ class OrganizationSignUpForm(BaseSignUpForm):
     admin_endpoint = forms.CharField(max_length=200, label='Agent Admin Endpoint', required=False)
     http_port = forms.IntegerField(label='Agent Http Port', required=False)
     http_endpoint = forms.CharField(max_length=200, label='Agent Http Endpoint', required=False)
+    api_key = forms.CharField(max_length=40, label='Agent Admin API Key', required=False)
+    webhook_key = forms.CharField(max_length=20, label='Agent Webhook Callback Key', required=False)
 
     class Meta:
         model = get_user_model()
-        fields = ('first_name', 'last_name', 'email', 'password1', 'password2', 'managed_agent',
-            'admin_port', 'admin_endpoint', 'http_port', 'http_endpoint')
+        fields = ('first_name', 'last_name', 'email', 'password1', 'password2', 
+            'org_name', 'org_role_name', 'ico_url',
+            'managed_agent', 'admin_port', 'admin_endpoint', 'http_port', 'http_endpoint', 
+            'api_key', 'webhook_key')
 
 
 ######################################################################

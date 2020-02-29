@@ -61,10 +61,14 @@ class Command(BaseCommand):
                 email = org['email']
                 password = org['password']
                 role_name = org['role']
-                if 'ico_url' in org:
-                    ico_url = org['ico_url']
-                else:
-                    ico_url = None
+                ico_url = org['ico_url'] if 'ico_url' in org else None
+                managed_agent = org['managed_agent'] if 'managed_agent' in org else True
+                admin_port = org['admin_port'] if 'admin_port' in org else None
+                admin_endpoint = org['admin_endpoint'] if 'admin_endpoint' in org else None
+                http_port = org['http_port'] if 'http_port' in org else None
+                http_endpoint = org['http_endpoint'] if 'http_endpoint' in org else None
+                api_key = org['api_key'] if 'api_key' in org else None
+                webhook_key = org['webhook_key'] if 'webhook_key' in org else None
 
                 if "$random" in name:
                     name = name.replace("$random", random_alpha_string(12))
@@ -88,5 +92,10 @@ class Command(BaseCommand):
                     for attr in org['relation']:
                         relation_attrs[attr] = get_attr_value(org['relation'][attr])
                 org_role, created = AriesOrgRole.objects.get_or_create(name=role_name)
-                org = org_signup(user, password, name, org_attrs=org_attrs, org_relation_attrs=relation_attrs, org_role=org_role, org_ico_url=ico_url)
+                org = org_signup(
+                    user, password, name, 
+                    org_attrs=org_attrs, org_relation_attrs=relation_attrs, org_role=org_role, org_ico_url=ico_url,
+                    managed_agent=managed_agent, admin_port=admin_port, admin_endpoint=admin_endpoint,
+                    http_port=http_port, http_endpoint=http_endpoint, api_key=api_key, webhook_key=webhook_key
+                )
 

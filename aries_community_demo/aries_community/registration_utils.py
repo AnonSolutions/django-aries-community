@@ -28,7 +28,7 @@ def user_provision(user, raw_password, mobile_agent=False, managed_agent=True):
 
 
 def org_provision(org, raw_password, org_role=None, managed_agent=True, admin_port=None, admin_endpoint=None,
-                http_port=None, http_endpoint=None):
+                http_port=None, http_endpoint=None, api_key=None, webhook_key=None):
     """
     Create a new org agent and associate to the org
     """
@@ -50,7 +50,9 @@ def org_provision(org, raw_password, org_role=None, managed_agent=True, admin_po
             admin_port=admin_port, 
             admin_endpoint=admin_endpoint,
             http_port=http_port, 
-            http_endpoint=http_endpoint
+            http_endpoint=http_endpoint,
+            api_key=api_key,
+            webhook_key=webhook_key
         )
     agent.save()
     org.agent = agent
@@ -72,7 +74,7 @@ def org_provision(org, raw_password, org_role=None, managed_agent=True, admin_po
 
 def org_signup(user, raw_password, org_name, org_attrs={}, org_relation_attrs={}, org_role=None, org_ico_url=None,
                 managed_agent=True, admin_port=None, admin_endpoint=None,
-                http_port=None, http_endpoint=None):
+                http_port=None, http_endpoint=None, api_key=None, webhook_key=None):
     """
     Helper method to create and provision a new org, and associate to the current user
     """
@@ -82,7 +84,9 @@ def org_signup(user, raw_password, org_name, org_attrs={}, org_relation_attrs={}
 
     org = get_aries_settings_model('ARIES_ORGANIZATION_MODEL').objects.create(org_name=org_name, role=org_role, ico_url=org_ico_url, **org_attrs)
 
-    org = org_provision(org, raw_password, org_role, managed_agent, admin_port, admin_endpoint, http_port, http_endpoint)
+    org = org_provision(org, raw_password, org_role=org_role, 
+        managed_agent=managed_agent, admin_port=admin_port, admin_endpoint=admin_endpoint, 
+        http_port=http_port, http_endpoint=http_endpoint, api_key=api_key, webhook_key=webhook_key)
 
     # associate the user with the org
     relation = get_aries_settings_model('ARIES_ORG_RELATION_MODEL').objects.create(org=org, user=user, **org_relation_attrs)

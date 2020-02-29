@@ -62,7 +62,8 @@ def aries_provision_config(
     postgres_creds = settings.ARIES_CONFIG['storage_credentials']
     genesis_url = settings.ARIES_CONFIG['genesis_url']
     webhook_host = settings.ARIES_CONFIG['webhook_host']
-    webhook_url = "http://" + webhook_host + ":8000/agent_cb/" + callback_key
+    webhook_port = settings.ARIES_CONFIG['webhook_port']
+    webhook_url = "http://" + webhook_host + ":" + webhook_port + "/agent_cb/" + callback_key
 
     # endpoint exposed by ngrok
     #endpoint = "https://9f3a6083.ngrok.io"
@@ -82,7 +83,6 @@ def aries_provision_config(
             ("--admin", "0.0.0.0", str(admin_port)),
             ("--admin-api-key", api_key),
             #"--admin-insecure-mode",
-            ("--webhook-url", webhook_url),
         ])
     provisionConfig.extend([
         ("--wallet-type", wallet_type),
@@ -105,8 +105,7 @@ def aries_provision_config(
                 ("--wallet-storage-creds", json.dumps(postgres_creds)),
             ]
         )
-    if start_agent and webhook_url:
-        provisionConfig.append(("--webhook-url", webhook_url))
+    provisionConfig.append(("--webhook-url", webhook_url))
 
     return provisionConfig
 
@@ -122,15 +121,15 @@ def get_unused_ports(count: int) -> []:
 def initialize_and_provision_agent(
         agent_name: str, raw_password, did_seed=None, org_role='', start_agent_proc=False,
         mobile_agent=False, managed_agent=None, admin_port=None, admin_endpoint=None,
-        http_port=None, http_endpoint=None
+        http_port=None, http_endpoint=None, api_key=None, webhook_key=None
     ) -> AriesAgent:
     """
     Initialize and provision a new Aries Agent.
     """
 
     agent = AriesAgent(agent_name=agent_name)
-    agent.api_key = random_an_string(40)
-    agent.callback_key = random_an_string(20)
+    agent.api_key = api_key if api_key else random_an_string(40)
+    agent.callback_key = webhook_key if webhook_key else random_an_string(20)
     agent.mobile_agent = mobile_agent
     agent.managed_agent = managed_agent
 

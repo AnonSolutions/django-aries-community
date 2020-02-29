@@ -45,8 +45,8 @@ EOF
 # -----------------------------------------------------------------------------------------------------------------
 # Default Settings:
 # -----------------------------------------------------------------------------------------------------------------
-DEFAULT_CONTAINERS="wallet-db aries-django"
-STN_CONTAINERS="wallet-db aries-django"
+DEFAULT_CONTAINERS="wallet-db trustee-agent aries-django"
+STN_CONTAINERS="wallet-db trustee-agent aries-django"
 # -----------------------------------------------------------------------------------------------------------------
 # Functions:
 # -----------------------------------------------------------------------------------------------------------------
@@ -85,9 +85,6 @@ configureEnvironment() {
   export POSTGRESQL_ADMIN_PASSWORD="mysecretpassword"
 
   # aries-django
-  export APP_CONFIG=${APP_CONFIG:-}
-  export API_HTTP_PORT=${API_HTTP_PORT:-8081}
-  export DATABASE_SERVICE_NAME="tob-db"
   export DATABASE_ENGINE="postgresql"
   export DATABASE_NAME=${POSTGRESQL_DATABASE}
   export DATABASE_USER=${POSTGRESQL_USER}
@@ -98,12 +95,21 @@ configureEnvironment() {
   export DJANGO_DEBUG=True
   export DJANGO_LOG_LEVEL=${DJANGO_LOG_LEVEL-INFO}
   export OPTIMIZE_TABLE_ROW_COUNTS=${OPTIMIZE_TABLE_ROW_COUNTS-}
-  export GENESIS_URL=${GENESIS_URL-}
+  export GENESIS_URL=${GENESIS_URL-http://$DOCKERHOST:9000/genesis}
   export LEDGER_URL=${LEDGER_URL-http://$DOCKERHOST:9000}
   export LEDGER_PROTOCOL_VERSION=${LEDGER_PROTOCOL_VERSION-}
   export SQL_DEBUG=${SQL_DEBUG:-}
-  export WEB_CONCURRENCY=${WEB_CONCURRENCY:-5}
-  export APPLICATION_URL=${APPLICATION_URL-http://localhost:8080}
+
+  # trustee-agent
+  export AGENT_WALLET_NAME=o_anon_solutions_inc812434
+  export WALLET_ENCRYPTION_KEY=pass12345
+  export WALLET_SEED=itution_0000o_anon_solutions_inc
+  export WEBHOOK_URL=http://aries-django:8000/agent_cb/1JZCV9DP8ETL9O2Q7T2A
+  export AGENT_HTTP_INTERFACE_PORT=8042
+  export AGENT_ADMIN_INTERFACE_PORT=8041
+  export AGENT_ENDPOINT=http://trustee-agent:${AGENT_HTTP_INTERFACE_PORT}
+  export ADMIN_API_KEY=VMS7YRZHTOKZXYKSZNJC038ES657PZSSJY3KKKZL
+  export AGENT_NAME=Anon Solutions Inc
 }
 
 getStartupParams() {

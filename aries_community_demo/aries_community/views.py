@@ -80,6 +80,8 @@ def org_signup_view(
             admin_endpoint = form.cleaned_data.get('admin_endpoint')
             http_port = form.cleaned_data.get('http_port')
             http_endpoint = form.cleaned_data.get('http_endpoint')
+            api_key = form.cleaned_data.get('api_key')
+            webhook_key = form.cleaned_data.get('webhook_key')
 
             user = authenticate(username=username, password=raw_password)
             user.managed_agent = False
@@ -95,7 +97,8 @@ def org_signup_view(
             org_role, created = AriesOrgRole.objects.get_or_create(name=org_role_name)
             org = org_signup(user, raw_password, org_name, org_role=org_role, org_ico_url=org_ico_url,
                 managed_agent=managed_agent, admin_port=admin_port, admin_endpoint=admin_endpoint,
-                http_port=http_port, http_endpoint=http_endpoint)
+                http_port=http_port, http_endpoint=http_endpoint,
+                api_key=api_key, webhook_key=webhook_key)
 
             # TODO need to auto-login with Atria custom user
             #login(request, user)
