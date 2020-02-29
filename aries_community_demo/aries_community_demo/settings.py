@@ -40,6 +40,9 @@ ARIES_CONFIG = {
     'genesis_url': 'http://localhost:9000/genesis',
     'default_enterprise_seed': 'aries_community_enterprise_00000',
     'default_institution_seed': 'aries_community_institution_0000',
+    'managed_agent_host': 'localhost',
+    'webhook_host': 'localhost',
+    'webhook_port': '8000',
 }
 
 ARIES_PROFILE_VIEW = 'aries_community.views.profile_view'

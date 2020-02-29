@@ -6,6 +6,10 @@ Anon Solutions Inc:
   password: pass12345
   role: Trustee
   ico_url: https://anon-solutions.ca/favicon.ico
-  managed_agent: True
+  managed_agent: False
   admin_port: 8041
+  admin_endpoint: http://trustee-agent:8041
   http_port: 8042
+  http_endpoint: http://trustee-agent:8042
+  api_key: VMS7YRZHTOKZXYKSZNJC038ES657PZSSJY3KKKZL
+  webhook_key: 1JZCV9DP8ETL9O2Q7T2A
