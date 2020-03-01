@@ -12,7 +12,22 @@ function checkJQPresent () {
 
 checkJQPresent
 
-export LEDGER_URL=http://localhost:9000
+if [ -z "${INDY_NETWORK}" ]; then
+    export LEDGER_URL=http://localhost:9000
+else
+    case "${INDY_NETWORK}" in
+    bcovrin-test*)
+        export LEDGER_URL=http://test.bcovrin.vonx.io
+        ;;
+    bcovrin-greenlight*)
+        export LEDGER_URL=http://greenlight.bcovrin.vonx.io
+        ;;
+    *)
+        export LEDGER_URL=http://localhost:9000
+        ;;
+    esac
+fi
+
 export AGENT_ENDPOINT=$(curl http://localhost:4040/api/tunnels | ${JQ_EXE} --raw-output '.tunnels | map(select(.name | contains("trustee-agent"))) | .[0] | .public_url')
 if [ -z "${AGENT_ENDPOINT}" ]; then
     export AGENT_ENDPOINT=http://localhost:8042
