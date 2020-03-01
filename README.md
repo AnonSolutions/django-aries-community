@@ -15,7 +15,6 @@ This repository is in active development.  A curated TODO list includes:
 - add credential exchange functionality
 - add credential exchange functionality to UI
 - add callbacks for credential exchange
-- add support for non-managed agents (static agents for orgs and mobile agents for individuals)
 - add fixed port ranges for agents (org vs individual)
 - add router for individual agents
 - potential to add router for org agents?

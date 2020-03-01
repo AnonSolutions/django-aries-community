@@ -62,9 +62,12 @@
         		        {% if connection.status == 'invitation' %}
                             <a href="{% url 'check_connection' %}?id={{connection.guid}}">Check Status</a>
         		        {% endif %}
-        		        {% if connection.status == 'request' %}
-        		            <a href="{% url 'check_connection' %}?id={{connection.guid}}">Check Status</a>
-        		        {% endif %}
+                        {% if connection.status == 'request' %}
+                            <a href="{% url 'check_connection' %}?id={{connection.guid}}">Check Status</a>
+                        {% endif %}
+                        {% if connection.status == 'response' %}
+                            <a href="{% url 'check_connection' %}?id={{connection.guid}}">Check Status</a>
+                        {% endif %}
                         {% if connection.status == 'active' %}
                             <a href="{ % url 'select_credential_offer' % }?connection_id={{connection.guid}}">Send Credential</a>
                             or:
