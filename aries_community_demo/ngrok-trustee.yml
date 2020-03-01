@@ -1,0 +1,5 @@
+tunnels:
+  trustee-agent:
+    addr: 8042
+    proto: http
+    bind-tls: true

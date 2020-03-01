@@ -11,6 +11,10 @@
           <div class='form-cont'>
             <h2>Connection Response</h2>
             <div class='newsfeed-post-seperator'></div>
+            <div>
+              <img src="../invitation/{{ invitation_id }}"/>
+            </div>
+            <div class='newsfeed-post-seperator'></div>
             <form action="{% url 'connection_response' %}" method="POST">
               {% csrf_token %}
               {% for field in form %}

@@ -1,9 +1,30 @@
+#!/bin/bash
 
-curl -d '{"seed":"itution_0000o_anon_solutions_inc", "role":"TRUST_ANCHOR", "alias":"Anon Solutions Inc"}' -X POST http://localhost:9000/register
+JQ_EXE=jq
+
+function checkJQPresent () {
+  if [ -z $(type -P "$JQ_EXE") ]; then
+    echoError "The ${JQ_EXE} executable is needed and not on your path."
+    echoError "Installation instructions can be found here: https://stedolan.github.io/jq/download"
+    exit 1
+  fi
+}
+
+checkJQPresent
+
+export LEDGER_URL=http://localhost:9000
+export AGENT_ENDPOINT=$(curl http://localhost:4040/api/tunnels | ${JQ_EXE} --raw-output '.tunnels | map(select(.name | contains("trustee-agent"))) | .[0] | .public_url')
+if [ -z "${AGENT_ENDPOINT}" ]; then
+    export AGENT_ENDPOINT=http://localhost:8042
+fi
+
+echo "Using ${LEDGER_URL} as ledger and ${AGENT_ENDPOINT} as the agent endpoint."
+
+curl -d '{"seed":"itution_0000o_anon_solutions_inc", "role":"TRUST_ANCHOR", "alias":"Anon Solutions Inc"}' -X POST ${LEDGER_URL}/register
 sleep 2
 aca-py \
     start \
-    --endpoint http://localhost:8042 \
+    --endpoint ${AGENT_ENDPOINT} \
     --label o_anon_solutions_inc \
     --auto-ping-connection \
     --auto-accept-invites \
@@ -16,7 +37,7 @@ aca-py \
     --wallet-type indy \
     --wallet-name o_anon_solutions_inc812434 \
     --wallet-key pass12345 \
-    --genesis-url http://localhost:9000/genesis \
+    --genesis-url ${LEDGER_URL}/genesis \
     --seed itution_0000o_anon_solutions_inc \
     --storage-type indy \
     --wallet-storage-type postgres_storage \

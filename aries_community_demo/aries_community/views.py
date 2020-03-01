@@ -8,6 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
+import pyqrcode
 import uuid
 
 from .forms import *
@@ -293,7 +294,9 @@ def handle_connection_request(
                     their_invitation = AgentInvitation(
                         agent = their_agent,
                         partner_name = agent_owner,
-                        invitation = my_connection.invitation)
+                        invitation = my_connection.invitation,
+                        invitation_url = my_connection.invitation_url,
+                        )
                     their_invitation.save()
 
                 if my_connection.agent.agent_org.get():
@@ -302,7 +305,11 @@ def handle_connection_request(
                     source_name = my_connection.agent.agent_user.get().email
                 target_name = my_connection.partner_name
                 institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
-                return render(request, response_template, {'msg': 'Created invitation for ' + target_name, 'msg_txt': my_connection.invitation})
+                return render(request, response_template, {
+                    'msg': 'Created invitation for ' + target_name, 
+                    'msg_txt': my_connection.invitation,
+                    'msg_txt2': their_invitation.id,
+                    })
             except Exception as e:
                 # ignore errors for now
                 print(" >>> Failed to create request for", agent.agent_name)
@@ -334,6 +341,7 @@ def handle_connection_response(
             invitation_id = cd.get('invitation_id')
             partner_name = cd.get('partner_name')
             invitation_details = cd.get('invitation_details')
+            invitation_url = cd.get('invitation_url')
 
             # get user or org associated with this agent
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
@@ -366,12 +374,14 @@ def handle_connection_response(
             form = SendConnectionResponseForm(initial={ 'invitation_id': invitation_id,
                                                         'agent_name': invitations[0].agent.agent_name, 
                                                         'partner_name': invitations[0].partner_name, 
-                                                        'invitation_details': invitations[0].invitation })
+                                                        'invitation_details': invitations[0].invitation,
+                                                        'invitation_url': invitations[0].invitation_url,
+                                                         })
         else:
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
             form = SendConnectionResponseForm(initial={'invitation_id': 0, 'agent_name': agent.agent_name})
 
-        return render(request, form_template, {'form': form})
+        return render(request, form_template, {'form': form, 'invitation_id': invitation_id})
     
 
 def poll_connection_status(
@@ -435,27 +445,14 @@ def connection_qr_code(
     """
 
     # find connection for requested token
-    connections = AgentConnection.objects.filter(token=token, connection_type='Outbound').all()
+    connections = AgentInvitation.objects.filter(id=token).all()
     if 0 == len(connections):
         return render(request, 'aries/form_response.html', {'msg': 'No connection found'})
 
     connection = connections[0]
-    #qr = qrcode.QRCode(version=27, box_size=4)
-    #qr.add_data(connection.invitation_shortform())
-    #qr.make(fit=True)
-    #image = qr.make_image()
-    source_name = connection.partner_name
-    target_name = connection.partner_name
-    if connection.agent.agent_org.get():
-        source_name = connection.agent.agent_org.get().org_name
-        institution_logo_url = connection.agent.agent_org.get().ico_url
-    else:
-        source_name = connection.agent.agent_user.get().email
-        institution_logo_url = None
-    if not institution_logo_url:
-        institution_logo_url = 'http://robohash.org/456'
-    qr = pyqrcode.create(connection.invitation_shortform(source_name, target_name, institution_logo_url))
-    path_to_image = '/tmp/'+token+'qr-offer.png'
+    print(connection.invitation_url)
+    qr = pyqrcode.create(connection.invitation_url)
+    path_to_image = '/tmp/'+token+'-qr-offer.png'
     qr.png(path_to_image, scale=2, module_color=[0, 0, 0, 128], background=[0xff, 0xff, 0xff])
     image_data = open(path_to_image, "rb").read()
 
