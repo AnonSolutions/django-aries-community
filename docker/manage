@@ -50,6 +50,15 @@ STN_CONTAINERS="wallet-db trustee-agent aries-django"
 # -----------------------------------------------------------------------------------------------------------------
 # Functions:
 # -----------------------------------------------------------------------------------------------------------------
+JQ_EXE=jq
+
+function checkJQPresent () {
+  if [ -z $(type -P "$JQ_EXE") ]; then
+    echoError "The ${JQ_EXE} executable is needed and not on your path."
+    echoError "Installation instructions can be found here: https://stedolan.github.io/jq/download"
+    exit 1
+  fi
+}
 
 configureEnvironment() {
 
@@ -68,6 +77,8 @@ configureEnvironment() {
         ;;
     esac
   done
+
+  checkJQPresent
 
   export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-aries}"
 
@@ -95,10 +106,36 @@ configureEnvironment() {
   export DJANGO_DEBUG=True
   export DJANGO_LOG_LEVEL=${DJANGO_LOG_LEVEL-INFO}
   export OPTIMIZE_TABLE_ROW_COUNTS=${OPTIMIZE_TABLE_ROW_COUNTS-}
-  export GENESIS_URL=${GENESIS_URL-http://$DOCKERHOST:9000/genesis}
-  export LEDGER_URL=${LEDGER_URL-http://$DOCKERHOST:9000}
-  export LEDGER_PROTOCOL_VERSION=${LEDGER_PROTOCOL_VERSION-}
   export SQL_DEBUG=${SQL_DEBUG:-}
+
+  # ledger-related
+  if [ -z "${INDY_NETWORK}" ]; then
+    export LEDGER_URL=${LEDGER_URL-http://$DOCKERHOST:9000}
+    export GENESIS_URL=${GENESIS_URL-$LEDGER_URL/genesis}
+    export LEDGER_PROTOCOL_VERSION=${LEDGER_PROTOCOL_VERSION-}
+    export DJANGO_SETTINGS=${DJANGO_SETTINGS-docker_settings}
+  else
+    case "${INDY_NETWORK}" in
+    bcovrin-test*)
+      export LEDGER_URL=http://test.bcovrin.vonx.io
+      export GENESIS_URL=${GENESIS_URL-$LEDGER_URL/genesis}
+      export LEDGER_PROTOCOL_VERSION=${LEDGER_PROTOCOL_VERSION-}
+      export DJANGO_SETTINGS=bcovrin_settings
+      ;;
+    bcovrin-greenlight*)
+      export LEDGER_URL=http://greenlight.bcovrin.vonx.io
+      export GENESIS_URL=${GENESIS_URL-$LEDGER_URL/genesis}
+      export LEDGER_PROTOCOL_VERSION=${LEDGER_PROTOCOL_VERSION-}
+      export DJANGO_SETTINGS=greenlight_settings
+      ;;
+    *)
+      export LEDGER_URL=${LEDGER_URL-http://$DOCKERHOST:9000}
+      export GENESIS_URL=${GENESIS_URL-$LEDGER_URL/genesis}
+      export LEDGER_PROTOCOL_VERSION=${LEDGER_PROTOCOL_VERSION-}
+      export DJANGO_SETTINGS=${DJANGO_SETTINGS-docker_settings}
+      ;;
+    esac
+  fi
 
   # trustee-agent
   export AGENT_WALLET_NAME=o_anon_solutions_inc812434
@@ -107,9 +144,15 @@ configureEnvironment() {
   export WEBHOOK_URL=http://aries-django:8000/agent_cb/1JZCV9DP8ETL9O2Q7T2A
   export AGENT_HTTP_INTERFACE_PORT=8042
   export AGENT_ADMIN_INTERFACE_PORT=8041
-  export AGENT_ENDPOINT=http://trustee-agent:${AGENT_HTTP_INTERFACE_PORT}
   export ADMIN_API_KEY=VMS7YRZHTOKZXYKSZNJC038ES657PZSSJY3KKKZL
-  export AGENT_NAME=Anon Solutions Inc
+  export AGENT_NAME="Anon Solutions Inc"
+
+  export AGENT_ENDPOINT=$(curl http://localhost:4040/api/tunnels | ${JQ_EXE} --raw-output '.tunnels | map(select(.name | contains("trustee-agent"))) | .[0] | .public_url')
+  if [ -z "${AGENT_ENDPOINT}" ]; then
+    export AGENT_ENDPOINT=http://trustee-agent:${AGENT_HTTP_INTERFACE_PORT}
+  fi
+
+  echo "Using ${LEDGER_URL} as ledger and ${AGENT_ENDPOINT} as the agent endpoint."
 }
 
 getStartupParams() {

@@ -191,6 +191,7 @@ class AgentInvitation(models.Model):
     agent = models.ForeignKey(AriesAgent, to_field="agent_name", on_delete=models.CASCADE)
     partner_name = models.CharField(max_length=200)
     invitation = models.TextField(max_length=4000, blank=True)
+    invitation_url = models.TextField(max_length=4000, blank=True)
     connecion_guid = models.CharField(max_length=80, blank=True)
 
 # base class for Agent connections
@@ -199,6 +200,7 @@ class AgentConnection(models.Model):
     agent = models.ForeignKey(AriesAgent, to_field="agent_name", on_delete=models.CASCADE)
     partner_name = models.CharField(max_length=200)
     invitation = models.TextField(max_length=4000, blank=True)
+    invitation_url = models.TextField(max_length=4000, blank=True)
     status = models.CharField(max_length=80, blank=True)
 
     def __str__(self):

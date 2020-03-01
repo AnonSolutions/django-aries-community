@@ -542,6 +542,7 @@ def request_connection_invitation(org, requestee_name, initialize_agent=False):
             agent = partner_agent,
             partner_name = requestee_name,
             invitation = json.dumps(my_invitation["invitation"]),
+            invitation_url = my_invitation["invitation_url"],
             status = my_status
         )
         connection.save()
