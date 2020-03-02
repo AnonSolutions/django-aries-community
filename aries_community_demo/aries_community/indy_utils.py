@@ -55,7 +55,7 @@ def create_and_register_did(alias, did_seed, org_role=None):
     if not settings.ARIES_CONFIG['register_dids']:
         return None
 
-    ledger_url = settings.ARIES_CONFIG['ledger_url']
+    ledger_url = environ.get('LEDGER_URL', settings.ARIES_CONFIG['ledger_url'])
     nym_info = run_coroutine_with_args(register_did_on_ledger, ledger_url, alias, did_seed)
 
     return nym_info

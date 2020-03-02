@@ -4,7 +4,7 @@ services:
   # un-managed trustee agent
   #
   trustee-agent:
-    image: bcgovimages/aries-cloudagent:py36-1.14-1_0.4.3
+    image: bcgovimages/aries-cloudagent:py36-1.14-1_0.4.4
     environment:
       - GENESIS_URL=${GENESIS_URL}
       - LEDGER_URL=${LEDGER_URL}
@@ -25,7 +25,6 @@ services:
       - AGENT_NAME=${AGENT_NAME}
     networks:
       - anon
-      - von
     ports:
       - ${AGENT_HTTP_INTERFACE_PORT}:${AGENT_HTTP_INTERFACE_PORT}
       - ${AGENT_ADMIN_INTERFACE_PORT}:${AGENT_ADMIN_INTERFACE_PORT}
@@ -71,10 +70,11 @@ services:
       context: ../aries_community_demo
       dockerfile: Dockerfile
     environment:
+      - GENESIS_URL=${GENESIS_URL}
+      - LEDGER_URL=${LEDGER_URL}
       - DJANGO_SETTINGS=${DJANGO_SETTINGS}
     networks:
       - anon
-      - von
     ports:
       - 8000:8000
     volumes:
@@ -114,9 +114,6 @@ services:
 
 networks:
   anon:
-  von:
-    external:
-      name: von_von
 
 volumes:
   aries-wallet-db:
