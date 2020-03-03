@@ -1,4 +1,0 @@
-docker build -f Dockerfile-base.ubuntu -t anonsolutions/indy-base ..
-docker build -f Dockerfile-indy.ubuntu -t anonsolutions/indy-community .
-docker build -f Dockerfile-indycat.ubuntu -t anonsolutions/indy-catalyst ../../indy-catalyst/agent
-

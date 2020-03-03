@@ -1,0 +1,8 @@
+include LICENSE
+include README.rst
+include requirements.txt
+include requirements-dev.txt
+recursive-include requirements *
+recursive-include aries_community/templates *
+recursive-include docs *
+exclude aries_community/static
