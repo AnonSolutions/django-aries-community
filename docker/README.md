@@ -23,7 +23,6 @@ git clone https://github.com/AnonSolutions/django-aries-community.git
 # this is necessary only on 'nix since we are mounting local directories
 chmod -R a+rwx django-aries-community/aries_community_demo
 cd django-aries-community/docker
-./manage build
 ./manage start
 ```
 
@@ -63,6 +62,7 @@ cd von-network
 virtualenv --python=python3.6 venv
 source venv/bin/activate
 pip install -r server/requirements.txt
+pip install -r server/requirements-dev.txt
 ```
 
 2. In the indy-sdk repository, build all necessary libraries (Note: check out the [indy-sdk repo](https://github.com/hyperledger/indy-sdk) for dependencies, such as rust):
@@ -97,7 +97,7 @@ docker run -itd -p 9701-9708:9701-9708 indy_pool
 docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d -p 5432:5432 postgres -c 'log_statement=all' -c 'logging_collector=on' -c 'log_destination=stderr'
 ```
 
-4. In a separate shell, check out the aries-cloudagent-python reposirtory:
+4. In a separate shell, check out the aries-cloudagent-python repository:
 
 ```bash
 git clone ...
@@ -109,19 +109,12 @@ etc ...
 
 TODO ...  
 
-6. Open 2 shells to run the Django Aries Community edition:
+6. Open a shell to run the Django Aries Community edition:
 
 ```bash
 cd django-aries-community/aries_community_demo
 ./reload_db.sh
 python manage.py runserver
-```
-
-... and run the "virtual agent" bot:
-
-```bash
-cd django-aries-community/aries_community_demo
-python manage.py process_tasks
 ```
 
 7. Whew!  One more - start up the von-network ledger browser - this also provides the capability to register DID's on the ledger for our Test organizations:
@@ -133,18 +126,23 @@ GENESIS_FILE=/tmp/atria-genesis.txt PORT=9000 python -m server.server
 
 Note that the genesis file at the above location is created by Django Aries Community on startup.
 
+Note also - depending on the state of the von-network and indy-plenum repositories, you may need to run with the indy-plenum code locally:
+
+```bash
+PYTHONPATH=/Users/icostanzo/Reference/indy-plenum GENESIS_FILE=/Users/icostanzo/Projects/aries-test-agent-proxy/aries-backchannels/local-genesis.txt REGISTER_NEW_DIDS=true PORT=9000 python -m server.server
+```
 
 ### Reset the Django Aries Community environment
 
 To reset the environment and start from scratch:
 
-1. Shut down the von-network ledger browser and vcx dummy-cloud-agent (just CRTL-C to kill each of these processes), and then:
+1. Shut down the von-network ledger browser (just CRTL-C to kill this process), and then:
 
 ```bash
 rm -rf ~/.indy_client/
 ```
 
-2. Kill the two Django processes (CTRL-C) and reload the Test database:
+2. Kill the Django process (CTRL-C) and reload the Test database:
 
 ```bash
 cd django-aries-community/aries_community_demo
