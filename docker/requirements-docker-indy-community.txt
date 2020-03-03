@@ -1,2 +1,0 @@
-django-indy-community~=0.1.14
-
