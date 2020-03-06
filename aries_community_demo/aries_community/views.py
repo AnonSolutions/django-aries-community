@@ -115,8 +115,8 @@ def org_signup_view(
 ###############################################################
 TOPIC_CONNECTIONS = "connections"
 TOPIC_CONNECTIONS_ACTIVITY = "connections_actvity"
-TOPIC_CREDENTIALS = "credentials"
-TOPIC_PRESENTATIONS = "presentations"
+TOPIC_CREDENTIALS = "issue_credential"
+TOPIC_PRESENTATIONS = "present_proof"
 TOPIC_GET_ACTIVE_MENU = "get-active-menu"
 TOPIC_PERFORM_MENU_ACTION = "perform-menu-action"
 TOPIC_PROBLEM_REPORT = "problem-report"
@@ -149,7 +149,7 @@ def agent_cb_view(
         return handle_agent_credentials_callback(agent, topic, payload)
 
     # not yet handled message types
-    print(">>> callback:", agent.agent_name, topic, payload)
+    print(">>> callback:", agent.agent_name, topic)
     return Response("{}")
 
 
@@ -400,11 +400,9 @@ def poll_connection_status(
         else:
             cd = form.cleaned_data
             connection_id = cd.get('connection_id')
-            print("connection_id", connection_id)
 
             # log out of current agent, if any
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
-            print("agent", agent)
 
             # set agent password
             # TODO vcx_config['something'] = raw_password
@@ -412,7 +410,6 @@ def poll_connection_status(
             connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
             # TODO validate connection id
             my_connection = connections[0]
-            print("my_connection", my_connection)
 
             # validate connection and get the updated status
             try:
@@ -450,7 +447,6 @@ def connection_qr_code(
         return render(request, 'aries/form_response.html', {'msg': 'No connection found'})
 
     connection = connections[0]
-    print(connection.invitation_url)
     qr = pyqrcode.create(connection.invitation_url)
     path_to_image = '/tmp/'+token+'-qr-offer.png'
     qr.png(path_to_image, scale=2, module_color=[0, 0, 0, 128], background=[0xff, 0xff, 0xff])
@@ -461,4 +457,268 @@ def connection_qr_code(
     #image.save(response, "PNG")
     return response
 
+
+######################################################################
+# views to offer, request, send and receive credentials
+######################################################################
+def check_connection_messages(
+    request,
+    form_template='indy/connection/check_messages.html',
+    response_template='indy/form_response.html'
+    ):
+    """
+    Poll Connections for outstanding messages (normally a background task).
+    """
+
+    if request.method=='POST':
+        form = PollConnectionStatusForm(request.POST)
+        if not form.is_valid():
+            return render(request, 'indy/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+        else:
+            cd = form.cleaned_data
+            connection_id = cd.get('connection_id')
+
+            # log out of current wallet, if any
+            wallet = agent_for_current_session(request)
+    
+            if connection_id > 0:
+                connections = AgentConnection.objects.filter(wallet=wallet, id=connection_id).all()
+            else:
+                connections = AgentConnection.objects.filter(wallet=wallet).all()
+
+            total_count = 0
+            for connection in connections:
+                # check for outstanding, un-received messages - add to outstanding conversations
+                if connection.connection_type == 'Inbound':
+                    msg_count = handle_inbound_messages(wallet, connection)
+                    total_count = total_count + msg_count
+
+            return render(request, response_template, {'msg': 'Received message count = ' + str(total_count)})
+
+    else:
+        # find connection request
+        connection_id = request.GET.get('connection_id', None)
+        wallet = agent_for_current_session(request)
+        if connection_id:
+            connections = AgentConnection.objects.filter(wallet=wallet, id=connection_id).all()
+        else:
+            connection_id = 0
+            connections = AgentConnection.objects.filter(wallet=wallet).all()
+        # TODO validate connection id
+        form = PollConnectionStatusForm(initial={ 'connection_id': connection_id,
+                                                  'wallet_name': connections[0].wallet.wallet_name })
+
+        return render(request, form_template, {'form': form})
+
+
+def list_conversations(
+    request,
+    template='indy/conversation/list.html'
+    ):
+    """
+    List Conversations for the current wallet.
+    """
+
+    # expects a wallet to be opened in the current session
+    wallet = agent_for_current_session(request)
+    conversations = AgentConversation.objects.filter(connection__wallet=wallet).all()
+    return render(request, template, {'wallet_name': wallet.wallet_name, 'conversations': conversations})
+
+
+def handle_select_credential_offer(
+    request,
+    form_template='indy/credential/select_offer.html',
+    response_template='indy/credential/offer.html'
+    ):
+    """
+    Select a Credential Definition and display a form to enter Credential Offer information.
+    """
+
+    if request.method=='POST':
+        form = SelectCredentialOfferForm(request.POST)
+        if not form.is_valid():
+            return render(request, 'indy/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+        else:
+            cd = form.cleaned_data
+            connection_id = cd.get('connection_id')
+            cred_def = cd.get('cred_def')
+            partner_name = cd.get('partner_name')
+
+            credential_name = cred_def.creddef_name
+            credential_tag = cred_def.creddef_name
+
+            # log out of current wallet, if any
+            wallet = agent_for_current_session(request)
+
+            connections = AgentConnection.objects.filter(id=connection_id, wallet=wallet).all()
+            # TODO validate connection id
+            schema_attrs = cred_def.creddef_template
+            form = SendCredentialOfferForm(initial={ 'connection_id': connection_id,
+                                                     'wallet_name': connections[0].wallet.wallet_name,
+                                                     'partner_name': partner_name,
+                                                     'cred_def': cred_def.id,
+                                                     'schema_attrs': schema_attrs,
+                                                     'credential_name': credential_name,
+                                                     'credential_tag': credential_tag })
+
+            return render(request, response_template, {'form': form})
+
+    else:
+        # find conversation request
+        connection_id = request.GET.get('connection_id', None)
+        wallet = agent_for_current_session(request)
+        connections = AgentConnection.objects.filter(id=connection_id, wallet=wallet).all()
+        # TODO validate connection id
+        form = SelectCredentialOfferForm(initial={ 'connection_id': connection_id,
+                                                   'partner_name': connections[0].partner_name,
+                                                   'wallet_name': connections[0].wallet.wallet_name})
+
+        return render(request, form_template, {'form': form})
+
+
+def handle_credential_offer(
+    request,
+    template='indy/form_response.html'
+    ):
+    """
+    Send a Credential Offer.
+    """
+
+    if request.method=='POST':
+        form = SendCredentialOfferForm(request.POST)
+        if not form.is_valid():
+            return render(request, 'indy/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+        else:
+            cd = form.cleaned_data
+            connection_id = cd.get('connection_id')
+            cred_def_id = cd.get('cred_def')
+            credential_name = cd.get('credential_name')
+            credential_tag = cd.get('credential_tag')
+            schema_attrs = cd.get('schema_attrs')
+            schema_attrs = json.loads(schema_attrs)
+            for attr in schema_attrs:
+                field_name = 'schema_attr_' + attr
+                field_value = request.POST.get(field_name)
+                schema_attrs[attr] = field_value
+            schema_attrs = json.dumps(schema_attrs)
+
+            wallet = agent_for_current_session(request)
+    
+            connections = AgentConnection.objects.filter(id=connection_id, wallet=wallet).all()
+            # TODO validate connection id
+            my_connection = connections[0]
+
+            cred_defs = IndyCredentialDefinition.objects.filter(id=cred_def_id, wallet=wallet).all()
+            cred_def = cred_defs[0]
+
+            # set wallet password
+            # TODO vcx_config['something'] = raw_password
+
+            # build the credential offer and send
+            try:
+                my_conversation = send_credential_offer(wallet, my_connection, credential_tag, json.loads(schema_attrs), cred_def, credential_name)
+
+                return render(request, template, {'msg': 'Updated conversation for ' + wallet.wallet_name})
+            except IndyError:
+                # ignore errors for now
+                print(" >>> Failed to update conversation for", wallet.wallet_name)
+                return render(request, 'indy/form_response.html', {'msg': 'Failed to update conversation for ' + wallet.wallet_name})
+
+    else:
+        return render(request, 'indy/form_response.html', {'msg': 'Method not allowed'})
+
+
+def handle_cred_offer_response(
+    request,
+    form_template='indy/credential/offer_response.html',
+    response_template='indy/form_response.html'
+    ):
+    """
+    Respond to a Credential Offer by sending a Credential Request.
+    """
+
+    if request.method=='POST':
+        form = SendCredentialResponseForm(request.POST)
+        if not form.is_valid():
+            return render(request, 'indy/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+        else:
+            cd = form.cleaned_data
+            conversation_id = cd.get('conversation_id')
+
+            wallet = agent_for_current_session(request)
+    
+            # find conversation request
+            conversations = AgentConversation.objects.filter(id=conversation_id, connection__wallet=wallet).all()
+            my_conversation = conversations[0]
+            # TODO validate conversation id
+            my_connection = my_conversation.connection
+
+            # build the credential request and send
+            try:
+                my_conversation = send_credential_request(wallet, my_connection, my_conversation)
+
+                return render(request, response_template, {'msg': 'Updated conversation for ' + wallet.wallet_name})
+            except IndyError:
+                # ignore errors for now
+                print(" >>> Failed to update conversation for", wallet.wallet_name)
+                return render(request, 'indy/form_response.html', {'msg': 'Failed to update conversation for ' + wallet.wallet_name})
+
+    else:
+        # find conversation request, fill in form details
+        conversation_id = request.GET.get('conversation_id', None)
+        wallet = agent_for_current_session(request)
+        conversations = AgentConversation.objects.filter(id=conversation_id, connection__wallet=wallet).all()
+        # TODO validate conversation id
+        conversation = conversations[0]
+        indy_conversation = json.loads(conversation.conversation_data)
+        # TODO validate connection id
+        connection = conversation.connection
+        form = SendCredentialResponseForm(initial={ 
+                                                 'conversation_id': conversation_id,
+                                                 'wallet_name': connection.wallet.wallet_name,
+                                                 'from_partner_name': connection.partner_name,
+                                                 'claim_id':indy_conversation['claim_id'],
+                                                 'claim_name': indy_conversation['claim_name'],
+                                                 'credential_attrs': indy_conversation['credential_attrs'],
+                                                 'libindy_offer_schema_id': json.loads(indy_conversation['libindy_offer'])['schema_id']
+                                                })
+
+        return render(request, form_template, {'form': form})
+
+
+######################################################################
+# views to list wallet credentials
+######################################################################
+def form_response(request):
+    """
+    Generic response page.
+    """
+
+    msg = request.GET.get('msg', None)
+    msg_txt = request.GET.get('msg_txt', None)
+    return render(request, 'indy/form_response.html', {'msg': msg, 'msg_txt': msg_txt})
+
+
+def list_wallet_credentials(
+    request
+    ):
+    """
+    List all credentials in the current wallet.
+    """
+
+    try:
+        agent = agent_for_current_session(request)
+        raw_password = request.session['wallet_password']
+        wallet_handle = open_wallet(wallet.wallet_name, raw_password)
+
+        (search_handle, search_count) = run_coroutine_with_args(prover_search_credentials, wallet_handle, "{}")
+        credentials = run_coroutine_with_args(prover_fetch_credentials, search_handle, search_count)
+        run_coroutine_with_args(prover_close_credentials_search, search_handle)
+
+        return render(request, 'indy/credential/list.html', {'wallet_name': wallet.wallet_name, 'credentials': json.loads(credentials)})
+    except:
+        raise
+    finally:
+        if wallet_handle:
+            close_wallet(wallet_handle)
 

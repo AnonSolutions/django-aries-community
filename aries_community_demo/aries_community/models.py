@@ -15,6 +15,10 @@ USER_ROLES = (
     'User',
 )
 
+CRED_EXCH_CONVERSATION = "CredExchange"
+PROOF_REQ_CONVERSATION = "ProofRequest"
+
+
 # base class for Aries Agents
 class AriesAgent(models.Model):
     agent_name = models.CharField(max_length=200, unique=True)
@@ -172,7 +176,7 @@ class IndyCredentialDefinition(models.Model):
     creddef_data = models.TextField(max_length=4000)
 
     def __str__(self):
-        return self.ledger_schema.schema_name + ":" + self.wallet.wallet_name + ":" + self.creddef_name
+        return self.ledger_schema.schema_name + ":" + self.agent.agent_name + ":" + self.creddef_name
 
 
 # Description of a proof request
@@ -194,6 +198,7 @@ class AgentInvitation(models.Model):
     invitation_url = models.TextField(max_length=4000, blank=True)
     connecion_guid = models.CharField(max_length=80, blank=True)
 
+
 # base class for Agent connections
 class AgentConnection(models.Model):
     guid = models.CharField(max_length=80, primary_key=True)
@@ -212,6 +217,7 @@ class AgentConversation(models.Model):
     guid = models.CharField(max_length=80, primary_key=True)
     connection = models.ForeignKey(AgentConnection, on_delete=models.CASCADE)
     conversation_type = models.CharField(max_length=30)
+    status = models.CharField(max_length=80, blank=True)
 
     def __str__(self):
         return self.connection.agent.agent_name + ":" + self.connection.partner_name + ":" + self.conversation_type + ", " +  self.guid
