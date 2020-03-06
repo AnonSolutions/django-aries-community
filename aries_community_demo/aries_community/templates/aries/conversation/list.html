@@ -1,4 +1,4 @@
-{% extends request.session.INDY_PROFILE %}
+{% extends request.session.ARIES_PROFILE %}
 
 {% load i18n %}
 {% load static %}
@@ -6,7 +6,7 @@
 {% block profile_content %}
 	<div class='profile-tabs profile-tabs-conversations'>
 		<div id='profileconversations'>
-			{% include "indy/pageIncludes/profileconversations.html" %}
+			{% include "aries/pageIncludes/profileconversations.html" %}
 		</div>
 	</div>
 {% endblock %}

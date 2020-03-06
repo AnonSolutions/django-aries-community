@@ -69,7 +69,7 @@
                             <a href="{% url 'check_connection' %}?id={{connection.guid}}">Check Status</a>
                         {% endif %}
                         {% if connection.status == 'active' %}
-                            <a href="{ % url 'select_credential_offer' % }?connection_id={{connection.guid}}">Send Credential</a>
+                            <a href="{% url 'select_credential_offer' %}?connection_id={{connection.guid}}">Send Credential</a>
                             or:
                             <a href="{ % url 'select_proof_request' % }?connection_id={{connection.guid}}">Send Proof Request</a>
                         {% endif %}

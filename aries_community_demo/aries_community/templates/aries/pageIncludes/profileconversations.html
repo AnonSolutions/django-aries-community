@@ -20,24 +20,26 @@
 		</div>
 		<div>
 			<h5>
-		        {% if conversation.status == 'Pending' %}
-		          {% if conversation.conversation_type == 'CredentialOffer' %}
-		            <a href={% url 'cred_offer_response' %}?conversation_id={{conversation.id}}>Accept Offer</a>
+	          {% if conversation.conversation_type == 'CredExchange' %}
+		          {% if conversation.status == 'offer_received' %}
+		              <a href={% url 'cred_offer_response' %}?conversation_id={{conversation.guid}}>Accept Offer</a>
 		          {% endif %}
-		          {% if conversation.conversation_type == 'ProofRequest' %}
-		            <a href={% url 'proof_req_response' %}?conversation_id={{conversation.id}}>Supply Proof</a>
+	          {% endif %}
+	          {% if conversation.conversation_type == 'ProofRequest' %}
+		          {% if conversation.status == 'Sent' %}
+		            <a href={% url 'proof_req_response' %}?conversation_id={{conversation.guid}}>Supply Proof</a>
 		          {% endif %}
-		        {% endif %}
-		        {% if conversation.status == 'Sent' %}
-		            <a href={% url 'check_conversation' %}?conversation_id={{conversation.id}}>Check Status</a>
-		        {% endif %}
-		        {% if conversation.status == 'Accepted' %}
+	          {% endif %}
+		      {% if conversation.status == 'Sent' %}
+		            <a href={% url 'check_conversation' %}?conversation_id={{conversation.guid}}>Check Status</a>
+		      {% endif %}
+		      {% if conversation.status == 'Accepted' %}
 		            [Completed]
 		          {% if conversation.conversation_type == 'ProofRequest' %}
-		            Proof is <a href={% url 'view_proof' %}?conversation_id={{conversation.id}}>
+		            Proof is <a href={% url 'view_proof' %}?conversation_id={{conversation.guid}}>
 		            {{ conversation.proof_state }}</a>
 		          {% endif %}
-		        {% endif %}
+		      {% endif %}
 			</h5>
 		</div>
 	</div>
