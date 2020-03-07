@@ -63,7 +63,8 @@ def aries_provision_config(
     genesis_url = environ.get('GENESIS_URL', settings.ARIES_CONFIG['genesis_url'])
     webhook_host = settings.ARIES_CONFIG['webhook_host']
     webhook_port = settings.ARIES_CONFIG['webhook_port']
-    webhook_url = "http://" + webhook_host + ":" + webhook_port + "/agent_cb/" + callback_key
+    webhook_root = settings.ARIES_CONFIG['webhook_root']
+    webhook_url = "http://" + webhook_host + ":" + webhook_port + webhook_root + "/agent_cb/" + callback_key
 
     # endpoint exposed by ngrok
     #endpoint = "https://9f3a6083.ngrok.io"
@@ -756,7 +757,7 @@ def get_agent_conversation(agent, conversation_id, conversation_type, initialize
     # start the agent if requested (and necessary)
     (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
 
-    connection = None
+    conversation = None
 
     if conversation_type == CRED_EXCH_CONVERSATION:
         url_topic = "/issue-credential/records/"
@@ -765,7 +766,7 @@ def get_agent_conversation(agent, conversation_id, conversation_type, initialize
     else:
         raise Exception("Invalid conversation type " + conversation_type)
 
-    # create connection and check status
+    # create conversation and check status
     try:
         response = requests.get(
             agent.admin_endpoint
@@ -774,7 +775,7 @@ def get_agent_conversation(agent, conversation_id, conversation_type, initialize
             headers=get_ADMIN_REQUEST_HEADERS(agent)
         )
         response.raise_for_status()
-        connection = response.json()
+        conversation = response.json()
     except:
         # ignore in case the agent is deleting exchange records
         #raise
@@ -783,7 +784,7 @@ def get_agent_conversation(agent, conversation_id, conversation_type, initialize
         if agent_started:
             stop_agent(agent)
 
-    return connection
+    return conversation
 
 
 def check_conversation_status(agent, conversation_id, conversation_type, initialize_agent=False):
