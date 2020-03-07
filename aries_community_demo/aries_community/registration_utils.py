@@ -27,6 +27,19 @@ def user_provision(user, raw_password, mobile_agent=False, managed_agent=True):
     return user
 
 
+def provision_cred_defs_for_org(org, org_role):
+    # if the org has a role, check if there are any schemas associated with that role
+    if org_role:
+        try:
+            start_agent(org.agent)
+
+            role_schemas = IndySchema.objects.filter(roles=org_role).all()
+            for schema in role_schemas:
+                creddef = create_creddef(org.agent, schema, schema.schema_name + '-' + org.agent.agent_name, schema.schema_template)
+        finally:
+            stop_agent(org.agent)
+
+
 def org_provision(org, raw_password, org_role=None, managed_agent=True, admin_port=None, admin_endpoint=None,
                 http_port=None, http_endpoint=None, api_key=None, webhook_key=None):
     """
@@ -59,15 +72,7 @@ def org_provision(org, raw_password, org_role=None, managed_agent=True, admin_po
     org.save()
 
     # if the org has a role, check if there are any schemas associated with that role
-    if org_role:
-        try:
-            start_agent(org.agent)
-
-            role_schemas = IndySchema.objects.filter(roles=org_role).all()
-            for schema in role_schemas:
-                creddef = create_creddef(org.agent, schema, schema.schema_name + '-' + org.agent.agent_name, schema.schema_template)
-        finally:
-            stop_agent(org.agent)
+    provision_cred_defs_for_org(org, org_role)
 
     return org
 

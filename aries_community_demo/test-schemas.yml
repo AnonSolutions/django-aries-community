@@ -16,6 +16,7 @@ Job Certificate:
   version: $generate
   issuing_roles:
     - Employer
+    - Trustee
   attributes:
     - first_name
     - last_name
