@@ -98,3 +98,95 @@ class PollConnectionStatusForm(VisibleAgentNameForm):
         self.fields['agent_name'].widget.attrs['readonly'] = True
         self.fields['connection_id'].widget.attrs['readonly'] = True
 
+
+######################################################################
+# forms to offer, request, send and receive credentials
+######################################################################
+class SendConversationResponseForm(AgentNameForm):
+    conversation_id = forms.CharField(widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        super(SendConversationResponseForm, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
+        self.fields['conversation_id'].widget.attrs['readonly'] = True
+
+
+class PollConversationStatusForm(VisibleAgentNameForm):
+    conversation_id = forms.CharField(label="Id")
+
+    def __init__(self, *args, **kwargs):
+        super(PollConversationStatusForm, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['conversation_id'].widget.attrs['readonly'] = True
+
+
+class SelectCredentialOfferForm(AgentNameForm):
+    connection_id = forms.CharField(widget=forms.HiddenInput())
+    partner_name = forms.CharField(label='Partner Name', max_length=60)
+    cred_def = forms.ModelChoiceField(label='Cred Def', queryset=IndyCredentialDefinition.objects.all())
+
+    def __init__(self, *args, **kwargs):
+        super(SelectCredentialOfferForm, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
+        self.fields['connection_id'].widget.attrs['readonly'] = True
+        self.fields['partner_name'].widget.attrs['readonly'] = True
+
+        # build a list of Credential Definitions available to the current wallet
+        initial = kwargs.get('initial')
+        if initial:
+            agent_name = initial.get('agent_name')
+            self.fields['cred_def'].queryset = IndyCredentialDefinition.objects.filter(agent__agent_name=agent_name).all()
+
+
+class SendCredentialOfferForm(AgentNameForm):
+    connection_id = forms.CharField(widget=forms.HiddenInput())
+    partner_name = forms.CharField(label='Partner Name', max_length=60)
+    cred_def = forms.CharField(max_length=80, widget=forms.HiddenInput())
+    credential_name = forms.CharField(label='Credential Name', max_length=80)
+    schema_attrs = forms.CharField(label='Credential Attributes', max_length=4000, widget=forms.Textarea)
+
+    def __init__(self, *args, **kwargs):
+        super(SendCredentialOfferForm, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
+        self.fields['connection_id'].widget.attrs['readonly'] = True
+        self.fields['partner_name'].widget.attrs['readonly'] = True
+        self.fields['cred_def'].widget.attrs['readonly'] = True
+
+        # build a list of attributes for the given schema
+        initial = kwargs.get('initial')
+        if initial:
+            schema_attrs = initial.get('schema_attrs', '{}')
+            schema_attrs = json.loads(schema_attrs)
+            self.fields['schema_attrs'].widget.attrs['hidden'] = True
+            for attr in schema_attrs:
+                field_name = 'schema_attr_' + attr
+                self.fields[field_name] = forms.CharField(label=attr, max_length=200)
+
+
+class SendCredentialResponseForm(SendConversationResponseForm):
+    # a bunch of fields that are read-only to present to the user
+    from_partner_name = forms.CharField(label='Partner Name', max_length=60)
+    claim_name = forms.CharField(label='Credential Name', max_length=400)
+    libindy_offer_schema_id = forms.CharField(max_length=120, widget=forms.HiddenInput())
+    credential_attrs = forms.CharField(label='Credential Attrs', max_length=4000, widget=forms.Textarea)
+
+    def __init__(self, *args, **kwargs):
+        super(SendCredentialResponseForm, self).__init__(*args, **kwargs)
+        self.fields['from_partner_name'].widget.attrs['readonly'] = True
+        self.fields['claim_name'].widget.attrs['readonly'] = True
+        self.fields['libindy_offer_schema_id'].widget.attrs['readonly'] = True
+        self.fields['credential_attrs'].widget.attrs['readonly'] = True
+
+        # build a list of attributes for the current schema
+        initial = kwargs.get('initial')
+        if initial:
+            credential_attrs = initial.get('credential_attrs', {})
+            self.fields['credential_attrs'].widget.attrs['hidden'] = True
+            for attr in credential_attrs:
+                field_name = 'credential_attr_' + attr
+                self.fields[field_name] = forms.CharField(label=attr, initial=credential_attrs[attr])
+                self.fields[field_name].widget.attrs['readonly'] = True
+

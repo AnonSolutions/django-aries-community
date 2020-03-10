@@ -43,6 +43,7 @@ ARIES_CONFIG = {
     'managed_agent_host': 'localhost',
     'webhook_host': 'localhost',
     'webhook_port': '8000',
+    'webhook_root': '',
 }
 
 ARIES_PROFILE_VIEW = 'aries_community.views.profile_view'

@@ -1,0 +1,50 @@
+{% load i18n %}
+{% load static %}
+
+<div class='profile-msgs'>
+	<div class='profile-msgs-left'>
+	<h4>Your Connections</h4>
+		<h5>Account Name</h5>
+		<h5>Account Name</h5>
+		<h5>Account Name</h5>
+		<h5>Account Name</h5>
+	</div>
+	<div class='profile-msgs-right'>
+
+    {% for conversation in conversations %}
+	<div class='newsfeed-posted-info'>
+		<div>
+			<a href=''>
+				<h2>{{ conversation.status }} ({{ conversation.conversation_type }}): {{ conversation.connection.partner_name }}</h2>
+			</a>
+		</div>
+		<div>
+			<h5>
+	          {% if conversation.conversation_type == 'CredExchange' %}
+		          {% if conversation.status == 'offer_received' %}
+		              <a href={% url 'cred_offer_response' %}?conversation_id={{conversation.guid}}>Accept Offer</a>
+		          {% endif %}
+	          {% endif %}
+	          {% if conversation.conversation_type == 'ProofRequest' %}
+		          {% if conversation.status == 'Sent' %}
+		            <a href={% url 'proof_req_response' %}?conversation_id={{conversation.guid}}>Supply Proof</a>
+		          {% endif %}
+	          {% endif %}
+		      {% if conversation.status == 'Sent' %}
+		            <a href={% url 'check_conversation' %}?conversation_id={{conversation.guid}}>Check Status</a>
+		      {% endif %}
+		      {% if conversation.status == 'Accepted' %}
+		            [Completed]
+		          {% if conversation.conversation_type == 'ProofRequest' %}
+		            Proof is <a href={% url 'view_proof' %}?conversation_id={{conversation.guid}}>
+		            {{ conversation.proof_state }}</a>
+		          {% endif %}
+		      {% endif %}
+			</h5>
+		</div>
+	</div>
+    <div class='newsfeed-post-seperator'></div>
+    {% endfor %}
+
+	</div>
+</div>

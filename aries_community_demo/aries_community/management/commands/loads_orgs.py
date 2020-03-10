@@ -56,46 +56,54 @@ class Command(BaseCommand):
         if orgs:
             for name in orgs:
                 org = orgs[name]
-                first_name = org['first_name']
-                last_name = org['last_name']
-                email = org['email']
-                password = org['password']
-                role_name = org['role']
-                ico_url = org['ico_url'] if 'ico_url' in org else None
-                managed_agent = org['managed_agent'] if 'managed_agent' in org else True
-                admin_port = org['admin_port'] if 'admin_port' in org else None
-                admin_endpoint = org['admin_endpoint'] if 'admin_endpoint' in org else None
-                http_port = org['http_port'] if 'http_port' in org else None
-                http_endpoint = org['http_endpoint'] if 'http_endpoint' in org else None
-                api_key = org['api_key'] if 'api_key' in org else None
-                webhook_key = org['webhook_key'] if 'webhook_key' in org else None
+                db_orgs = AriesOrganization.objects.filter(org_name=name).all()
+                if 0 < len(db_orgs):
+                    # provision cred defs for an existing org
+                    db_org = db_orgs[0]
+                    role_name = org['role']
+                    org_role, created = AriesOrgRole.objects.get_or_create(name=role_name)
+                    provision_cred_defs_for_org(db_org, org_role)
+                else:
+                    first_name = org['first_name']
+                    last_name = org['last_name']
+                    email = org['email']
+                    password = org['password']
+                    role_name = org['role']
+                    ico_url = org['ico_url'] if 'ico_url' in org else None
+                    managed_agent = org['managed_agent'] if 'managed_agent' in org else True
+                    admin_port = org['admin_port'] if 'admin_port' in org else None
+                    admin_endpoint = org['admin_endpoint'] if 'admin_endpoint' in org else None
+                    http_port = org['http_port'] if 'http_port' in org else None
+                    http_endpoint = org['http_endpoint'] if 'http_endpoint' in org else None
+                    api_key = org['api_key'] if 'api_key' in org else None
+                    webhook_key = org['webhook_key'] if 'webhook_key' in org else None
 
-                if "$random" in name:
-                    name = name.replace("$random", random_alpha_string(12))
-                if "$random" in email:
-                    email = email.replace("$random", random_alpha_string(12))
+                    if "$random" in name:
+                        name = name.replace("$random", random_alpha_string(12))
+                    if "$random" in email:
+                        email = email.replace("$random", random_alpha_string(12))
 
-                user_attrs = {}
-                if 'user' in org:
-                    for attr in org['user']:
-                        user_attrs[attr] = get_attr_value(org['user'][attr])
-                user = get_user_model().objects.create_user(first_name=first_name, last_name=last_name, email=email, password=password, **user_attrs)
-                user.groups.add(Group.objects.get(name=ORG_ROLE))
-                user.save()
+                    user_attrs = {}
+                    if 'user' in org:
+                        for attr in org['user']:
+                            user_attrs[attr] = get_attr_value(org['user'][attr])
+                    user = get_user_model().objects.create_user(first_name=first_name, last_name=last_name, email=email, password=password, **user_attrs)
+                    user.groups.add(Group.objects.get(name=ORG_ROLE))
+                    user.save()
 
-                org_attrs = {}
-                if 'org' in org:
-                    for attr in org['org']:
-                        org_attrs[attr] = get_attr_value(org['org'][attr])
-                relation_attrs = {}
-                if 'relation' in org:
-                    for attr in org['relation']:
-                        relation_attrs[attr] = get_attr_value(org['relation'][attr])
-                org_role, created = AriesOrgRole.objects.get_or_create(name=role_name)
-                org = org_signup(
-                    user, password, name, 
-                    org_attrs=org_attrs, org_relation_attrs=relation_attrs, org_role=org_role, org_ico_url=ico_url,
-                    managed_agent=managed_agent, admin_port=admin_port, admin_endpoint=admin_endpoint,
-                    http_port=http_port, http_endpoint=http_endpoint, api_key=api_key, webhook_key=webhook_key
-                )
+                    org_attrs = {}
+                    if 'org' in org:
+                        for attr in org['org']:
+                            org_attrs[attr] = get_attr_value(org['org'][attr])
+                    relation_attrs = {}
+                    if 'relation' in org:
+                        for attr in org['relation']:
+                            relation_attrs[attr] = get_attr_value(org['relation'][attr])
+                    org_role, created = AriesOrgRole.objects.get_or_create(name=role_name)
+                    org = org_signup(
+                        user, password, name, 
+                        org_attrs=org_attrs, org_relation_attrs=relation_attrs, org_role=org_role, org_ico_url=ico_url,
+                        managed_agent=managed_agent, admin_port=admin_port, admin_endpoint=admin_endpoint,
+                        http_port=http_port, http_endpoint=http_endpoint, api_key=api_key, webhook_key=webhook_key
+                    )
 

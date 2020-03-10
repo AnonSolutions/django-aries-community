@@ -20,6 +20,14 @@ class AgentInteractionTests(LiveServerTestCase):
     # override port for the LiveServer (default is 8081)
     port = 8000
 
+    def api_key_ADMIN_REQUEST_HEADERS(self, api_key):
+        ADMIN_REQUEST_HEADERS = {}
+        # set admin header per agent
+        if api_key is not None:
+           ADMIN_REQUEST_HEADERS = {"x-api-key": api_key}
+        return ADMIN_REQUEST_HEADERS
+
+
     ##############################################################
     # agent process control tests
     ##############################################################
@@ -35,7 +43,7 @@ class AgentInteractionTests(LiveServerTestCase):
                 "localhost:10010",
                 start_agent=True
             )
-        proc1_info = start_aca_py("test_agent_1", config1, "http://localhost:10010", "test_api_key_1")
+        proc1_info = start_aca_py("test_agent_1", config1, "http://localhost:10010", self.api_key_ADMIN_REQUEST_HEADERS("test_api_key_1"))
 
         config2 = aries_provision_config(
                 "test_agent_2", 
@@ -48,7 +56,7 @@ class AgentInteractionTests(LiveServerTestCase):
                 "localhost:10030",
                 start_agent=True
             )
-        proc2_info = start_aca_py("test_agent_2", config2, "http://localhost:10030", "test_api_key_2")
+        proc2_info = start_aca_py("test_agent_2", config2, "http://localhost:10030", self.api_key_ADMIN_REQUEST_HEADERS("test_api_key_2"))
 
         stop_aca_py(proc1_info["name"])
         stop_aca_py(proc2_info["name"])
@@ -67,7 +75,7 @@ class AgentInteractionTests(LiveServerTestCase):
                 "localhost:10050",
                 start_agent=True
             )
-        proc1_info = start_aca_py("test_agent_1", config1, "http://localhost:10050", "test_api_key_3")
+        proc1_info = start_aca_py("test_agent_1", config1, "http://localhost:10050", self.api_key_ADMIN_REQUEST_HEADERS("test_api_key_3"))
 
         config2 = aries_provision_config(
                 "test_agent_4", 
@@ -80,7 +88,7 @@ class AgentInteractionTests(LiveServerTestCase):
                 "localhost:10070",
                 start_agent=True
             )
-        proc2_info = start_aca_py("test_agent_2", config2, "http://localhost:10070", "test_api_key_4")
+        proc2_info = start_aca_py("test_agent_2", config2, "http://localhost:10070", self.api_key_ADMIN_REQUEST_HEADERS("test_api_key_4"))
 
         stop_all_aca_py()
 
@@ -143,7 +151,7 @@ class AgentInteractionTests(LiveServerTestCase):
         org_connection_state = check_connection_status(org.agent, org_connection_1.guid, initialize_agent=init_org_agent)
         user_connection_state = check_connection_status(user.agent, user_connection_1.guid, initialize_agent=init_user_agent)
 
-        return (org_connection_state, user_connection_state)
+        return (org_connection_1, org_connection_state, user_connection_1, user_connection_state)
 
     def delete_user_and_org_agents(self, user, org, raw_password):
         # cleanup after ourselves
@@ -180,61 +188,44 @@ class AgentInteractionTests(LiveServerTestCase):
         return (schema, cred_def, proof_request)
 
 
-    def issue_credential_from_org_to_user(self, org, user, org_connection, user_connection, cred_def, schema_attrs, cred_name, cred_tag):
+    def issue_credential_from_org_to_user(self, org, user, org_connection, user_connection, cred_def_id, schema_attrs):
         # issue a credential based on the default schema/credential definition
-        org_conversation_1 = send_credential_offer(org.wallet, org_connection,  
-                                            cred_tag, schema_attrs, cred_def, 
-                                            cred_name)
+        org_conversation_1 = send_credential_offer(org.agent, org_connection, schema_attrs, cred_def_id, initialize_agent=True)
         sleep(2)
 
         i = 0
         while True:
-            handled_count = handle_inbound_messages(user.wallet, user_connection)
+            # we should receive a conversation to handle
+            user_in_cred_exches = AgentConversation.objects.filter(connection__agent=user.agent, 
+                conversation_type=CRED_EXCH_CONVERSATION, status="offer_received").all()
+            count = len(user_in_cred_exches)
             i = i + 1
-            if handled_count > 0 or i > 3:
+            if count > 0 or i > 3:
                 break
             sleep(2)
-        user_conversations = AgentConversation.objects.filter(connection__wallet=user.wallet, conversation_type="CredentialOffer", status='Pending').all()
-        user_conversation_1 = user_conversations[0]
+        user_conversation_1 = user_in_cred_exches[0]
 
         # send credential request (user -> org)
-        user_conversation_2 = send_credential_request(user.wallet, user_connection, user_conversation_1)
+        user_conversation_2 = send_credential_request(user.agent, user_conversation_1, initialize_agent=True)
         sleep(2)
 
         # send credential (org -> user)
         i = 0
-        message = org_conversation_1
         while True:
-            message = poll_message_conversation(org.wallet, org_connection, message, initialize_vcx=True)
+            status = check_conversation_status(org.agent, org_conversation_1.guid, CRED_EXCH_CONVERSATION, initialize_agent=True)
             i = i + 1
-            if message.conversation_type == 'IssueCredential' or i > 3:
+            if status == 'credential_acked' or i > 3:
                 break
             sleep(2)
-        org_conversation_2 = message
-        sleep(2)
 
         # accept credential and update status (user)
         i = 0
-        message = user_conversation_2
         while True:
-            message = poll_message_conversation(user.wallet, user_connection, message, initialize_vcx=True)
+            status = check_conversation_status(user.agent, user_conversation_2.guid, CRED_EXCH_CONVERSATION, initialize_agent=True)
             i = i + 1
-            if message.status == 'Accepted' or i > 3:
+            if status == 'credential_acked' or i > 3:
                 break
             sleep(2)
-        user_conversation_3 = message
-        sleep(2)
-
-        # update credential offer status (org)
-        i = 0
-        message = org_conversation_2
-        while True:
-            message = poll_message_conversation(org.wallet, org_connection, message, initialize_vcx=True)
-            i = i + 1
-            if message.status == 'Accepted' or i > 3:
-                break
-            sleep(2)
-        org_conversation_3 = message
 
 
     def test_register_org_with_schema_and_cred_def(self):
@@ -272,7 +263,7 @@ class AgentInteractionTests(LiveServerTestCase):
 
             (schema, cred_def, proof_request) = self.schema_and_cred_def_for_org(org)
 
-            (org_connection_state, user_connection_state) = self.establish_agent_connection(org, user)
+            (org_connection, org_connection_state, user_connection, user_connection_state) = self.establish_agent_connection(org, user)
 
             self.assertEqual(org_connection_state, 'active')
             self.assertEqual(user_connection_state, 'active')
@@ -284,3 +275,132 @@ class AgentInteractionTests(LiveServerTestCase):
         # clean up after ourself
         self.delete_user_and_org_agents(user, org, raw_password)
 
+
+    def test_agent_credential_exchange_raw(self):
+        # exchange credentials between two agents
+        (user, org, raw_password) = self.create_user_and_org()
+
+        try:
+            # startup the agent for that org
+            start_agent(org.agent)
+            start_agent(user.agent)
+
+            (schema, cred_def, proof_request) = self.schema_and_cred_def_for_org(org)
+
+            # establish a connection
+            (org_connection, org_connection_state, user_connection, user_connection_state) = self.establish_agent_connection(org, user)
+
+            # check that user has no offers or credentials
+            user_conversations = AgentConversation.objects.filter(connection=user_connection, conversation_type=CRED_EXCH_CONVERSATION, status='offer_received').all()
+            self.assertEqual(len(user_conversations), 0)
+            user_credentials = fetch_credentials(user.agent)
+            self.assertEqual(len(user_credentials), 0)
+
+            # issue credential offer (org -> user)
+            schema_attrs = json.loads(cred_def.creddef_template)
+            # data normally provided by the org data pipeline
+            schema_attrs['name'] = 'Joe Smith'
+            schema_attrs['date'] = '2018-01-01'
+            schema_attrs['degree'] = 'B.A.Sc. Honours'
+            schema_attrs['age'] = '25'
+            attr_values = [
+                {"name": "name", "value": "Joe Smith"},
+                {"name": "date", "value": "2018-01-01"},
+                {"name": "degree", "value": "B.A.Sc. Honours"},
+                {"name": "age", "value": "25"},
+            ]
+            org_conversation_1 = send_credential_offer(org.agent, org_connection, attr_values, cred_def.ledger_creddef_id)
+            sleep(2)
+
+            i = 0
+            while True:
+                # once the user receives the cred offer, request the credential
+                user_conversations = AgentConversation.objects.filter(connection=user_connection, conversation_type=CRED_EXCH_CONVERSATION, status='offer_received').all()
+                i = i + 1
+                if len(user_conversations) > 0 or i > 3:
+                    break
+                sleep(2)
+            self.assertEqual(len(user_conversations), 1)
+            user_conversation_1 = user_conversations[0]
+
+            # send credential request (user -> org)
+            user_conversation_2 = send_credential_request(user.agent, user_conversation_1)
+            sleep(2)
+
+            # wait for credential (org -> user)
+            i = 0
+            while True:
+                user_conversations = AgentConversation.objects.filter(connection=user_connection, conversation_type=CRED_EXCH_CONVERSATION, status='credential_acked').all()
+                i = i + 1
+                if len(user_conversations) > 0 or i > 3:
+                    break
+                sleep(2)
+            self.assertEqual(len(user_conversations), 1)
+            sleep(2)
+
+            # get updated credential status (org)
+            i = 0
+            while True:
+                org_conversations = AgentConversation.objects.filter(connection=org_connection, conversation_type=CRED_EXCH_CONVERSATION, status='credential_acked').all()
+                i = i + 1
+                if len(org_conversations) > 0 or i > 3:
+                    break
+                sleep(2)
+            self.assertEqual(len(org_conversations), 1)
+
+            # verify credential is in user wallet
+            user_credentials = fetch_credentials(user.agent)
+            self.assertEqual(len(user_credentials), 1)
+
+        finally:
+            # shut down the agent for that org
+            stop_agent(user.agent)
+            stop_agent(org.agent)
+
+        # clean up after ourself
+        self.delete_user_and_org_agents(user, org, raw_password)
+
+
+    def test_agent_credential_exchange(self):
+        # request and deliver a proof between two agents
+        (user, org, raw_password) = self.create_user_and_org()
+
+        try:
+            # startup the agent for that org
+            start_agent(org.agent)
+            start_agent(user.agent)
+
+            (schema, cred_def, proof_request) = self.schema_and_cred_def_for_org(org)
+
+            # establish a connection
+            (org_connection, org_connection_state, user_connection, user_connection_state) = self.establish_agent_connection(org, user)
+
+            # make up a credential
+            schema_attrs = json.loads(cred_def.creddef_template)
+            schema_attrs['name'] = 'Joe Smith'
+            schema_attrs['date'] = '2018-01-01'
+            schema_attrs['degree'] = 'B.A.Sc. Honours'
+            schema_attrs['age'] = '25'
+            cred_name = 'Cred4Proof Credential Name'
+            cred_tag = 'Cred4Proof Tag Value'
+            attr_values = [
+                {"name": "name", "value": "Joe Smith"},
+                {"name": "date", "value": "2018-01-01"},
+                {"name": "degree", "value": "B.A.Sc. Honours"},
+                {"name": "age", "value": "25"},
+            ]
+
+            # issue credential (org -> user)
+            self.issue_credential_from_org_to_user(org, user, org_connection, user_connection, cred_def.ledger_creddef_id, attr_values)
+
+            # verify credential is in user wallet
+            user_credentials = fetch_credentials(user.agent)
+            self.assertEqual(len(user_credentials), 1)
+
+        finally:
+            # shut down the agent for that org
+            stop_agent(user.agent)
+            stop_agent(org.agent)
+
+        # clean up after ourself
+        self.delete_user_and_org_agents(user, org, raw_password)

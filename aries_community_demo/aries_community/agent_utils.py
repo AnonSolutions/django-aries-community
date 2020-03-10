@@ -63,7 +63,8 @@ def aries_provision_config(
     genesis_url = environ.get('GENESIS_URL', settings.ARIES_CONFIG['genesis_url'])
     webhook_host = settings.ARIES_CONFIG['webhook_host']
     webhook_port = settings.ARIES_CONFIG['webhook_port']
-    webhook_url = "http://" + webhook_host + ":" + webhook_port + "/agent_cb/" + callback_key
+    webhook_root = settings.ARIES_CONFIG['webhook_root']
+    webhook_url = "http://" + webhook_host + ":" + webhook_port + webhook_root + "/agent_cb/" + callback_key
 
     # endpoint exposed by ngrok
     #endpoint = "https://9f3a6083.ngrok.io"
@@ -78,10 +79,15 @@ def aries_provision_config(
             "--auto-accept-invites", 
             "--auto-accept-requests", 
             "--auto-respond-messages",
+            "--auto-respond-credential-request",
+            "--auto-store-credential",
+            "--auto-verify-presentation",
+            "--preserve-exchange-records",
             ("--inbound-transport", "http", "0.0.0.0", str(http_port)),
             ("--outbound-transport", "http"),
             ("--admin", "0.0.0.0", str(admin_port)),
             ("--admin-api-key", api_key),
+            "--enable-undelivered-queue",
             #"--admin-insecure-mode",
         ])
     provisionConfig.extend([
@@ -183,7 +189,7 @@ def start_agent(agent, cmd: str='start', config=None):
     if not config:
         config = json.loads(agent.agent_config)
 
-    start_aca_py(agent.agent_name, config, agent.admin_endpoint, agent.api_key)
+    start_aca_py(agent.agent_name, config, agent.admin_endpoint, get_ADMIN_REQUEST_HEADERS(agent))
 
 
 def stop_agent(agent):
@@ -207,6 +213,14 @@ START_TIMEOUT = 30.0
 s_print_lock = threading.Lock()
 running_procs = {}
 
+
+def get_ADMIN_REQUEST_HEADERS(agent):
+    ADMIN_REQUEST_HEADERS = {}
+    # set admin header per agent
+    if agent.api_key is not None:
+       ADMIN_REQUEST_HEADERS = {"x-api-key": agent.api_key}
+    return ADMIN_REQUEST_HEADERS
+
 def s_print(*a, **b):
     """Thread safe print function"""
     with s_print_lock:
@@ -228,15 +242,10 @@ def stderr_reader(proc_name, proc):
         else:
             break
 
-def detect_process(admin_url, api_key, start_timeout=START_TIMEOUT):
+def detect_process(admin_url, ADMIN_REQUEST_HEADERS, start_timeout=START_TIMEOUT):
     text = None
 
-    def fetch_swagger(url: str, api_key: str, timeout: float):
-        ADMIN_REQUEST_HEADERS = {}
-        # set admin header per agent
-        if api_key is not None:
-           ADMIN_REQUEST_HEADERS = {"x-api-key": api_key}
-
+    def fetch_swagger(url: str, ADMIN_REQUEST_HEADERS: dict, timeout: float):
         text = None
         wait_time = START_TIMEOUT
         while wait_time > 0:
@@ -252,7 +261,7 @@ def detect_process(admin_url, api_key, start_timeout=START_TIMEOUT):
         return text
 
     status_url = admin_url + "/status"
-    status_text = fetch_swagger(status_url, api_key, start_timeout)
+    status_text = fetch_swagger(status_url, ADMIN_REQUEST_HEADERS, start_timeout)
     print("Agent running with admin url", admin_url)
 
     if not status_text:
@@ -271,7 +280,7 @@ def detect_process(admin_url, api_key, start_timeout=START_TIMEOUT):
             f"Unexpected response from agent process. Admin URL: {status_url}"
         )
 
-def start_aca_py(agent_name, agent_args, admin_endpoint, api_key, bin_path=None, python_path=None, wait=True):
+def start_aca_py(agent_name, agent_args, admin_endpoint, ADMIN_REQUEST_HEADERS, bin_path=None, python_path=None, wait=True):
     """
     Start an aca-py process and record the process handle by agent name
     """
@@ -304,11 +313,11 @@ def start_aca_py(agent_name, agent_args, admin_endpoint, api_key, bin_path=None,
     print("Started, waiting for status check ...")
     if wait:
         time.sleep(1.0)
-        detect_process(admin_endpoint, api_key)
+        detect_process(admin_endpoint, ADMIN_REQUEST_HEADERS)
 
     proc_info = {"name": agent_name, "proc": proc, "threads": [t1, t2,]}
     running_procs[agent_name] = proc_info
-    print("Done")
+    print("Agent started.")
 
     return proc_info
 
@@ -404,11 +413,6 @@ def create_schema(agent, schema_name, schema_version, schema_attrs, schema_templ
     Note that the agent must be running.
     """
 
-    ADMIN_REQUEST_HEADERS = {}
-    # set admin header per agent
-    if agent.api_key is not None:
-       ADMIN_REQUEST_HEADERS = {"x-api-key": agent.api_key}
-
     try:
         schema_request = {
             "schema_name": schema_name,
@@ -418,7 +422,7 @@ def create_schema(agent, schema_name, schema_version, schema_attrs, schema_templ
         response = agent_post_with_retry(
             agent.admin_endpoint + "/schemas",
             json.dumps(schema_request),
-            headers=ADMIN_REQUEST_HEADERS,
+            headers=get_ADMIN_REQUEST_HEADERS(agent),
         )
         response.raise_for_status()
         schema_id = response.json()
@@ -443,24 +447,18 @@ def create_creddef(agent, indy_schema, creddef_name, creddef_template, initializ
     Note that the agent must be running.
     """
 
-    ADMIN_REQUEST_HEADERS = {}
-    # set admin header per agent
-    if agent.api_key is not None:
-       ADMIN_REQUEST_HEADERS = {"x-api-key": agent.api_key}
-
     try:
         cred_def_request = {"schema_id": indy_schema.ledger_schema_id}
-        print(cred_def_request)
         response = agent_post_with_retry(
             agent.admin_endpoint + "/credential-definitions",
             json.dumps(cred_def_request),
-            headers=ADMIN_REQUEST_HEADERS,
+            headers=get_ADMIN_REQUEST_HEADERS(agent),
         )
         response.raise_for_status()
         cred_def_id = response.json()
 
         indy_creddef = IndyCredentialDefinition(
-                            ledger_creddef_id = cred_def_id,
+                            ledger_creddef_id = cred_def_id["credential_definition_id"],
                             ledger_schema = indy_schema,
                             agent = agent,
                             creddef_name = creddef_name,
@@ -498,7 +496,7 @@ def start_agent_if_necessary(agent, initialize_agent) -> (AriesAgent, bool):
     # start agent if necessary
     if initialize_agent:
         try:
-            detect_process(agent.admin_endpoint, agent.api_key, start_timeout=1.0)
+            detect_process(agent.admin_endpoint, get_ADMIN_REQUEST_HEADERS(agent), start_timeout=1.0)
             # didn't start it (assume it's already running)
             return (agent, False)
         except:
@@ -522,20 +520,13 @@ def request_connection_invitation(org, requestee_name, initialize_agent=False):
 
     # create connection and generate invitation
     try:
-        ADMIN_REQUEST_HEADERS = {}
-        # set admin header per agent
-        if partner_agent.api_key is not None:
-           ADMIN_REQUEST_HEADERS = {"x-api-key": partner_agent.api_key}
-
         response = requests.post(
                 partner_agent.admin_endpoint + "/connections/create-invitation",
-                headers=ADMIN_REQUEST_HEADERS,
+                headers=get_ADMIN_REQUEST_HEADERS(partner_agent),
         )
         response.raise_for_status()
         my_invitation = response.json()
-        print(my_invitation)
         my_status = check_connection_status(partner_agent, my_invitation["connection_id"])
-        print(my_status)
 
         connection = AgentConnection(
             guid = my_invitation["connection_id"],
@@ -566,21 +557,15 @@ def receive_connection_invitation(agent, partner_name, invitation, initialize_ag
 
     # create connection and generate invitation
     try:
-        ADMIN_REQUEST_HEADERS = {}
-        # set admin header per agent
-        if agent.api_key is not None:
-           ADMIN_REQUEST_HEADERS = {"x-api-key": agent.api_key}
-
         response = requests.post(
             agent.admin_endpoint
             + "/connections/receive-invitation?alias="
             + partner_name,
             invitation,
-            headers=ADMIN_REQUEST_HEADERS
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
         )
         response.raise_for_status()
         my_connection = response.json()
-        print(my_connection)
 
         connections = AgentConnection.objects.filter(agent=agent, guid=my_connection["connection_id"]).all()
         if 0 < len(connections):
@@ -615,16 +600,11 @@ def get_agent_connection(agent, connection_id, initialize_agent=False):
 
     # create connection and check status
     try:
-        ADMIN_REQUEST_HEADERS = {}
-        # set admin header per agent
-        if agent.api_key is not None:
-           ADMIN_REQUEST_HEADERS = {"x-api-key": agent.api_key}
-
         response = requests.get(
             agent.admin_endpoint
             + "/connections/"
             + connection_id,
-            headers=ADMIN_REQUEST_HEADERS
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
         )
         response.raise_for_status()
         connection = response.json()
@@ -669,9 +649,11 @@ def handle_agent_connections_callback(agent, topic, payload):
     print(">>> callback:", agent.agent_name, topic)
     try:
         connection_id = payload["connection_id"]
-        connection = AgentConnection.objects.filter(guid=connection_id, agent=agent).get()
-        connection.status = payload["state"]
-        connection.save()
+        connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
+        if 0 < len(connections):
+            connection = connections[0]
+            connection.status = payload["state"]
+            connection.save()
         return Response("{}")
     except Exception as e:
         print(e)
@@ -683,7 +665,7 @@ def handle_agent_connections_activity_callback(agent, topic, payload):
     Handle connections activity callbacks from the agent
     """
     # TODO determine use cases where this is called
-    print(">>> callback:", agent.agent_name, topic, payload)
+    print(">>> callback:", agent.agent_name, topic)
     return Response("{}")
 
 
@@ -691,7 +673,20 @@ def handle_agent_connections_activity_callback(agent, topic, payload):
 # utilities to offer, request, send and receive credentials
 ######################################################################
 
-def send_credential_offer(agent, connection, credential_tag, schema_attrs, cred_def, credential_name, initialize_agent=False):
+def build_credential_offer(agent, connection, credential_attrs, cred_def_id):
+    credential_offer = {
+            "auto_issue": True,
+            "connection_id": connection.guid,
+            "comment": "Issued by " + agent.agent_name,
+            "cred_def_id": cred_def_id,
+            "credential_preview": {
+                "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/issue-credential/1.0/credential-preview",
+                "attributes": credential_attrs
+            }
+        }
+    return credential_offer
+
+def send_credential_offer(agent, connection, credential_attrs, cred_def_id, initialize_agent=False):
     """
     Send a Credential Offer.
     """
@@ -700,85 +695,201 @@ def send_credential_offer(agent, connection, credential_tag, schema_attrs, cred_
     (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
 
     try:
-        my_connection = run_coroutine_with_args(Connection.deserialize, json.loads(connection.connection_data))
-        my_cred_def = run_coroutine_with_args(CredentialDef.deserialize, json.loads(cred_def.creddef_data))
-        cred_def_handle = my_cred_def.handle
-
-        # create a credential (the last '0' is the 'price')
-        credential = run_coroutine_with_args(IssuerCredential.create, credential_tag, schema_attrs, int(cred_def_handle), credential_name, '0')
-
-        run_coroutine_with_args(credential.send_offer, my_connection)
-
-        # serialize/deserialize credential - waiting for Alice to rspond with Credential Request
-        credential_data = run_coroutine(credential.serialize)
+        credential_offer = build_credential_offer(agent, connection, credential_attrs, cred_def_id)
+        response = requests.post(
+            agent.admin_endpoint
+            + "/issue-credential/send-offer",
+            json.dumps(credential_offer),
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        my_cred_exchange = response.json()
 
         conversation = AgentConversation(
             connection = connection,
-            conversation_type = 'CredentialOffer',
-            message_id = 'N/A',
-            status = 'Sent',
-            conversation_data = json.dumps(credential_data))
+            conversation_type = CRED_EXCH_CONVERSATION,
+            guid = my_cred_exchange["credential_exchange_id"],
+            status = my_cred_exchange["state"])
         conversation.save()
     except:
         raise
     finally:
-        if initialize_vcx:
-            try:
-                shutdown(False)
-            except:
-                raise
+        if agent_started:
+            stop_agent(agent)
 
     return conversation
     
 
-def send_credential_request(wallet, connection, conversation, initialize_vcx=True):
+def send_credential_request(agent, conversation, initialize_agent=False):
     """
     Respond to a Credential Offer by sending a Credentia Request.
     """
 
-    if initialize_vcx:
-        try:
-            config_json = wallet.wallet_config
-            run_coroutine_with_args(vcx_init_with_config, config_json)
-        except:
-            raise
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
 
     # create connection and generate invitation
     try:
-        my_connection = run_coroutine_with_args(Connection.deserialize, json.loads(connection.connection_data))
-        #my_offer = run_coroutine_with_args()
-    
-        offer_json = [json.loads(conversation.conversation_data),]
-        credential = run_coroutine_with_args(Credential.create, 'credential', offer_json)
+        response = requests.post(
+            agent.admin_endpoint
+            + "/issue-credential/records/" + conversation.guid + "/send-request",
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        my_cred_exchange = response.json()
 
-        run_coroutine_with_args(credential.send_request, my_connection, 0)
-
-        # serialize/deserialize credential - wait for Faber to send credential
-        credential_data = run_coroutine(credential.serialize)
-
-        conversation.status = 'Sent'
-        conversation.conversation_data = json.dumps(credential_data)
-        conversation.conversation_type = 'CredentialRequest'
+        conversation.status = my_cred_exchange["state"]
         conversation.save()
     except:
         raise
     finally:
-        if initialize_vcx:
-            try:
-                shutdown(False)
-            except:
-                raise
+        if agent_started:
+            stop_agent(agent)
 
     return conversation
+
+
+def get_agent_conversation(agent, conversation_id, conversation_type, initialize_agent=False):
+    """
+    Fetches the Connection object from the agent.
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    conversation = None
+
+    if conversation_type == CRED_EXCH_CONVERSATION:
+        url_topic = "/issue-credential/records/"
+    elif conversation_type == PROOF_REQ_CONVERSATION:
+        url_topic = "/present-proof/records/"
+    else:
+        raise Exception("Invalid conversation type " + conversation_type)
+
+    # create conversation and check status
+    try:
+        response = requests.get(
+            agent.admin_endpoint
+            + url_topic
+            + conversation_id,
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        conversation = response.json()
+    except:
+        # ignore in case the agent is deleting exchange records
+        #raise
+        return None
+    finally:
+        if agent_started:
+            stop_agent(agent)
+
+    return conversation
+
+
+def check_conversation_status(agent, conversation_id, conversation_type, initialize_agent=False):
+    """
+    Check status of the Conversation.
+    Called when a credential has been offered and/or requested and confirmation has not yet been received.
+    """
+
+    status = None
+
+    # create connection and check status
+    try:
+        conversation = get_agent_conversation(agent, conversation_id, conversation_type, initialize_agent)
+
+        conversations = AgentConversation.objects.filter(connection__agent=agent, guid=conversation_id, conversation_type=conversation_type).all()
+        if 0 < len(conversations):
+            my_conversation = conversations[0]
+            if conversation:
+                my_conversation.status = conversation["state"]
+                my_conversation.save()
+                status = conversation["state"]
+            else:
+                status = my_conversation.status
+        else:
+            my_conversation = None
+    except:
+        raise
+
+    return status
 
 
 def handle_agent_credentials_callback(agent, topic, payload):
     """
     Handle credential processing callbacks from the agent
     """
-    # TODO handle callbacks during credential exchange protocol handshake
+    # handle callbacks during credential exchange protocol handshake
     # - update credential status
-    print(">>> callback:", agent.agent_name, topic, payload)
+    state = payload["state"]
+    cred_exch_id = payload["credential_exchange_id"]
+    connection_id = payload["connection_id"]
+    print(">>> callback:", agent.agent_name, topic, state, cred_exch_id)
+
+    connection = AgentConnection.objects.filter(agent=agent, guid=connection_id).get()
+    cred_exches = AgentConversation.objects.filter(connection__agent=agent, guid=cred_exch_id).all()
+
+    if state == "offer_received":
+        # holder receives a credential offer - create a new AgentConversation
+        conversation = AgentConversation(
+            connection = connection,
+            conversation_type = CRED_EXCH_CONVERSATION,
+            guid = cred_exch_id,
+            status = state)
+        conversation.save()
+
+    elif state == "request_received":
+        # issuer receives a credential request (no action, we have "auto submit")
+        conversation = cred_exches[0]
+        conversation.status = state
+        conversation.save()
+
+    elif state == "credential_received":
+        # holder receives a credential (no action; "auto store")
+        conversation = cred_exches[0]
+        conversation.status = state
+        conversation.save()
+
+    elif state == "credential_acked":
+        # issuer receives an acknowledgement that the credential was recevied (no action)
+        conversation = cred_exches[0]
+        conversation.status = state
+        conversation.save()
+
+    else:
+        # ignore all other statuses (but update state)
+        if 0 < len(cred_exches):
+            conversation = cred_exches[0]
+            conversation.status = state
+            conversation.save()
+
     return Response("{}")
 
 
+def fetch_credentials(agent, initialize_agent=False):
+    """
+    Fetch credentials from the agent (wallet).
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    credentials = None
+
+    # create connection and check status
+    try:
+        response = requests.get(
+            agent.admin_endpoint
+            + "/credentials",
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        credentials = response.json()["results"]
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+
+    return credentials
