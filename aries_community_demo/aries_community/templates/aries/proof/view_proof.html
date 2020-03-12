@@ -1,0 +1,26 @@
+{% extends 'base_nav.html' %}
+
+{% load i18n %}
+
+{% block page_title %} {% trans "View Proof" %} {% endblock %}
+
+{% block main_content %} 
+
+  <div class='inside-body'>
+    <div class='center-body'>
+      <div class='innercont-center-body'>
+        <div class='innercont-center-inner'>
+          <div class='form-cont'>
+            <h2>Proof Received</h2>
+              <div>
+                {% for attr, value in conversation.data.items %}
+                <h4>{{ attr }}</h4>
+                <p>{{ value }}</p>
+                {% endfor %}
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
