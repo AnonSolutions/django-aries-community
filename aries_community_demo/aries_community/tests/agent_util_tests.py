@@ -382,7 +382,6 @@ class AgentInteractionTests(LiveServerTestCase):
             schema_attrs['degree'] = 'B.A.Sc. Honours'
             schema_attrs['age'] = '25'
             cred_name = 'Cred4Proof Credential Name'
-            cred_tag = 'Cred4Proof Tag Value'
             attr_values = [
                 {"name": "name", "value": "Joe Smith"},
                 {"name": "date", "value": "2018-01-01"},
@@ -427,7 +426,6 @@ class AgentInteractionTests(LiveServerTestCase):
             schema_attrs['degree'] = 'B.A.Sc. Honours'
             schema_attrs['age'] = '25'
             cred_name = 'Cred4Proof Credential Name'
-            cred_tag = 'Cred4Proof Tag Value'
             attr_values = [
                 {"name": "name", "value": "Joe Smith"},
                 {"name": "date", "value": "2018-01-01"},
@@ -482,6 +480,7 @@ class AgentInteractionTests(LiveServerTestCase):
 
             # select credential(s) for proof (user)
             claims_data = get_claims_for_proof_request(user.agent, user_conversation_1)
+            self.assertEqual(len(claims_data), 1)
             requested_proof = get_agent_conversation(user.agent, user_conversation_1.guid, PROOF_REQ_CONVERSATION)
 
             supplied_attrs = {}
@@ -525,118 +524,139 @@ class AgentInteractionTests(LiveServerTestCase):
     def test_agent_proof_exchange_2_creds(self):
         # request and deliver a proof between two agents
         (user, org, raw_password) = self.create_user_and_org()
-        (schema, cred_def, proof_request) = self.schema_and_cred_def_for_org(org)
 
-        # establish a connection
-        (org_connection, user_connection) = self.establish_agent_connection(org, user)
+        try:
+            # startup the agent for that org
+            start_agent(org.agent)
+            start_agent(user.agent)
 
-        # make up a credential
-        schema_attrs = json.loads(cred_def.creddef_template)
-        schema_attrs['name'] = 'Joe Smith'
-        schema_attrs['date'] = '2018-01-01'
-        schema_attrs['degree'] = 'B.A.Sc. Honours'
-        schema_attrs['age'] = '25'
-        cred_name = 'Cred4Proof Credential Name'
-        cred_tag = 'Cred4Proof Tag Value'
+            (schema, cred_def, proof_request) = self.schema_and_cred_def_for_org(org)
 
-        # issue credential (org -> user)
-        self.issue_credential_from_org_to_user(org, user, org_connection, user_connection, cred_def, schema_attrs, cred_name, cred_tag)
+            # establish a connection
+            (org_connection, org_connection_state, user_connection, user_connection_state) = self.establish_agent_connection(org, user)
 
-        # verify credential is in user wallet
-        user_credentials = list_wallet_credentials(user.wallet)
-        self.assertEqual(len(user_credentials), 1)
+            # make up a credential
+            schema_attrs = json.loads(cred_def.creddef_template)
+            schema_attrs['name'] = 'Joe Smith'
+            schema_attrs['date'] = '2018-01-01'
+            schema_attrs['degree'] = 'B.A.Sc. Honours'
+            schema_attrs['age'] = '25'
+            cred_name = 'Cred4Proof Credential Name'
+            attr_values = [
+                {"name": "name", "value": "Joe Smith"},
+                {"name": "date", "value": "2018-01-01"},
+                {"name": "degree", "value": "B.A.Sc. Honours"},
+                {"name": "age", "value": "25"},
+            ]
 
-        # make up a credential
-        schema_attrs = json.loads(cred_def.creddef_template)
-        schema_attrs['name'] = 'Joe Smith 2'
-        schema_attrs['date'] = '2018-01-02'
-        schema_attrs['degree'] = 'M.Sc. Honours'
-        schema_attrs['age'] = '28'
-        cred_name = 'Cred4Proof Credential Name 2'
-        cred_tag = 'Cred4Proof Tag Value 2'
+            # issue credential (org -> user)
+            self.issue_credential_from_org_to_user(org, user, org_connection, user_connection, cred_def.ledger_creddef_id, attr_values)
 
-        # issue credential (org -> user)
-        self.issue_credential_from_org_to_user(org, user, org_connection, user_connection, cred_def, schema_attrs, cred_name, cred_tag)
+            # verify credential is in user wallet
+            user_credentials = fetch_credentials(user.agent)
+            self.assertEqual(len(user_credentials), 1)
 
-        # verify credential is in user wallet
-        user_credentials = list_wallet_credentials(user.wallet)
-        self.assertEqual(len(user_credentials), 2)
+            # make up a credential
+            schema_attrs = json.loads(cred_def.creddef_template)
+            schema_attrs['name'] = 'Joe Smith 2'
+            schema_attrs['date'] = '2018-01-02'
+            schema_attrs['degree'] = 'M.Sc. Honours'
+            schema_attrs['age'] = '28'
+            cred_name = 'Cred4Proof Credential Name 2'
 
-        # construct the proof request to send to the user (to whom we have just issued a credential)
-        proof_req_attrs = proof_request.proof_req_attrs
-        proof_req_predicates = proof_request.proof_req_predicates
-        org_connection_data = json.loads(org_connection.connection_data)
-        issuer_did = org_connection_data['data']['public_did']
-        proof_req_attrs = proof_req_attrs.replace('$ISSUER_DID', issuer_did)
-        proof_req_predicates = proof_req_predicates.replace('$ISSUER_DID', issuer_did)
-        proof_req_predicates = proof_req_predicates.replace('"$VALUE"', '21')
-        proof_req_attrs = json.loads(proof_req_attrs)
-        proof_req_predicates = json.loads(proof_req_predicates)
-        proof_name = "My Cool Proof"
-        proof_uuid = "Some Uuid Value"
+            # issue credential (org -> user)
+            self.issue_credential_from_org_to_user(org, user, org_connection, user_connection, cred_def.ledger_creddef_id, attr_values)
 
-        # issue proof request (org -> user)
-        org_conversation_1 = send_proof_request(org.wallet, org_connection, proof_uuid, proof_name, proof_req_attrs, proof_req_predicates)
-        sleep(2)
+            # verify credential is in user wallet
+            user_credentials = fetch_credentials(user.agent)
+            self.assertEqual(len(user_credentials), 2)
 
-        # poll to receive proof request
-        user_conversations = AgentConversation.objects.filter(connection__wallet=user.wallet, conversation_type="ProofRequest", status='Pending').all()
-        self.assertEqual(len(user_conversations), 0)
+            # construct the proof request to send to the user (to whom we have just issued a credential)
+            proof_req_attrs = proof_request.proof_req_attrs
+            proof_req_predicates = proof_request.proof_req_predicates
 
-        i = 0
-        while True:
-            handled_count = handle_inbound_messages(user.wallet, user_connection)
-            i = i + 1
-            if handled_count > 0 or i > 3:
-                break
+            issuer_did = get_public_did(org.agent)
+            proof_req_attrs = proof_req_attrs.replace('$ISSUER_DID', issuer_did)
+            proof_req_predicates = proof_req_predicates.replace('$ISSUER_DID', issuer_did)
+            proof_req_predicates = proof_req_predicates.replace('"$VALUE"', '21')
+            proof_req_attrs = json.loads(proof_req_attrs)
+            proof_req_predicates = json.loads(proof_req_predicates)
+            proof_name = "My Cool Proof"
+            proof_uuid = "Some Uuid Value"
+
+            requested_attrs = {}
+            additional_filters = {}
+            for requested_attr in proof_req_attrs:
+                referent = requested_attr["name"] + "_referent"
+                requested_attrs[referent] = requested_attr
+                additional_filters[referent] = {"$eq":{'degree':'M.Sc. Honours'}}
+            requested_predicates = {}
+            for requested_predicate in proof_req_predicates:
+                referent = requested_predicate["name"] + "_referent"
+                requested_predicates[referent] = requested_predicate
+                additional_filters[referent] = {"$eq":{'degree':'M.Sc. Honours'}}
+
+            # issue proof request (org -> user)
+            org_conversation_1 = send_proof_request(org.agent, org_connection, proof_name, requested_attrs, requested_predicates)
             sleep(2)
-        self.assertEqual(handled_count, 1)
-        user_conversations = AgentConversation.objects.filter(connection__wallet=user.wallet, conversation_type="ProofRequest", status='Pending').all()
-        self.assertEqual(len(user_conversations), 1)
-        user_conversation_1 = user_conversations[0]
 
-        # select credential(s) for proof (user) - there are 2 creds now
-        claim_data = get_claims_for_proof_request(user.wallet, user_connection, user_conversation_1)
-        for attr in claim_data['attrs']:
+            # poll to receive proof request
+            i = 0
+            while True:
+                # once the user receives the request, build the proof
+                user_conversations = AgentConversation.objects.filter(connection=user_connection, conversation_type=PROOF_REQ_CONVERSATION, status='request_received').all()
+                i = i + 1
+                if len(user_conversations) > 0 or i > 3:
+                    break
+                sleep(2)
+            self.assertEqual(len(user_conversations), 1)
+            user_conversation_1 = user_conversations[0]
+
+            # select credential(s) for proof (user)
+            claims_data = get_claims_for_proof_request(user.agent, user_conversation_1)
+            self.assertEqual(len(claims_data), 2)
+
+            requested_proof = get_agent_conversation(user.agent, user_conversation_1.guid, PROOF_REQ_CONVERSATION)
+
+            # try again with additional_filters
+            # TODO the additional_filters is currently not working :-(
+            claims_data = get_claims_for_proof_request(user.agent, user_conversation_1, additional_filters=additional_filters)
+            print("claims_data with filter:", claims_data)
+            self.assertEqual(len(claims_data), 1)
+
+            supplied_attrs = {}
+            supplied_predicates = {}
+            supplied_self_attested_attrs = {}
             # build array of credential id's (from wallet)
-            claims = claim_data['attrs'][attr]
-            if 0 < len(claims):
-                self.assertEqual(len(claims), 2)
-            else:
-                self.assertEqual(attr, 'comments')
+            for claim_data in claims_data:
+                for referent in claim_data['presentation_referents']:
+                    if referent in requested_proof["presentation_request"]["requested_attributes"] and referent not in supplied_attrs:
+                        supplied_attrs[referent] = { "cred_id": claim_data["cred_info"]["referent"], "revealed": True }
+                    if referent in requested_proof["presentation_request"]["requested_predicates"] and referent not in supplied_predicates:
+                        supplied_predicates[referent] = { "cred_id": claim_data["cred_info"]["referent"] }
+            for referent in requested_proof["presentation_request"]["requested_attributes"]:
+                if referent not in supplied_attrs:
+                    supplied_self_attested_attrs[referent] = "User supplied value"
 
-        # try again with additional_filters
-        claim_data = get_claims_for_proof_request(user.wallet, user_connection, user_conversation_1, additional_filters={'degree':'M.Sc. Honours'})
-        credential_attrs = {}
-        for attr in claim_data['attrs']:
-            # build array of credential id's (from wallet)
-            claims = claim_data['attrs'][attr]
-            if 0 < len(claims):
-                self.assertEqual(len(claims), 1)
-                credential_attrs[attr] = {'referent': claims[0]['cred_info']['referent']}
-            else:
-                # if no claim available, make up a self-attested value
-                self.assertEqual(attr, 'comments')
-                credential_attrs[attr] = {'value': 'user-supplied value'}
+            # construct proof and send (user -> org)
+            user_conversation_2 = send_claims_for_proof_request(user.agent, user_conversation_1, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
 
-        # construct proof and send (user -> org)
-        user_conversation_2 = send_claims_for_proof_request(user.wallet, user_connection, user_conversation_1, credential_attrs)
+            # accept and validate proof (org)
+            i = 0
+            while True:
+                org_conversations = AgentConversation.objects.filter(connection=org_connection, conversation_type=PROOF_REQ_CONVERSATION, status='verified').all()
+                i = i + 1
+                if len(org_conversations) > 0 or i > 3:
+                    break
+                sleep(2)
+            self.assertEqual(len(org_conversations), 1)
+            org_conversation_2 = org_conversations[0]
 
-        # accept and validate proof (org)
-        i = 0
-        message = org_conversation_1
-        while True:
-            message = poll_message_conversation(org.wallet, org_connection, message, initialize_vcx=True)
-            i = i + 1
-            if message.status == 'Accepted' or i > 3:
-                break
-            sleep(2)
-        self.assertEqual(message.status, 'Accepted')
-        self.assertEqual(message.proof_state, 'Verified')
-        org_conversation_2 = message
-
-        # TODO verify some stuff ...
+            # TODO verify some stuff ...
+        finally:
+            # shut down the agent for that org
+            stop_agent(user.agent)
+            stop_agent(org.agent)
 
         # clean up after ourself
-        self.delete_user_and_org_wallets(user, org, raw_password)
-
+        self.delete_user_and_org_agents(user, org, raw_password)

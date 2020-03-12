@@ -1,5 +1,6 @@
 import asyncio
 import aiohttp
+import urllib
 import json
 import os
 from pathlib import Path
@@ -971,19 +972,26 @@ def send_proof_request(agent, connection, proof_req_name, proof_attrs, proof_pre
 
 
 # note additional filters are exact match only (attr=value) to filter the allowable claims
-def get_claims_for_proof_request(agent, conversation, initialize_agent=False):
+def get_claims_for_proof_request(agent, conversation, additional_filters=None, initialize_agent=False):
     """
     For the receiver of the Proof Request (i.e. Prover) find the set of claims that can be used
     to construct a Proof.
+    additional_filters must be wql format as defined:  https://github.com/hyperledger/indy-sdk/tree/master/docs/design/011-wallet-query-language
     """
     # start the agent if requested (and necessary)
     (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
 
     # create connection and generate invitation
+    params = ""
+    if additional_filters:
+        print("additional_filters:", additional_filters)
+        params = "?extra_query=" + urllib.parse.quote_plus(json.dumps(additional_filters))
+    print(agent.admin_endpoint + "/present-proof/records/" + conversation.guid + "/credentials" + params)
+    print(get_ADMIN_REQUEST_HEADERS(agent))
     try:
         response = requests.get(
             agent.admin_endpoint
-            + "/present-proof/records/" + conversation.guid + "/credentials",
+            + "/present-proof/records/" + conversation.guid + "/credentials" + params,
             headers=get_ADMIN_REQUEST_HEADERS(agent)
         )
         response.raise_for_status()
