@@ -4,7 +4,7 @@ services:
   # un-managed trustee agent
   #
   trustee-agent:
-    image: bcgovimages/aries-cloudagent:py36-1.14-1_0.4.4
+    image: bcgovimages/aries-cloudagent:py36-1.14-1_0.4.5
     environment:
       - GENESIS_URL=${GENESIS_URL}
       - LEDGER_URL=${LEDGER_URL}

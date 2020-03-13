@@ -1,5 +1,6 @@
 import asyncio
 import aiohttp
+import urllib
 import json
 import os
 from pathlib import Path
@@ -82,7 +83,7 @@ def aries_provision_config(
             "--auto-respond-credential-request",
             "--auto-store-credential",
             "--auto-verify-presentation",
-            "--preserve-exchange-records",
+            #"--preserve-exchange-records",
             ("--inbound-transport", "http", "0.0.0.0", str(http_port)),
             ("--outbound-transport", "http"),
             ("--admin", "0.0.0.0", str(admin_port)),
@@ -389,6 +390,21 @@ def agent_post_with_retry(url, payload, headers=None):
                 raise e
             time.sleep(5)
 
+def get_public_did(agent):
+    try:
+        response = requests.get(
+                agent.admin_endpoint + "/wallet/did/public",
+                headers=get_ADMIN_REQUEST_HEADERS(agent),
+        )
+        response.raise_for_status()
+        my_did = response.json()
+        if "result" in my_did and "did" in my_did["result"]:
+            return my_did["result"]["did"]
+        else:
+            return None
+    except:
+        raise
+
 def create_schema_json(schema_name, schema_version, schema_attrs):
     """
     Create an Indy Schema object based on a list of attributes.
@@ -441,7 +457,7 @@ def create_schema(agent, schema_name, schema_version, schema_attrs, schema_templ
     return indy_schema
 
 
-def create_creddef(agent, indy_schema, creddef_name, creddef_template, initialize_vcx=True):
+def create_creddef(agent, indy_schema, creddef_name, creddef_template):
     """
     Create an Indy Credential Definition (VCX) and also store in our local database
     Note that the agent must be running.
@@ -893,3 +909,196 @@ def fetch_credentials(agent, initialize_agent=False):
             stop_agent(agent)
 
     return credentials
+
+
+######################################################################
+# utilities to request, send and receive proofs
+######################################################################
+
+def build_proof_request(agent, connection, proof_name, requested_attrs, requested_predicates):
+    proof_request = {
+          "connection_id": connection.guid,
+          "proof_request": {
+            "name": proof_name,
+            "version": "1.0",
+            "requested_attributes": requested_attrs,
+            "requested_predicates": requested_predicates
+          }
+        }
+    return proof_request
+
+
+def build_presentation(agent, requested_attrs, requested_predicates, self_attested_attrs):
+    proof_presentation = {
+            "requested_attributes": requested_attrs,
+            "requested_predicates": requested_predicates,
+            "self_attested_attributes": self_attested_attrs
+        }
+    return proof_presentation
+
+
+def send_proof_request(agent, connection, proof_req_name, proof_attrs, proof_predicates, initialize_agent=False):
+    """
+    Send an Aries Proof Request.
+    """
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    # create connection and generate invitation
+    try:
+        proof_request = build_proof_request(agent, connection, proof_req_name, proof_attrs, proof_predicates)
+        print("proof_request:", proof_request)
+        response = requests.post(
+            agent.admin_endpoint
+            + "/present-proof/send-request",
+            json.dumps(proof_request),
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        my_proof_request = response.json()
+
+        conversation = AgentConversation(
+            connection = connection,
+            conversation_type = PROOF_REQ_CONVERSATION,
+            guid = my_proof_request["presentation_exchange_id"],
+            status = my_proof_request["state"])
+        conversation.save()
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+
+    return conversation
+
+
+# note additional filters are exact match only (attr=value) to filter the allowable claims
+def get_claims_for_proof_request(agent, conversation, additional_filters=None, initialize_agent=False):
+    """
+    For the receiver of the Proof Request (i.e. Prover) find the set of claims that can be used
+    to construct a Proof.
+    additional_filters must be wql format as defined:  https://github.com/hyperledger/indy-sdk/tree/master/docs/design/011-wallet-query-language
+    """
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    # create connection and generate invitation
+    params = ""
+    if additional_filters:
+        print("additional_filters:", additional_filters)
+        params = "?extra_query=" + urllib.parse.quote_plus(json.dumps(additional_filters))
+    try:
+        response = requests.get(
+            agent.admin_endpoint
+            + "/present-proof/records/" + conversation.guid + "/credentials" + params,
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        creds_for_proof = response.json()
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+
+    return creds_for_proof
+
+
+def cred_for_referent(creds_for_proof, attr, schema_id):
+    """
+    Find the credential for the given referent (i.e. credential id).
+    """
+
+    for cred in creds_for_proof['attrs'][attr]:
+        if schema_id == cred['cred_info']['referent']:
+            return cred
+    return None
+
+
+def send_claims_for_proof_request(agent, conversation, supplied_attrs, supplied_predicates, supplied_self_attested_attrs, initialize_agent=False):
+    """
+    Construct a Proof with the given set of claims and send the Proof.
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    # create connection and generate invitation
+    try:
+        presentation = build_presentation(agent, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
+        print("presentation:", presentation)
+        response = requests.post(
+            agent.admin_endpoint
+            + "/present-proof/records/" + conversation.guid + "/send-presentation",
+            json.dumps(presentation),
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        my_proof_request = response.json()
+
+        conversation.status = my_proof_request["state"]
+        conversation.save()
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+
+    return conversation
+
+
+def handle_agent_proof_callback(agent, topic, payload):
+    """
+    Handle proof request processing callbacks from the agent
+    """
+    # handle callbacks during proof request protocol handshake
+    state = payload["state"]
+    proof_request_id = payload["presentation_exchange_id"]
+    connection_id = payload["connection_id"]
+    print(">>> callback:", agent.agent_name, topic, state, proof_request_id)
+    print(">>> payload:", json.dumps(payload))
+
+    connection = AgentConnection.objects.filter(agent=agent, guid=connection_id).get()
+    proof_requests = AgentConversation.objects.filter(connection__agent=agent, guid=proof_request_id).all()
+
+    # TODO update the following as appropriate for proof requests
+    if state == "request_received":
+        # holder receives a credential offer - create a new AgentConversation
+        if 0 == len(proof_requests):
+            conversation = AgentConversation(
+                connection = connection,
+                conversation_type = PROOF_REQ_CONVERSATION,
+                guid = proof_request_id,
+                status = state)
+        else:
+            conversation = proof_requests[0]
+            conversation.status = state
+
+        conversation.save()
+
+    elif state == "presentation_sent":
+        # issuer receives a credential request (no action, we have "auto submit")
+        conversation = proof_requests[0]
+        conversation.status = state
+        conversation.save()
+
+    elif state == "presentation_received":
+        # holder receives a credential (no action; "auto store")
+        conversation = proof_requests[0]
+        conversation.status = state
+        conversation.save()
+
+    elif state == "verified":
+        # issuer receives an acknowledgement that the credential was recevied (no action)
+        conversation = proof_requests[0]
+        conversation.status = state
+        conversation.save()
+
+    else:
+        # ignore all other statuses (but update state)
+        if 0 < len(proof_requests):
+            conversation = proof_requests[0]
+            conversation.status = state
+            conversation.save()
+
+    return Response("{}")

@@ -190,3 +190,86 @@ class SendCredentialResponseForm(SendConversationResponseForm):
                 self.fields[field_name] = forms.CharField(label=attr, initial=credential_attrs[attr])
                 self.fields[field_name].widget.attrs['readonly'] = True
 
+
+######################################################################
+# forms to request, send and receive proofs
+######################################################################
+class SelectProofRequestForm(AgentNameForm):
+    connection_id = forms.CharField(widget=forms.HiddenInput())
+    partner_name = forms.CharField(label='Partner Name', max_length=60)
+    proof_request = forms.ModelChoiceField(label='Proof Request Type', queryset=IndyProofRequest.objects.all())
+
+    def __init__(self, *args, **kwargs):
+        super(SelectProofRequestForm, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
+        self.fields['connection_id'].widget.attrs['readonly'] = True
+        self.fields['partner_name'].widget.attrs['readonly'] = True
+
+
+class SendProofRequestForm(AgentNameForm):
+    connection_id = forms.CharField(widget=forms.HiddenInput())
+    partner_name = forms.CharField(label='Partner Name', max_length=60)
+    proof_name = forms.CharField(label='Proof Name', max_length=400)
+    proof_attrs = forms.CharField(label='Proof Attributes', max_length=4000, widget=forms.Textarea)
+    proof_predicates = forms.CharField(label='Proof Predicates', max_length=4000, widget=forms.Textarea)
+
+    def __init__(self, *args, **kwargs):
+        super(SendProofRequestForm, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
+        self.fields['connection_id'].widget.attrs['readonly'] = True
+        self.fields['partner_name'].widget.attrs['readonly'] = True
+
+
+class SendProofReqResponseForm(SendConversationResponseForm):
+    # a bunch of fields that are read-only to present to the user
+    from_partner_name = forms.CharField(label='Partner Name', max_length=60)
+    proof_req_name = forms.CharField(label='Proof Request Name', max_length=400)
+
+    def __init__(self, *args, **kwargs):
+        super(SendProofReqResponseForm, self).__init__(*args, **kwargs)
+        self.fields['from_partner_name'].widget.attrs['readonly'] = True
+        self.fields['proof_req_name'].widget.attrs['readonly'] = True
+
+
+class SelectProofReqClaimsForm(SendProofReqResponseForm):
+    proof_request = forms.CharField(label='Requested Proof', widget=forms.HiddenInput)
+
+    def __init__(self, *args, **kwargs):
+        super(SelectProofReqClaimsForm, self).__init__(*args, **kwargs)
+
+        # list requested attributes and the available claims, for the user to select
+        initial = kwargs.get('initial')
+        if initial:
+            available_claims = initial.get('selected_claims', '{}')
+            proof_request = initial.get('proof_request', '{}')
+            print("available_claims:", available_claims)
+            print("proof_request:", proof_request)
+
+            for attr in proof_request['presentation_request']['requested_attributes']:
+                field_name = 'proof_req_attr_' + attr
+                choices = []
+                claim_no = 0
+                for claim in available_claims:
+                    if attr in claim['presentation_referents']:
+                        choices.append(('ref::'+claim['cred_info']['referent'], json.dumps(claim['cred_info']['attrs'])))
+                        claim_no = claim_no + 1
+                if 0 < len(choices):
+                    self.fields[field_name] = forms.ChoiceField(label='Select claim for '+attr, choices=tuple(choices), widget=forms.RadioSelect())
+                else:
+                    self.fields[field_name] = forms.CharField(label='No claims available for '+attr+', enter value:', max_length=80)
+
+            for attr in proof_request['presentation_request']['requested_predicates']:
+                field_name = 'proof_req_attr_' + attr
+                choices = []
+                claim_no = 0
+                for claim in available_claims:
+                    if attr in claim['presentation_referents']:
+                        choices.append(('ref::'+claim['cred_info']['referent'], json.dumps(claim['cred_info']['attrs'])))
+                        claim_no = claim_no + 1
+                if 0 < len(choices):
+                    self.fields[field_name] = forms.ChoiceField(label='Select claim for '+attr, choices=tuple(choices), widget=forms.RadioSelect())
+                else:
+                    self.fields[field_name] = forms.CharField(label='No claims available for '+attr+', enter value:', max_length=80)
+
