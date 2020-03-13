@@ -947,6 +947,7 @@ def send_proof_request(agent, connection, proof_req_name, proof_attrs, proof_pre
     # create connection and generate invitation
     try:
         proof_request = build_proof_request(agent, connection, proof_req_name, proof_attrs, proof_predicates)
+        print("proof_request:", proof_request)
         response = requests.post(
             agent.admin_endpoint
             + "/present-proof/send-request",
