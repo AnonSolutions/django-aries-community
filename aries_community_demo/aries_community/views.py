@@ -888,44 +888,47 @@ def handle_proof_select_claims(
             conversation_id = cd.get('conversation_id')
             proof_req_name = cd.get('proof_req_name')
 
-            wallet = wallet_for_current_session(request)
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
             # find conversation request
-            conversations = AgentConversation.objects.filter(id=conversation_id, connection__wallet=wallet).all()
+            conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
             # TODO validate conversation id
             my_conversation = conversations[0]
-            indy_conversation = json.loads(my_conversation.conversation_data)
+            requested_proof = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
             # TODO validate connection id
             my_connection = my_conversation.connection
 
             # get selected attributes for proof request
-            requested_attributes = indy_conversation['proof_request_data']['requested_attributes']
-            requested_predicates = indy_conversation['proof_request_data']['requested_predicates']
-            credential_attrs = {}
-            for attr in requested_attributes:
-                field_name = 'proof_req_attr_' + attr
+            supplied_attrs = {}
+            supplied_predicates = {}
+            supplied_self_attested_attrs = {}
+
+            # build array of credential id's (from wallet)
+            for referent in requested_proof["presentation_request"]["requested_attributes"]:
+                field_name = 'proof_req_attr_' + referent
                 value = request.POST.get(field_name)
                 if value.startswith('ref::'):
-                    credential_attrs[attr] = {'referent': value.replace('ref::','')}
+                    supplied_attrs[referent] = { "cred_id": value[5:], "revealed": True }
                 else:
-                    credential_attrs[attr] = {'value': value}
-            for attr in requested_predicates:
-                field_name = 'proof_req_attr_' + attr
+                    supplied_self_attested_attrs[referent] = value
+            for referent in requested_proof["presentation_request"]["requested_predicates"]:
+                field_name = 'proof_req_attr_' + referent
                 value = request.POST.get(field_name)
                 if value.startswith('ref::'):
-                    credential_attrs[attr] = {'referent': value.replace('ref::','')}
+                    supplied_predicates[referent] = { "cred_id": value[5:] }
                 else:
-                    credential_attrs[attr] = {'value': value}
+                    # shouldn't happen ...
+                    supplied_predicates[referent] = { "cred_id": value }
 
             # send claims for this proof request to requestor
             try:
-                proof_data = send_claims_for_proof_request(wallet, my_connection, my_conversation, credential_attrs)
+                proof_data = send_claims_for_proof_request(agent, my_conversation, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
 
-                return render(request, template, {'msg': 'Sent proof request for ' + wallet.wallet_name})
-            except IndyError:
+                return render(request, template, {'msg': 'Sent proof request for ' + agent.agent_name})
+            except Exception as e:
                 # ignore errors for now
-                print(" >>> Failed to find claims for", wallet.wallet_name)
-                return render(request, 'aries/form_response.html', {'msg': 'Failed to find claims for ' + wallet.wallet_name})
+                print(" >>> Failed to find claims for", agent.agent_name, e)
+                return render(request, 'aries/form_response.html', {'msg': 'Failed to find claims for ' + agent.agent_name})
 
     else:
         return render(request, 'aries/form_response.html', {'msg': 'Method not allowed'})
@@ -939,12 +942,20 @@ def handle_view_proof(
     View the Proof sent by the Prover.
     """
 
-    wallet = wallet_for_current_session(request)
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
     conversation_id = request.GET.get('conversation_id', None)
-    conversations = AgentConversation.objects.filter(id=conversation_id, connection__wallet=wallet).all()
+    conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
     # TODO validate conversation id
     conversation = conversations[0]
-    return render(request, template, {'conversation': json.loads(conversation.conversation_data)})
+
+    requested_proof = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
+
+    for attr, value in requested_proof["presentation"]["requested_proof"]["revealed_attrs"].items():
+        value["identifier"] = requested_proof["presentation"]["identifiers"][value["sub_proof_index"]]
+    for attr, value in requested_proof["presentation"]["requested_proof"]["predicates"].items():
+        value["identifier"] = requested_proof["presentation"]["identifiers"][value["sub_proof_index"]]
+
+    return render(request, template, {'conversation': conversation, 'proof': requested_proof})
 
 
 ######################################################################

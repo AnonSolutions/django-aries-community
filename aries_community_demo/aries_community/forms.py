@@ -234,7 +234,7 @@ class SendProofReqResponseForm(SendConversationResponseForm):
 
 
 class SelectProofReqClaimsForm(SendProofReqResponseForm):
-    requested_attrs = forms.CharField(label='Requested Attrs', widget=forms.HiddenInput)
+    proof_request = forms.CharField(label='Requested Proof', widget=forms.HiddenInput)
 
     def __init__(self, *args, **kwargs):
         super(SelectProofReqClaimsForm, self).__init__(*args, **kwargs)

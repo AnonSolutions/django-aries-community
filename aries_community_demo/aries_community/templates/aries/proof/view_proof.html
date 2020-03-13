@@ -11,11 +11,26 @@
       <div class='innercont-center-body'>
         <div class='innercont-center-inner'>
           <div class='form-cont'>
-            <h2>Proof Received</h2>
+            <h2>Proof {{ conversation.guid }} {{ conversation.status }}</h2>
+              <div></div>
               <div>
-                {% for attr, value in conversation.data.items %}
+                <h3>Revealed:</h3>
+                {% for attr, value in proof.presentation.requested_proof.revealed_attrs.items %}
+                <h4>{{ attr }} = {{ value.raw }}</h4>
+                Cred Def: {{ value.identifier.cred_def_id }}
+                {% endfor %}
+              </div>
+              <div>
+                <h3>Predicates (ZKP's):</h3>
+                {% for attr, value in proof.presentation.requested_proof.predicates.items %}
                 <h4>{{ attr }}</h4>
-                <p>{{ value }}</p>
+                Cred Def: {{ value.identifier.cred_def_id }}
+                {% endfor %}
+              </div>
+              <div>
+                <h3>Self-attested:</h3>
+                {% for attr, value in proof.presentation.requested_proof.self_attested_attrs.items %}
+                <h4>{{ attr }} = {{ value.raw }}</h4>
                 {% endfor %}
               </div>
           </div>

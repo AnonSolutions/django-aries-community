@@ -29,10 +29,10 @@
 		          {% if conversation.status == 'request_received' %}
 		            <a href={% url 'proof_req_response' %}?conversation_id={{conversation.guid}}>Supply Proof</a>
 		          {% endif %}
-			      {% if conversation.status == 'Accepted' %}
+			      {% if conversation.status == 'verified' %}
 		            [Completed]
 		            Proof is <a href={% url 'view_proof' %}?conversation_id={{conversation.guid}}>
-		            {{ conversation.proof_state }}</a>
+		            {{ conversation.status }}</a>
 		          {% endif %}
 	          {% endif %}
 		      {% if conversation.status == 'Sent' %}
@@ -42,7 +42,7 @@
 		            [Completed]
 		          {% if conversation.conversation_type == 'ProofRequest' %}
 		            Proof is <a href={% url 'view_proof' %}?conversation_id={{conversation.guid}}>
-		            {{ conversation.proof_state }}</a>
+		            {{ conversation.status }}</a>
 		          {% endif %}
 		      {% endif %}
 			</h5>
