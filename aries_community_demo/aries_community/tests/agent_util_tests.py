@@ -451,7 +451,6 @@ class AgentInteractionTests(LiveServerTestCase):
             proof_req_attrs = json.loads(proof_req_attrs)
             proof_req_predicates = json.loads(proof_req_predicates)
             proof_name = "My Cool Proof"
-            proof_uuid = "Some Uuid Value"
 
             requested_attrs = {}
             for requested_attr in proof_req_attrs:
@@ -563,6 +562,12 @@ class AgentInteractionTests(LiveServerTestCase):
             schema_attrs['degree'] = 'M.Sc. Honours'
             schema_attrs['age'] = '28'
             cred_name = 'Cred4Proof Credential Name 2'
+            attr_values = [
+                {"name": "name", "value": "Joe Smith 2"},
+                {"name": "date", "value": "2018-01-02"},
+                {"name": "degree", "value": "M.Sc. Honours"},
+                {"name": "age", "value": "28"},
+            ]
 
             # issue credential (org -> user)
             self.issue_credential_from_org_to_user(org, user, org_connection, user_connection, cred_def.ledger_creddef_id, attr_values)
@@ -582,7 +587,6 @@ class AgentInteractionTests(LiveServerTestCase):
             proof_req_attrs = json.loads(proof_req_attrs)
             proof_req_predicates = json.loads(proof_req_predicates)
             proof_name = "My Cool Proof"
-            proof_uuid = "Some Uuid Value"
 
             requested_attrs = {}
             additional_filters = {}
@@ -704,6 +708,12 @@ class AgentInteractionTests(LiveServerTestCase):
             schema_attrs['degree'] = 'M.Sc. Honours'
             schema_attrs['age'] = '28'
             cred_name = 'Cred4Proof Credential Name 2'
+            attr_values = [
+                {"name": "name", "value": "Joe Smith 2"},
+                {"name": "date", "value": "2018-01-02"},
+                {"name": "degree", "value": "M.Sc. Honours"},
+                {"name": "age", "value": "28"},
+            ]
 
             # issue credential (org -> user)
             self.issue_credential_from_org_to_user(org, user, org_connection, user_connection, cred_def.ledger_creddef_id, attr_values)
@@ -723,13 +733,12 @@ class AgentInteractionTests(LiveServerTestCase):
             proof_req_attrs = json.loads(proof_req_attrs)
             for proof_req_attr in proof_req_attrs:
                 if 'restrictions' in proof_req_attr:
-                    proof_req_attr['restrictions'].append({'attr::degree::value':'M.Sc. Honours'})
+                    proof_req_attr['restrictions'][0][f"attr::degree::value"] = 'M.Sc. Honours'
             proof_req_predicates = json.loads(proof_req_predicates)
             for proof_req_predicate in proof_req_predicates:
                 if 'restrictions' in proof_req_predicate:
-                    proof_req_predicate['restrictions'].append({'attr::degree::value':'M.Sc. Honours'})
+                    proof_req_predicate['restrictions'][0][f"attr::degree::value"] = 'M.Sc. Honours'
             proof_name = "My Cool Proof"
-            proof_uuid = "Some Uuid Value"
 
             requested_attrs = {}
             for requested_attr in proof_req_attrs:

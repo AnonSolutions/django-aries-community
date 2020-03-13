@@ -242,17 +242,34 @@ class SelectProofReqClaimsForm(SendProofReqResponseForm):
         # list requested attributes and the available claims, for the user to select
         initial = kwargs.get('initial')
         if initial:
-            field_attrs = initial.get('requested_attrs', '{}')
-            if 'attrs' in field_attrs:
-                for attr in field_attrs['attrs']:
-                    field_name = 'proof_req_attr_' + attr
-                    choices = []
-                    claim_no = 0
-                    if 0 < len(field_attrs['attrs'][attr]):
-                        for claim in field_attrs['attrs'][attr]:
-                            choices.append(('ref::'+claim['cred_info']['referent'], json.dumps(claim['cred_info']['attrs'])))
-                            claim_no = claim_no + 1
-                        self.fields[field_name] = forms.ChoiceField(label='Select claim for '+attr, choices=tuple(choices), widget=forms.RadioSelect())
-                    else:
-                        self.fields[field_name] = forms.CharField(label='No claims available for '+attr+', enter value:', max_length=80)
+            available_claims = initial.get('selected_claims', '{}')
+            proof_request = initial.get('proof_request', '{}')
+            print("available_claims:", available_claims)
+            print("proof_request:", proof_request)
+
+            for attr in proof_request['presentation_request']['requested_attributes']:
+                field_name = 'proof_req_attr_' + attr
+                choices = []
+                claim_no = 0
+                for claim in available_claims:
+                    if attr in claim['presentation_referents']:
+                        choices.append(('ref::'+claim['cred_info']['referent'], json.dumps(claim['cred_info']['attrs'])))
+                        claim_no = claim_no + 1
+                if 0 < len(choices):
+                    self.fields[field_name] = forms.ChoiceField(label='Select claim for '+attr, choices=tuple(choices), widget=forms.RadioSelect())
+                else:
+                    self.fields[field_name] = forms.CharField(label='No claims available for '+attr+', enter value:', max_length=80)
+
+            for attr in proof_request['presentation_request']['requested_predicates']:
+                field_name = 'proof_req_attr_' + attr
+                choices = []
+                claim_no = 0
+                for claim in available_claims:
+                    if attr in claim['presentation_referents']:
+                        choices.append(('ref::'+claim['cred_info']['referent'], json.dumps(claim['cred_info']['attrs'])))
+                        claim_no = claim_no + 1
+                if 0 < len(choices):
+                    self.fields[field_name] = forms.ChoiceField(label='Select claim for '+attr, choices=tuple(choices), widget=forms.RadioSelect())
+                else:
+                    self.fields[field_name] = forms.CharField(label='No claims available for '+attr+', enter value:', max_length=80)
 

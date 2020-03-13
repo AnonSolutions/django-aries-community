@@ -26,8 +26,13 @@
 		          {% endif %}
 	          {% endif %}
 	          {% if conversation.conversation_type == 'ProofRequest' %}
-		          {% if conversation.status == 'Sent' %}
+		          {% if conversation.status == 'request_received' %}
 		            <a href={% url 'proof_req_response' %}?conversation_id={{conversation.guid}}>Supply Proof</a>
+		          {% endif %}
+			      {% if conversation.status == 'Accepted' %}
+		            [Completed]
+		            Proof is <a href={% url 'view_proof' %}?conversation_id={{conversation.guid}}>
+		            {{ conversation.proof_state }}</a>
 		          {% endif %}
 	          {% endif %}
 		      {% if conversation.status == 'Sent' %}

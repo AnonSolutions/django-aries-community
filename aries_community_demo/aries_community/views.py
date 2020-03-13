@@ -714,22 +714,22 @@ def handle_select_proof_request(
             connection_id = cd.get('connection_id')
             partner_name = cd.get('partner_name')
 
-            wallet = wallet_for_current_session(request)
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
-            connections = AgentConnection.objects.filter(id=connection_id, wallet=wallet).all()
+            connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
+            # TODO validate connection id
             connection = connections[0]
-            connection_data = json.loads(connection.connection_data)
-            institution_did = connection_data['data']['public_did']
 
             proof_req_attrs = proof_request.proof_req_attrs
             proof_req_predicates = proof_request.proof_req_predicates
 
             # selective attribute substitutions
+            institution_did = get_public_did(agent)
             proof_req_attrs = proof_req_attrs.replace('$ISSUER_DID', institution_did)
             proof_req_predicates = proof_req_predicates.replace('$ISSUER_DID', institution_did)
 
             proof_form = SendProofRequestForm(initial={
-                    'wallet_name': connection.wallet.wallet_name,
+                    'agent_name': connection.agent.agent_name,
                     'connection_id': connection_id,
                     'partner_name': partner_name,
                     'proof_name': proof_request.proof_req_name,
@@ -770,26 +770,34 @@ def handle_send_proof_request(
             proof_name = cd.get('proof_name')
             proof_attrs = cd.get('proof_attrs')
             proof_predicates = cd.get('proof_predicates')
-            proof_uuid = str(uuid.uuid4())
 
-            wallet = wallet_for_current_session(request)
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
     
-            connections = AgentConnection.objects.filter(id=connection_id, wallet=wallet).all()
+            connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
             # TODO validate connection id
             my_connection = connections[0]
 
-            # set wallet password
-            # TODO vcx_config['something'] = raw_password
+            proof_req_attrs = json.loads(proof_attrs)
+            proof_req_predicates = json.loads(proof_predicates)
+
+            requested_attrs = {}
+            for requested_attr in proof_req_attrs:
+                referent = requested_attr["name"] + "_referent"
+                requested_attrs[referent] = requested_attr
+            requested_predicates = {}
+            for requested_predicate in proof_req_predicates:
+                referent = requested_predicate["name"] + "_referent"
+                requested_predicates[referent] = requested_predicate
 
             # build the proof request and send
             try:
-                my_conversation = send_proof_request(wallet, my_connection, proof_uuid, proof_name, json.loads(proof_attrs), json.loads(proof_predicates))
+                conversation = send_proof_request(agent, my_connection, proof_name, requested_attrs, requested_predicates)
 
-                return render(request, template, {'msg': 'Updated conversation for ' + wallet.wallet_name})
-            except IndyError:
+                return render(request, template, {'msg': 'Updated conversation for ' + agent.agent_name})
+            except:
                 # ignore errors for now
-                print(" >>> Failed to update conversation for", wallet.wallet_name)
-                return render(request, 'aries/form_response.html', {'msg': 'Failed to update conversation for ' + wallet.wallet_name})
+                print(" >>> Failed to update conversation for", agent.agent_name)
+                return render(request, 'aries/form_response.html', {'msg': 'Failed to update conversation for ' + agent.agent_name})
 
     else:
         return render(request, 'aries/form_response.html', {'msg': 'Method not allowed'})
@@ -813,10 +821,10 @@ def handle_proof_req_response(
             conversation_id = cd.get('conversation_id')
             proof_req_name = cd.get('proof_req_name')
 
-            wallet = wallet_for_current_session(request)
-    
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+   
             # find conversation request
-            conversations = AgentConversation.objects.filter(id=conversation_id, connection__wallet=wallet).all()
+            conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
             my_conversation = conversations[0]
             # TODO validate conversation id
             # TODO validate connection id
@@ -824,37 +832,40 @@ def handle_proof_req_response(
 
             # find claims for this proof request and display for the user
             try:
-                claim_data = get_claims_for_proof_request(wallet, my_connection, my_conversation)
+                proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
+                claim_data = get_claims_for_proof_request(agent, my_conversation)
 
                 form = SelectProofReqClaimsForm(initial={
                          'conversation_id': conversation_id,
-                         'wallet_name': my_connection.wallet.wallet_name,
+                         'agent_name': my_connection.agent.agent_name,
                          'from_partner_name': my_connection.partner_name,
                          'proof_req_name': proof_req_name,
-                         'requested_attrs': claim_data,
+                         'selected_claims': claim_data,
+                         'proof_request': proof_request,
                     })
 
                 return render(request, response_template, {'form': form})
-            except IndyError:
+            except Exception as e:
                 # ignore errors for now
-                print(" >>> Failed to find claims for", wallet.wallet_name)
-                return render(request, 'aries/form_response.html', {'msg': 'Failed to find claims for ' + wallet.wallet_name})
+                print(" >>> Failed to find claims for", agent.agent_name, e)
+                return render(request, 'aries/form_response.html', {'msg': 'Failed to find claims for ' + agent.agent_name})
 
     else:
         # find conversation request, fill in form details
-        wallet = wallet_for_current_session(request)
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
         conversation_id = request.GET.get('conversation_id', None)
-        conversations = AgentConversation.objects.filter(id=conversation_id, connection__wallet=wallet).all()
+        conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
         # TODO validate conversation id
         conversation = conversations[0]
-        indy_conversation = json.loads(conversation.conversation_data)
         # TODO validate connection id
         connection = conversation.connection
+        proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
+        print("proof_request:", proof_request)
         form = SendProofReqResponseForm(initial={ 
                                                  'conversation_id': conversation_id,
-                                                 'wallet_name': connection.wallet.wallet_name,
+                                                 'agent_name': agent.agent_name,
                                                  'from_partner_name': connection.partner_name,
-                                                 'proof_req_name': indy_conversation['proof_request_data']['name'],
+                                                 'proof_req_name': proof_request['presentation_request']['name'],
                                                 })
 
     return render(request, form_template, {'form': form})

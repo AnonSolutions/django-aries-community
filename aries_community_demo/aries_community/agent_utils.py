@@ -987,8 +987,6 @@ def get_claims_for_proof_request(agent, conversation, additional_filters=None, i
     if additional_filters:
         print("additional_filters:", additional_filters)
         params = "?extra_query=" + urllib.parse.quote_plus(json.dumps(additional_filters))
-    print(agent.admin_endpoint + "/present-proof/records/" + conversation.guid + "/credentials" + params)
-    print(get_ADMIN_REQUEST_HEADERS(agent))
     try:
         response = requests.get(
             agent.admin_endpoint
@@ -1028,6 +1026,7 @@ def send_claims_for_proof_request(agent, conversation, supplied_attrs, supplied_
     # create connection and generate invitation
     try:
         presentation = build_presentation(agent, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
+        print("presentation:", presentation)
         response = requests.post(
             agent.admin_endpoint
             + "/present-proof/records/" + conversation.guid + "/send-presentation",
@@ -1057,6 +1056,7 @@ def handle_agent_proof_callback(agent, topic, payload):
     proof_request_id = payload["presentation_exchange_id"]
     connection_id = payload["connection_id"]
     print(">>> callback:", agent.agent_name, topic, state, proof_request_id)
+    print(">>> payload:", json.dumps(payload))
 
     connection = AgentConnection.objects.filter(agent=agent, guid=connection_id).get()
     proof_requests = AgentConversation.objects.filter(connection__agent=agent, guid=proof_request_id).all()
