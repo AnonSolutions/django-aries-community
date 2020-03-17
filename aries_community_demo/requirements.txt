@@ -4,7 +4,7 @@ djangorestframework-bulk>=0.2.1,<1
 django-cors-headers>=2.4.0,<3
 django-filter>=1.1.0
 python-dateutil>=2.7.2
--e git+https://github.com/deschler/django-modeltranslation.git#egg=django-modeltranslation
+#-e git+https://github.com/deschler/django-modeltranslation.git#egg=django-modeltranslation
 django-extensions
 markdown
 aiohttp~=3.3.0
