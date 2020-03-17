@@ -44,6 +44,7 @@ ARIES_CONFIG = {
     'webhook_host': 'localhost',
     'webhook_port': '8000',
     'webhook_root': '',
+    'aca_py_bin_path': '../venv/bin/',
 }
 
 ARIES_PROFILE_VIEW = 'aries_community.views.profile_view'

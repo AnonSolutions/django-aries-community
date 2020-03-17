@@ -208,7 +208,11 @@ def stop_agent(agent):
 # low-level utilities to manage aca-py processes
 ######################################################################
 
-DEFAULT_BIN_PATH = "../venv/bin"
+if 'aca_py_bin_path' in settings.ARIES_CONFIG:
+    DEFAULT_BIN_PATH = settings.ARIES_CONFIG['aca_py_bin_path']
+else:
+    DEFAULT_BIN_PATH = "../venv/bin/"
+
 DEFAULT_PYTHON_PATH = ".."
 START_TIMEOUT = 30.0
 s_print_lock = threading.Lock()
@@ -290,7 +294,7 @@ def start_aca_py(agent_name, agent_args, admin_endpoint, ADMIN_REQUEST_HEADERS, 
         bin_path = DEFAULT_BIN_PATH
     if bin_path:
         cmd_path = os.path.join(bin_path, cmd_path)
-    cmd_args = list(flatten((["python3", cmd_path, "start"], agent_args)))
+    cmd_args = list(flatten(([cmd_path, "start"], agent_args)))
 
     my_env = os.environ.copy()
     python_path = DEFAULT_PYTHON_PATH if python_path is None else python_path
