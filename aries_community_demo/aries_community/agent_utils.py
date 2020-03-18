@@ -183,14 +183,9 @@ def initialize_and_provision_agent(
 def start_agent(agent, cmd: str='start', config=None):
     """
     Start up an instance of an Aries Agent.
+    Only start if necessary (checks if it is already running).
     """
-    if agent.mobile_agent or (not agent.managed_agent):
-        return
-
-    if not config:
-        config = json.loads(agent.agent_config)
-
-    start_aca_py(agent.agent_name, config, agent.admin_endpoint, get_ADMIN_REQUEST_HEADERS(agent))
+    start_agent_if_necessary(agent, initialize_agent=True, cmd=cmd, config=config)
 
 
 def stop_agent(agent):
@@ -253,7 +248,8 @@ def detect_process(admin_url, ADMIN_REQUEST_HEADERS, start_timeout=START_TIMEOUT
     def fetch_swagger(url: str, ADMIN_REQUEST_HEADERS: dict, timeout: float):
         text = None
         wait_time = START_TIMEOUT
-        while wait_time > 0:
+        # always test at least once
+        while True:
             try:
                 resp = requests.get(url, headers=ADMIN_REQUEST_HEADERS)
                 resp.raise_for_status()
@@ -261,8 +257,10 @@ def detect_process(admin_url, ADMIN_REQUEST_HEADERS, start_timeout=START_TIMEOUT
                 return text
             except Exception:
                 pass
-            time.sleep(0.5)
             wait_time = wait_time - 0.5
+            if wait_time < 0:
+                break
+            time.sleep(0.5)
         return text
 
     status_url = admin_url + "/status"
@@ -512,16 +510,23 @@ def create_proof_request(name, description, attrs, predicates):
 ######################################################################
 # utilities to create and confirm agent-to-agent connections
 ######################################################################
-def start_agent_if_necessary(agent, initialize_agent) -> (AriesAgent, bool):
+def start_agent_if_necessary(agent, initialize_agent: bool=True, cmd: str='start', config=None) -> (AriesAgent, bool):
     # start agent if necessary
+    if agent.mobile_agent or (not agent.managed_agent):
+        return (agent, False)
+
     if initialize_agent:
         try:
-            detect_process(agent.admin_endpoint, get_ADMIN_REQUEST_HEADERS(agent), start_timeout=1.0)
+            detect_process(agent.admin_endpoint, get_ADMIN_REQUEST_HEADERS(agent), start_timeout=0.0)
             # didn't start it (assume it's already running)
             return (agent, False)
         except:
             # not running, try to start
-            start_agent(agent)
+            if not config:
+                config = json.loads(agent.agent_config)
+
+            start_aca_py(agent.agent_name, config, agent.admin_endpoint, get_ADMIN_REQUEST_HEADERS(agent))
+
             return (agent, True)
     else:
         # didn't start it (assume it's already running)
