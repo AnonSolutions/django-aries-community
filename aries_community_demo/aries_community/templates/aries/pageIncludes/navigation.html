@@ -18,24 +18,26 @@
 			</div>
 		</div>
 
-		<div class='topnav-con'>
-			{% if request.user.is_authenticated %}
-				<div class='topnav-item topnav-accountnamecon'>
-					<a href="{% url 'aries_profile' %}">
-						{{ request.user }} 
-                        {% if request.session.ACTIVE_ROLE %}
-                           [ {{ request.session.ACTIVE_ROLE }} ]
+                <div class='topnav-con'>
+                        {% if request.user.is_authenticated %}
+                                <div class='topnav-item topnav-accountnamecon'>
+                                        <a href="{% url 'aries_profile' %}">
+                                                {{ request.user }}
+
+                                                {% if request.session.ACTIVE_ROLE %}
+                        [ {{ request.session.ACTIVE_ROLE }} ]
                         {% endif %}
                         {% if request.session.ACTIVE_ORG %}
                           [ {{ request.session.ACTIVE_ORG }} ]
                         {% endif %}
-					</a>
-				</div>
-			{% else %}
-				<!-- TODO anon user -->
-			{% endif %}
-		</div>
-	</div> <!-- top nav ends -->
+                        <a href="{% url 'logout' %}?next={% url 'login' %}">{% trans "Exit" %}</a>
+                                        </a>
+                                </div>
+                        {% else %}
+                                <!-- TODO anon user -->
+                        {% endif %}
+                </div>
+        </div> <!-- top nav ends -->
 
 	{% if request.user.is_authenticated %}
 		<div class='sidenav'>
