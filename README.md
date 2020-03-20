@@ -117,3 +117,18 @@ At this point, both parties should have an Active connection to each other.
 
 TBD include additional descriptions, and a link to a video tutorial
 
+
+## Getting involved!
+
+To get involved as a committer, just create a fork of this repository and start coding!  You can raise Pull Requests with any changes you feel are warrented, please raise github issues before you do the PR.
+
+Also, when you check in your code, can you please use the following flags on your git command:
+
+git commit --signoff -S ...
+
+The "--signoff" is required for some open source projects (e.g. all of Hyperledger projects) so it's a good practice. 
+
+The "-S" digitally signs your commit (you need to setup a signing key, you can read about it here: https://help.github.com/en/github/authenticating-to-github/signing-commits) which is also a good practice to get into.
+
+Thanks for getting involved!
+
