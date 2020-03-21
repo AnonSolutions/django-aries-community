@@ -60,7 +60,7 @@
         		<div>
         			<h5>Connection Status: {{ connection.status }}
         		        {% if connection.status == 'invitation' %}
-                            <a href="{% url 'check_connection' %}?id={{connection.guid}}">(Check Status></a>
+                            <a href="{% url 'check_connection' %}?id={{connection.guid}}">(Check Status)</a>
         		        {% endif %}
                         {% if connection.status == 'request' %}
                             <a href="{% url 'check_connection' %}?id={{connection.guid}}">(Check Status)</a>
