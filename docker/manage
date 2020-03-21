@@ -272,6 +272,7 @@ start-dev|up-dev)
   _startupParams=$(getStartupParamsDev $@)
   configureEnvironment $@
   export DJANGO_SETTINGS=docker_dev_settings
+  export WEBHOOK_URL=http://aries-django-dev:8000/agent_cb/1JZCV9DP8ETL9O2Q7T2A
   docker-compose up -d ${_startupParams} 
   docker-compose logs -f
  ;;
