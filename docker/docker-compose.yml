@@ -79,8 +79,37 @@ services:
       - anon
     ports:
       - 8000:8000
-    #volumes:
-    #  - "..:/home/aries/aries_community_demo"
+    depends_on:
+      - wallet-db
+    entrypoint: >
+        /bin/bash -c "
+        echo waiting for dependencies ... ${DJANGO_SETTINGS} ...;
+        sleep 10;
+        cd /home/aries/aries_community_demo/aries_community_demo;
+        touch db.sqlite3;
+        DJANGO_SETTINGS_MODULE=aries_community_demo.${DJANGO_SETTINGS} ./reload_db.sh;
+        sleep 5;
+        DJANGO_SETTINGS_MODULE=aries_community_demo.${DJANGO_SETTINGS} ./init_data_docker.sh;
+        sleep 5;
+        DJANGO_SETTINGS_MODULE=aries_community_demo.${DJANGO_SETTINGS} python manage.py runserver 0.0.0.0:8000;"
+
+  # 
+  # aries-django-dev
+  # 
+  aries-django-dev:
+    build:
+      context: ../aries_community_demo
+      dockerfile: Dockerfile-dev
+    environment:
+      - GENESIS_URL=${GENESIS_URL}
+      - LEDGER_URL=${LEDGER_URL}
+      - DJANGO_SETTINGS=${DJANGO_SETTINGS}
+    networks:
+      - anon
+    ports:
+      - 8000:8000
+    volumes:
+      - "..:/home/aries/aries_community_demo"
     depends_on:
       - wallet-db
     entrypoint: >

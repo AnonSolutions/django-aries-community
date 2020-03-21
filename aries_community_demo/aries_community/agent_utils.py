@@ -249,7 +249,7 @@ def detect_process(admin_url, ADMIN_REQUEST_HEADERS, start_timeout=START_TIMEOUT
         text = None
         wait_time = START_TIMEOUT
         # always test at least once
-        while True:
+        while wait_time >= 0:
             try:
                 resp = requests.get(url, headers=ADMIN_REQUEST_HEADERS)
                 resp.raise_for_status()
@@ -259,9 +259,9 @@ def detect_process(admin_url, ADMIN_REQUEST_HEADERS, start_timeout=START_TIMEOUT
                 pass
             wait_time = wait_time - 0.5
             if wait_time < 0:
-                break
+                return None
             time.sleep(0.5)
-        return text
+        return None
 
     status_url = admin_url + "/status"
     status_text = fetch_swagger(status_url, ADMIN_REQUEST_HEADERS, start_timeout)
