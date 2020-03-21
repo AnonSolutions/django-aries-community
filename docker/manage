@@ -22,6 +22,7 @@ usage() {
             By default all containers will be started.
             
       start - Same as up
+      start-dev - Same as up, but starts the dev django (mounts local drives)
 
       up-bcovrin -  Like "up", runs on the bcovrin network.
       start-bcovrin - Same as up-bcovrin
@@ -46,6 +47,7 @@ EOF
 # Default Settings:
 # -----------------------------------------------------------------------------------------------------------------
 DEFAULT_CONTAINERS="wallet-db trustee-agent aries-django"
+DEV_CONTAINERS="wallet-db trustee-agent aries-django-dev"
 STN_CONTAINERS="wallet-db trustee-agent aries-django"
 # -----------------------------------------------------------------------------------------------------------------
 # Functions:
@@ -180,6 +182,31 @@ getStartupParams() {
   echo ${ARGS} ${CONTAINERS}
 }
 
+getStartupParamsDev() {
+  CONTAINERS=""
+  ARGS="--force-recreate"
+
+  for arg in $@; do
+    case "$arg" in
+    *=*)
+      # Skip it
+      ;;
+    -*)
+      ARGS+=" $arg"
+      ;;
+    *)
+      CONTAINERS+=" $arg"
+      ;;
+    esac
+  done
+
+  if [ -z "$CONTAINERS" ]; then
+    CONTAINERS="$DEV_CONTAINERS"
+  fi
+
+  echo ${ARGS} ${CONTAINERS}
+}
+
 getStartupParamsStn() {
   CONTAINERS=""
   ARGS="--force-recreate"
@@ -238,6 +265,13 @@ case "${COMMAND}" in
 start|up)
   _startupParams=$(getStartupParams $@)
   configureEnvironment $@
+  docker-compose up -d ${_startupParams} 
+  docker-compose logs -f
+ ;;
+start-dev|up-dev)
+  _startupParams=$(getStartupParamsDev $@)
+  configureEnvironment $@
+  export DJANGO_SETTINGS=docker_dev_settings
   docker-compose up -d ${_startupParams} 
   docker-compose logs -f
  ;;
