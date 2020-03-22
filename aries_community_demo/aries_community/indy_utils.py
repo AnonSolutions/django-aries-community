@@ -70,7 +70,7 @@ def validate_seed(seed: (str, bytes)) -> bytes:
     return seed
 
 
-def seed_to_did(seed: str) -> str:
+def seed_to_did(seed: str) -> (str, str):
     """
     Derive a DID from a seed value.
 
@@ -84,7 +84,7 @@ def seed_to_did(seed: str) -> str:
     seed = validate_seed(seed)
     verkey, _ = create_keypair(seed)
     did = bytes_to_b58(verkey[:16])
-    return did
+    return (did, verkey)
 
 
 async def register_did_on_ledger(ledger_url, alias, seed):

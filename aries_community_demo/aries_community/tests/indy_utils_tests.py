@@ -9,7 +9,7 @@ TEST_DID  = "6sYe1y3zXhmyrBkgHgAgaq"
 class IndyUtilsTests(TestCase):
 
     def test_seed_to_did(self):
-        did = seed_to_did(TEST_SEED)
+        (did, verkey) = seed_to_did(TEST_SEED)
 
         assert did == TEST_DID
 
