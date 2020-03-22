@@ -28,13 +28,21 @@ cd django-aries-community/docker
 
 That's it!  Your docker is up and running, open a browser and navigate to http://localhost:8000/
 
-To shut down the environment, CTRL-C to stop the docker services and then in each shell run:
+2. To shut down the environment, CTRL-C to stop the docker services and then in each shell run:
 
 ```bash
 ./manage rm
 ```
 
 Note that you need to run this (`./manage rm`) in BOTH shells (von-network and aries-community), it's important to keep the data in both sets of docker images in sync.
+
+3. If you want to run in "docker development" mode, then run the following command in the second shell:
+
+```bash
+./manage start-dev
+```
+
+This mounts the code from the local filesystem (instead of copying it into the docker container) so changes will get refreshed.
 
 
 ### Running Django Aries Community - "Bare Metal" Version
@@ -49,10 +57,12 @@ Note it is recommended to build/run on either Ubuntu 16.04 or on the latest Mac 
 
 ```bash
 git clone https://github.com/hyperledger/indy-sdk.git
-cd indy-sdk
-git checkout master
-cd ..
 git clone https://github.com/bcgov/von-network.git
+git clone https://github.com/ianco/indy-plenum.git
+cd idy-plenum
+git checkout von_network_fixes
+cd ..
+git clone https://github.com/anonsolutions/django-aries-community.git
 ```
 
 1a. Install dependencies in von-network:
@@ -65,100 +75,64 @@ pip install -r server/requirements.txt
 pip install -r server/requirements-dev.txt
 ```
 
-2. In the indy-sdk repository, build all necessary libraries (Note: check out the [indy-sdk repo](https://github.com/hyperledger/indy-sdk) for dependencies, such as rust):
+2. In the root indy-sdk directory, build the container for the indy nodes:
 
 ```bash
 cd indy-sdk
-cd libindy
-cargo build
-ln -s target/debug/libindy.so /use/local/lib/
-cd ..
-
-cd experimental/plugins/postgres_storage
-cargo build
-ln -s target/debug/libindystrgpostgres.so /use/local/lib/
-cd ../../..
-
-cd cli
-cargo build
-cd ..
-```
-
-3. In the root indy-sdk directory, build and run the indy nodes:
-
-```bash
 docker build -f ci/indy-pool.dockerfile -t indy_pool .
-docker run -itd -p 9701-9708:9701-9708 indy_pool
 ```
 
-... and run a postgres database:
+3. In a separate shell, install the aries-cloudagent-python dependencies:
 
 ```bash
+cd django-aries-community/aries_community_demo
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+```
+
+4. Start up the indy nodes and run a postgres database:
+
+```bash
+cd indy-sdk
+docker run -itd -p 9701-9708:9701-9708 indy_pool
 docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d -p 5432:5432 postgres -c 'log_statement=all' -c 'logging_collector=on' -c 'log_destination=stderr'
 ```
 
-4. In a separate shell, check out the aries-cloudagent-python repository:
+5. Start up the von-network ledger browser - this also provides the capability to register DID's on the ledger for our Test organizations.  Note that you need to pass in the location of your `indy-plenum` code and the location of your `local-genesis.txt` file:
 
 ```bash
-git clone ...
-cd ...
-etc ...
+cd von-network
+PYTHONPATH=<plenum location>/indy-plenum GENESIS_FILE=<genesis location>/local-genesis.txt REGISTER_NEW_DIDS=true PORT=9000 python -m server.server
 ```
 
-5. TODO install the Python requirements
+(Note that the ledger browser uses a very limited subset of plenum code to sign the DID transactions when writing to the ledger.  You can try installing plenum via pip if you like, although the dependencies are fairly complicated.)
 
-TODO ...  
-
-6. Open a shell to run the Django Aries Community edition:
+6. Initialize the environment and setup test agents:
 
 ```bash
 cd django-aries-community/aries_community_demo
 ./reload_db.sh
+./init_data.sh
+```
+
+7. Finally run the django server:
+
+```bash
 python manage.py runserver
-```
-
-7. Whew!  One more - start up the von-network ledger browser - this also provides the capability to register DID's on the ledger for our Test organizations:
-
-```bash
-cd von-network
-GENESIS_FILE=/tmp/atria-genesis.txt PORT=9000 python -m server.server
-```
-
-Note that the genesis file at the above location is created by Django Aries Community on startup.
-
-Note also - depending on the state of the von-network and indy-plenum repositories, you may need to run with the indy-plenum code locally:
-
-```bash
-PYTHONPATH=/Users/icostanzo/Reference/indy-plenum GENESIS_FILE=/Users/icostanzo/Projects/aries-test-agent-proxy/aries-backchannels/local-genesis.txt REGISTER_NEW_DIDS=true PORT=9000 python -m server.server
 ```
 
 ### Reset the Django Aries Community environment
 
 To reset the environment and start from scratch:
 
-1. Shut down the von-network ledger browser (just CRTL-C to kill this process), and then:
+1. Shut down the von-network ledger browser (just CRTL-C to kill this process)
+
+2. Kill the 2 docker processes (indy nodes and postgres database):
 
 ```bash
+docker ps -a -q | xargs docker rm -f
 rm -rf ~/.indy_client/
 ```
 
-2. Kill the Django process (CTRL-C) and reload the Test database:
-
-```bash
-cd django-aries-community/aries_community_demo
-./reload_db.sh
-```
-
-3. Kill the 2 docker processes (indy nodes and postgres database):
-
-```bash
-# to kill the 2 specific dockers:
-docker ps   # (get the process id's)
-docker stop <process 1> <process 2>
-docker rm -f <process 1> <process 2>
-# ... or to indescriminitely kill all dockers:
-docker ps -q  | xargs docker rm -f
-```
-
-To re-start the environment, just go to step #1 of the previous section.
+To re-start the environment, just go to step #4 of the previous section.
 
