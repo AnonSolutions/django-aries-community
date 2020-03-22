@@ -61,7 +61,7 @@ def aries_provision_config(
     postgres = True
     postgres_config = settings.ARIES_CONFIG['storage_config']
     postgres_creds = settings.ARIES_CONFIG['storage_credentials']
-    genesis_url = environ.get('GENESIS_URL', settings.ARIES_CONFIG['genesis_url'])
+    genesis_url = os.environ.get('GENESIS_URL', settings.ARIES_CONFIG['genesis_url'])
     webhook_host = settings.ARIES_CONFIG['webhook_host']
     webhook_port = settings.ARIES_CONFIG['webhook_port']
     webhook_root = settings.ARIES_CONFIG['webhook_root']

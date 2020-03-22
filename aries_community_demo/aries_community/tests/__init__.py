@@ -3,4 +3,3 @@ from .model_tests import IndySchemaTests, IndyCredentialDefinitionTests, IndyPro
 from .model_tests import AgentConnectionTests, AgentConversationTests
 from .registration_util_tests import RegistrationTests
 from .agent_util_tests import AgentInteractionTests
-from .indy_utils_tests import IndyUtilsTests
