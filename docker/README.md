@@ -20,8 +20,6 @@ cd von-network
 
 ```bash
 git clone https://github.com/AnonSolutions/django-aries-community.git
-# this is necessary only on 'nix since we are mounting local directories
-chmod -R a+rwx django-aries-community/aries_community_demo
 cd django-aries-community/docker
 ./manage start
 ```
@@ -44,6 +42,12 @@ Note that you need to run this (`./manage rm`) in BOTH shells (von-network and a
 
 This mounts the code from the local filesystem (instead of copying it into the docker container) so changes will get refreshed.
 
+Note - if you are running on `NIX` (and ONLY if you are running on `nix`) then you *may* need to do the following:
+
+```
+# this is necessary only on 'nix since we are mounting local directories
+chmod -R a+rwx django-aries-community/aries_community_demo
+```
 
 ### Running Django Aries Community - "Bare Metal" Version
 
@@ -59,7 +63,7 @@ Note it is recommended to build/run on either Ubuntu 16.04 or on the latest Mac 
 git clone https://github.com/hyperledger/indy-sdk.git
 git clone https://github.com/bcgov/von-network.git
 git clone https://github.com/ianco/indy-plenum.git
-cd idy-plenum
+cd indy-plenum
 git checkout von_network_fixes
 cd ..
 git clone https://github.com/anonsolutions/django-aries-community.git
@@ -69,7 +73,7 @@ git clone https://github.com/anonsolutions/django-aries-community.git
 
 ```bash
 cd von-network
-virtualenv --python=python3.6 venv
+virtualenv venv
 source venv/bin/activate
 pip install -r server/requirements.txt
 pip install -r server/requirements-dev.txt
@@ -86,6 +90,7 @@ docker build -f ci/indy-pool.dockerfile -t indy_pool .
 
 ```bash
 cd django-aries-community/aries_community_demo
+virtualenv venv
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
 ```
