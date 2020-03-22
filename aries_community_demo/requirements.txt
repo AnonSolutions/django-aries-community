@@ -13,3 +13,4 @@ pyqrcode
 pypng
 requests
 git+https://github.com/ianco/aries-cloudagent-python#egg=aries-cloudagent
+pynacl
