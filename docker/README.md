@@ -105,6 +105,12 @@ cd von-network
 PYTHONPATH=<plenum location>/indy-plenum GENESIS_FILE=<genesis location>/local-genesis.txt REGISTER_NEW_DIDS=true PORT=9000 python -m server.server
 ```
 
+Wait until you see that the ledger brower is fully initialized, you will see:
+
+```
+2020-03-22 17:07:55,662|DEBUG|anchor.py|Finished resync
+```
+
 (Note that the ledger browser uses a very limited subset of plenum code to sign the DID transactions when writing to the ledger.  You can try installing plenum via pip if you like, although the dependencies are fairly complicated.)
 
 6. Initialize the environment and setup test agents:
@@ -119,6 +125,12 @@ cd django-aries-community/aries_community_demo
 
 ```bash
 python manage.py runserver
+```
+
+7a. You can also run the unit tests.  First ensure that the django server is not running, and then:
+
+```bash
+python manage.py test
 ```
 
 ### Reset the Django Aries Community environment
