@@ -10,8 +10,8 @@
 			<div class='profile-org-top-info-bar profile-anon-top-info-bar'>
 						<h2 class='profile-name'>{{ request.session.agent_owner }} ({{ request.session.agent_name }})</h2>
 				<div class='profile-top-bar-right'>
-					<div class='btn btn-connect'><i class="fas fa-user-plus"></i>Connect</div>
-					<div class='btn btn-connect'><i class="fas fa-comment"></i>Message</div>
+					<div class='btn btn-connect'><i class="fas fa-user-plus"></i>{% trans "Connect" %}</div>
+					<div class='btn btn-connect'><i class="fas fa-comment"></i>{% trans "Message" %}</div>
 				</div>
 			</div>
 		</div>
@@ -20,22 +20,22 @@
 			<div class='profile-nav-cont profile-anon-nav-cont'>
 				<div class='profile-nav'>
 					<div class='profile-nav-btn profile-nav-btn-profile active-profile-nav'>
-						<a href="{% url 'aries_profile' %}"><h5>Profile</h5><i class="fas fa-plus"></i></a>
+						<a href="{% url 'aries_profile' %}"><h5>{% trans "Profile" %}</h5><i class="fas fa-plus"></i></a>
 					</div>
 					<div class='profile-nav-btn profile-nav-btn-data'>
-						<a href="{% url 'aries_data' %}"><h5>Application-Managed Data</h5><i class="fas fa-plus"></i></a>
+						<a href="{% url 'aries_data' %}"><h5>{% trans "Application-Managed Data" %}</h5><i class="fas fa-plus"></i></a>
 					</div>
 					<div class='profile-nav-btn profile-nav-btn-connections'>
-						<a href="{% url 'connections' %}"><h5>Connections</h5><i class="fas fa-plus"></i></a>
+						<a href="{% url 'connections' %}"><h5>{% trans "Connections" %}</h5><i class="fas fa-plus"></i></a>
 					</div>
 					<div class='profile-nav-btn profile-nav-btn-conversations'>
-						<a href="{% url 'conversations' %}"><h5>Conversations</h5><i class="fas fa-plus"></i></a>
+						<a href="{% url 'conversations' %}"><h5>{% trans "Conversations" %}</h5><i class="fas fa-plus"></i></a>
 					</div>
 					<div class='profile-nav-btn profile-nav-btn-credentials'>
-						<a href="{% url 'credentials' %}"><h5>Credentials</h5><i class="fas fa-plus"></i></a>
+						<a href="{% url 'credentials' %}"><h5>{% trans "Credentials" %}</h5><i class="fas fa-plus"></i></a>
 					</div>
 					<div class='profile-nav-btn profile-nav-btn-wallet'>
-						<a href="{% url 'aries_wallet' %}"><h5>Wallet</h5><i class="fas fa-plus"></i></a>
+						<a href="{% url 'aries_wallet' %}"><h5>{% trans "Wallet" %}</h5><i class="fas fa-plus"></i></a>
 					</div>
 				</div>
 			</div>
