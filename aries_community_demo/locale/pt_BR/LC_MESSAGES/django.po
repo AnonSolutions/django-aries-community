@@ -1,0 +1,168 @@
+# This file is distributed under the same license as the Django package.
+#
+# Translators:
+# Guilherme Funchal da Silva <guilherme.funchal@gmail.com>, 2020
+msgid ""
+msgstr ""
+"Project-Id-Version: django\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-03-23 20:42+0100\n"
+"PO-Revision-Date: 2020-03-23 16:23-0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pt_BR\n"
+"X-Generator: Poedit 2.2.1\n"
+
+msgid "Individual"
+msgstr "Pessoa"
+
+msgid "Organization"
+msgstr "Organização"
+
+msgid "Welcome to Anon.world"
+msgstr "Benvindo a página"
+
+msgid "Already Have an Account?"
+msgstr "Já tem uma conta?"
+
+msgid "Sign in as:"
+msgstr "Conectar como:"
+
+msgid "Individual Login"
+msgstr "Login pessoal"
+
+msgid "Your username and password didn't match."
+msgstr "Seu usuário ou senha não coincidem."
+
+msgid "Please try again."
+msgstr "Por favor, tente novamente."
+
+msgid "Your account doesn't have access to this page."
+msgstr "Sua conta não tem acesso a esta página."
+
+msgid "To proceed, please login with an account that has access."
+msgstr "Para continuar, faça login com uma conta que tenha acesso."
+
+msgid "Forgot Password?"
+msgstr "Esqueceu a senha?"
+
+msgid "Sign In"
+msgstr "Conectar"
+
+msgid "Stay Signed In"
+msgstr "Fique conectado"
+
+msgid "Organization Login"
+msgstr "Login na Organização"
+
+msgid "Please login to see this page."
+msgstr "Por favor faça o login para ver esta página."
+
+msgid "Create User Account"
+msgstr "Criar Conta Pessoal"
+
+msgid "Create Organization Account"
+msgstr "Criar Conta na Organização"
+
+msgid "Sign up"
+msgstr "Se inscrever"
+
+msgid "Profile"
+msgstr "Perfil"
+
+msgid "Application-Managed Data"
+msgstr "Dados do APP"
+
+msgid "Connections"
+msgstr "Conexões"
+
+msgid "Conversations"
+msgstr "Mensagens"
+
+msgid "Credentials"
+msgstr "Credenciais"
+
+msgid "Wallet"
+msgstr "Carteira"
+
+msgid "Message"
+msgstr "Mensagem"
+
+msgid "Connect"
+msgstr "Conectar"
+
+msgid "Submit"
+msgstr "Enviar"
+
+msgid "Log Out"
+msgstr "Sair"
+
+msgid "Send Connection Invite"
+msgstr "Enviar convite de conexão"
+
+msgid "Respond to (External) Invite"
+msgstr "Responder a convite externo"
+
+msgid "Agent Connections"
+msgstr "Conexões do agente"
+
+msgid "Accept"
+msgstr "Aceitar"
+
+msgid "Check Status"
+msgstr "Verifica estado"
+
+msgid "Send Credential"
+msgstr "Envia credencial"
+
+msgid "Send Proof Request"
+msgstr "Enviar solicitação de prova"
+
+msgid "Accept Offer"
+msgstr "Aceita oferta"
+
+msgid "Credential"
+msgstr "Credencial"
+
+msgid "Schema"
+msgstr "Esquema"
+
+msgid "Referent"
+msgstr "Referente"
+
+msgid "Cred Def"
+msgstr "Cred Def"
+
+msgid "User Data"
+msgstr "Dados do usuário"
+
+msgid "Date Aquired"
+msgstr "Data de aquisição"
+
+msgid "Your Connections"
+msgstr "Suas conexões"
+
+msgid "or:"
+msgstr "ou:"
+
+msgid "Account Name"
+msgstr "Nome da conta"
+
+msgid "Exit"
+msgstr "Sair"
+
+msgid "Mobile QR"
+msgstr "QR Code"
+
+
+msgid "Connection Response"
+msgstr "Resposta de conexão"
+
+msgid "Supply Proof"
+msgstr "Prova de fornecimento"
+
+msgid "Select Claims for Proof"
+msgstr "Selecionar reivindicações para prova"
