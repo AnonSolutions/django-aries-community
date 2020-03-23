@@ -5,7 +5,7 @@
 	<div class='newsfeed-posted-info'>
 		<div>
 			<a href=''>
-				<h2>Agent Connections</h2>
+				<h2>{% trans "Agent Connections" %}</h2>
 			</a>
 		</div>
 		<div>
@@ -33,8 +33,8 @@
                     </a>
                 </div>
                 <div>
-                    <a href="{% url 'connection_response' %}?id={{invitation.id}}"}>Accept</a>
-                    <a href="{% url 'connection_qr' token=invitation.id %}"}>Mobile QR</a>
+                    <a href="{% url 'connection_response' %}?id={{invitation.id}}"}>{% trans "Accept" %}</a>
+                    <a href="{% url 'connection_qr' token=invitation.id %}"}>{% trans "Mobile QR" %}</a>
                 </div>
             </div>
         </div>
@@ -60,20 +60,20 @@
         		<div>
         			<h5>Connection Status: {{ connection.status }}
         		        {% if connection.status == 'invitation' %}
-                            <a href="{% url 'check_connection' %}?id={{connection.guid}}">(Check Status)</a>
+                            <a href="{% url 'check_connection' %}?id={{connection.guid}}">({% trans "Check Status" %})</a>
         		        {% endif %}
                         {% if connection.status == 'request' %}
-                            <a href="{% url 'check_connection' %}?id={{connection.guid}}">(Check Status)</a>
+                            <a href="{% url 'check_connection' %}?id={{connection.guid}}">({% trans "Check Status" %})</a>
                         {% endif %}
                         {% if connection.status == 'response' %}
-                            <a href="{% url 'check_connection' %}?id={{connection.guid}}">(Check Status)</a>
+                            <a href="{% url 'check_connection' %}?id={{connection.guid}}">({% trans "Check Status" %})</a>
                         {% endif %}
                 </div>
                 <div>
                         {% if connection.status == 'active' or connection.status == 'response' %}
-                            <a href="{% url 'select_credential_offer' %}?connection_id={{connection.guid}}">Send Credential</a>
-                            or:
-                            <a href="{% url 'select_proof_request' %}?connection_id={{connection.guid}}">Send Proof Request</a>
+                            <a href="{% url 'select_credential_offer' %}?connection_id={{connection.guid}}">{% trans "Send Credential" %}</a>
+                            {% trans "or:" %}
+                            <a href="{% url 'select_proof_request' %}?connection_id={{connection.guid}}">{% trans "Send Proof Request" %}</a>
                         {% endif %}
         			</h5>
         		</div>
