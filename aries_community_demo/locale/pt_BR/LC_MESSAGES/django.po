@@ -157,7 +157,6 @@ msgstr "Sair"
 msgid "Mobile QR"
 msgstr "QR Code"
 
-
 msgid "Connection Response"
 msgstr "Resposta de conexão"
 
@@ -175,4 +174,3 @@ msgstr "Predicados (ZKP's):"
 
 msgid "Self-attested:"
 msgstr "Auto-atestado:"
-
