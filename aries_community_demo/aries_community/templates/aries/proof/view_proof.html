@@ -17,14 +17,14 @@
                 <h3>{% trans "Revealed:" %}</h3>
                 {% for attr, value in proof.presentation.requested_proof.revealed_attrs.items %}
                 <h4>{{ attr }} = {{ value.raw }}</h4>
-                Cred Def: {{ value.identifier.cred_def_id }}
+                {% trans "Cred Def" %}: {{ value.identifier.cred_def_id }}
                 {% endfor %}
               </div>
               <div>
                 <h3>{% trans "Predicates (ZKP's):" %}</h3>
                 {% for attr, value in proof.presentation.requested_proof.predicates.items %}
                 <h4>{{ attr }}</h4>
-                Cred Def: {{ value.identifier.cred_def_id }}
+                {% trans "Cred Def" %}: {{ value.identifier.cred_def_id }}
                 {% endfor %}
               </div>
               <div>
