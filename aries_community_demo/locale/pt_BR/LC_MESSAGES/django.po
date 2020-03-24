@@ -68,7 +68,7 @@ msgid "Create Organization Account"
 msgstr "Criar Conta na Organização"
 
 msgid "Sign up"
-msgstr "Se inscrever"
+msgstr "inscrever-se"
 
 msgid "Profile"
 msgstr "Perfil"
@@ -166,3 +166,13 @@ msgstr "Prova de fornecimento"
 
 msgid "Select Claims for Proof"
 msgstr "Selecionar reivindicações para prova"
+
+msgid "Revealed:"
+msgstr "Revelado:"
+
+msgid "Predicates (ZKP's):"
+msgstr "Predicados (ZKP's):"
+
+msgid "Self-attested:"
+msgstr "Auto-atestado:"
+
