@@ -156,6 +156,7 @@ LANGUAGES = (
     ('es', gettext('Spanish')),
     ('zh-hans', gettext('Chinese')),
     ('fr', gettext('French')),
+    ('pt-br', gettext('Portuguese')),
 )
 MODELTRANSLATION_DEFAULT_LANGUAGE = 'en'
 MODELTRANSLATION_TRANSLATION_REGISTRY = "aries_community.translation"
