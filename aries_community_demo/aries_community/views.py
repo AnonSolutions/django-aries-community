@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, get_user_model, login
 from django.urls import reverse
 from django.conf import settings
+from django.utils.translation import ugettext_lazy as trans
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -310,7 +311,7 @@ def handle_connection_request(
                 target_name = my_connection.partner_name
                 institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
                 return render(request, response_template, {
-                    'msg': 'Created invitation for ' + target_name, 
+                    'msg':  trans('Created invitation for ') + target_name,
                     'msg_txt': my_connection.invitation,
                     'msg_txt2': their_invitation.id,
                     })
