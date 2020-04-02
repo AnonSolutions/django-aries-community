@@ -182,3 +182,5 @@ msgstr "Tipo de conexão:"
 msgid "Connection Status:"
 msgstr "Estado da conexão:"
 
+msgid "Partner Name"
+msgstr "Nome da organização"
