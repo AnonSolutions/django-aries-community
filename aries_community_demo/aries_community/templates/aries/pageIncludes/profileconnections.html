@@ -55,10 +55,10 @@
         			</a>
         		</div>
         		<div>
-        			<h5>Connection Type: {{ connection.connection_type }}</h5>
+        			<h5>{% trans "Connection Type:" %} {{ connection.connection_type }}</h5>
         		</div>
         		<div>
-        			<h5>Connection Status: {{ connection.status }}
+        			<h5>{% trans "Connection Status:" %} {{ connection.status }}</h5>
         		        {% if connection.status == 'invitation' %}
                             <a href="{% url 'check_connection' %}?id={{connection.guid}}">({% trans "Check Status" %})</a>
         		        {% endif %}
