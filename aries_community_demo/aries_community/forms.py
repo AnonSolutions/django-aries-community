@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+from django.utils.translation import ugettext_lazy as trans
 
 import json
 
@@ -70,7 +71,7 @@ class VisibleAgentNameForm(forms.Form):
 
 
 class SendConnectionInvitationForm(AgentNameForm):
-    partner_name = forms.CharField(label='Partner Name', max_length=60)
+    partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
 
     def __init__(self, *args, **kwargs):
         super(SendConnectionInvitationForm, self).__init__(*args, **kwargs)
