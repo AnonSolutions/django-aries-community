@@ -311,7 +311,7 @@ def handle_connection_request(
                 target_name = my_connection.partner_name
                 institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
                 return render(request, response_template, {
-                    'msg':  trans('Created invitation for ') + target_name,
+                    'msg':  trans('Created invitation for ') + target_name, 
                     'msg_txt': my_connection.invitation,
                     'msg_txt2': their_invitation.id,
                     })
@@ -319,7 +319,7 @@ def handle_connection_request(
                 # ignore errors for now
                 print(" >>> Failed to create request for", agent.agent_name)
                 print(e)
-                return render(request, 'aries/form_response.html', {'msg': 'Failed to create invitation for ' + agent.agent_name})
+                return render(request, 'aries/form_response.html', {'msg': trans('Failed to create invitation for')  +  agent.agent_name})
 
     else:
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
@@ -340,7 +340,7 @@ def handle_connection_response(
     if request.method=='POST':
         form = SendConnectionResponseForm(request.POST)
         if not form.is_valid():
-            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+            return render(request, 'aries/form_response.html', {'msg': trans('Form error'), 'msg_txt': str(form.errors)})
         else:
             cd = form.cleaned_data
             invitation_id = cd.get('invitation_id')
