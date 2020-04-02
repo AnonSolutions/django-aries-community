@@ -184,3 +184,87 @@ msgstr "Estado da conexão:"
 
 msgid "Partner Name"
 msgstr "Nome da organização"
+
+msgid "Failed to create invitation for"
+msgstr "Falhou para criar convite para"
+
+msgid "Form error"
+msgstr "Erro no formulário"
+
+msgid "Invitation"
+msgstr "Convite"
+
+msgid "Invitation URL"
+msgstr "URL do convite"
+
+msgid "Credential Name"
+msgstr "Nome da credencial"
+
+msgid "Credential Attributes"
+msgstr "Atributos da credencial"
+
+msgid "Proof Request Type"
+msgstr "Tipo de requisição de prova"
+
+msgid "Proof Name"
+msgstr "Nome da prova"
+
+msgid "Proof Attributes"
+msgstr "Atributos da prova"
+
+msgid "Proof Predicates"
+msgstr "Predicados da prova"
+
+msgid "Proof Request Name"
+msgstr "Nome do pedido de prova"
+
+msgid "Select claim for"
+msgstr "Selecionar reivindicação para"
+
+msgid "No claims available for"
+msgstr "Nenhuma reivindicação disponível para"
+
+msgid "URL for company logo"
+msgstr "URL do logo"
+
+msgid "Managed Agent"
+msgstr "Agente gerenciado"
+
+msgid "Agent Admin Endpoint"
+msgstr "Ponto do administrador do agente"
+
+msgid "Agent Http Endpoint"
+msgstr "Ponto Http do agente"
+
+msgid "Agent Admin API Key"
+msgstr "API Key do Agent Admin"
+
+msgid "Agent Webhook Callback Key"
+msgstr "Chave de retorno de chamada do agente"
+
+msgid "Credential Attrs"
+msgstr "Atributos da credencial"
+
+msgid "Requested Proof"
+msgstr "Prova solicitada"
+
+msgid "First Name"
+msgstr "Primeiro nome"
+
+msgid "Last Name"
+msgstr "Último nome"
+
+msgid "Email Address"
+msgstr "Endereço de email"
+
+msgid "Required. Provide a valid email address."
+msgstr "Requerido. Fornecer um endereço de e-mail válido."
+
+msgid "Mobile Agent"
+msgstr "Agente mobile"
+
+msgid "Company Name"
+msgstr "Nome da organização"
+
+msgid "Company Role"
+msgstr "Regra da organização"
