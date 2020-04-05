@@ -1,0 +1,269 @@
+# This file is distributed under the same license as the Django package.
+#
+# Translators:
+# Guilherme Funchal da Silva <guilherme.funchal@gmail.com>, 2020
+msgid ""
+msgstr ""
+"Project-Id-Version: django\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-03-23 20:42+0100\n"
+"PO-Revision-Date: 2020-04-05 20:37-0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: es\n"
+"X-Generator: Poedit 2.2.1\n"
+
+msgid "Individual"
+msgstr "Persona"
+
+msgid "Organization"
+msgstr "Organizacion"
+
+msgid "Welcome to Anon.world"
+msgstr "Bienvenido a Anon.world"
+
+msgid "Already Have an Account?"
+msgstr "¿Ya tienes una cuenta?"
+
+msgid "Sign in as:"
+msgstr "Conectar como:"
+
+msgid "Individual Login"
+msgstr "Inicio de sesión personal"
+
+msgid "Your username and password didn't match."
+msgstr "Su nombre de usuario o contraseña no coinciden."
+
+msgid "Please try again."
+msgstr "Por favor, intente nuevamente."
+
+msgid "Your account doesn't have access to this page."
+msgstr "Su cuenta no tiene acceso a esta página."
+
+msgid "To proceed, please login with an account that has access."
+msgstr "Para continuar, inicie sesión con una cuenta que tenga acceso"
+
+msgid "Forgot Password?"
+msgstr "Olvido la contraseña?"
+
+msgid "Sign In"
+msgstr "Conectar"
+
+msgid "Stay Signed In"
+msgstr "Mantente conectado"
+
+msgid "Organization Login"
+msgstr "Inicio de sesión de la organización"
+
+msgid "Please login to see this page."
+msgstr "Inicia sesión para ver esta página."
+
+msgid "Create User Account"
+msgstr "Crear cuenta personal"
+
+msgid "Create Organization Account"
+msgstr "Crear cuenta de organización"
+
+msgid "Sign up"
+msgstr "Suscribirse"
+
+msgid "Profile"
+msgstr "Perfil"
+
+msgid "Application-Managed Data"
+msgstr "Datos de la APLICACIÓN"
+
+msgid "Connections"
+msgstr "Conexiones"
+
+msgid "Conversations"
+msgstr "Mensajes"
+
+msgid "Credentials"
+msgstr "Credenciales"
+
+msgid "Wallet"
+msgstr "Billetera"
+
+msgid "Message"
+msgstr "Mensajes"
+
+msgid "Connect"
+msgstr "Conectar"
+
+msgid "Submit"
+msgstr "Enviar"
+
+msgid "Log Out"
+msgstr "Salir"
+
+msgid "Send Connection Invite"
+msgstr "Enviar invitación de conexión"
+
+msgid "Respond to (External) Invite"
+msgstr "Responder a una invitación externa"
+
+msgid "Agent Connections"
+msgstr "Conexiones de agente"
+
+msgid "Accept"
+msgstr "Aceptar"
+
+msgid "Check Status"
+msgstr "Verificar estado"
+
+msgid "Send Credential"
+msgstr "Enviar credencial"
+
+msgid "Send Proof Request"
+msgstr "Enviar solicitud de prueba"
+
+msgid "Accept Offer"
+msgstr "Aceptar oferta"
+
+msgid "Credential"
+msgstr "Credencial"
+
+msgid "Schema"
+msgstr "Diseño"
+
+msgid "Referent"
+msgstr "Referencial"
+
+msgid "Cred Def"
+msgstr "Cred Def"
+
+msgid "User Data"
+msgstr "Datos del usuario"
+
+msgid "Date Aquired"
+msgstr "Fecha de compra"
+
+msgid "Your Connections"
+msgstr "Sus conexiones"
+
+msgid "or:"
+msgstr "ou:"
+
+msgid "Account Name"
+msgstr "Nombre de cuenta"
+
+msgid "Exit"
+msgstr "Salir"
+
+msgid "Mobile QR"
+msgstr "QR Code"
+
+msgid "Connection Response"
+msgstr "Respuesta de conexión"
+
+msgid "Supply Proof"
+msgstr "Prueba de suministro"
+
+msgid "Select Claims for Proof"
+msgstr "Seleccionar reclamos para prueba"
+
+msgid "Revealed:"
+msgstr "Revelado:"
+
+msgid "Predicates (ZKP's):"
+msgstr "Predicados (ZKP's):"
+
+msgid "Self-attested:"
+msgstr "Autocertificado:"
+
+msgid "Connection Type:"
+msgstr "Tipo de conexión:"
+
+msgid "Connection Status:"
+msgstr "Estado de la conexión:"
+
+msgid "Partner Name"
+msgstr "Nombre de la organización"
+
+msgid "Failed to create invitation for"
+msgstr "No se pudo crear la invitación para"
+
+msgid "Form error"
+msgstr "Error de formulario"
+
+msgid "Invitation"
+msgstr "Invitación"
+
+msgid "Invitation URL"
+msgstr "URL de invitación"
+
+msgid "Credential Name"
+msgstr "Nombre de credencial"
+
+msgid "Credential Attributes"
+msgstr "Atributos de credenciales"
+
+msgid "Proof Request Type"
+msgstr "Tipo de solicitud de prueba"
+
+msgid "Proof Name"
+msgstr "Nombre de la prueba"
+
+msgid "Proof Attributes"
+msgstr "Atributos de prueba"
+
+msgid "Proof Predicates"
+msgstr "Predicado de la prueba"
+
+msgid "Proof Request Name"
+msgstr "Nombre de la solicitud de prueba"
+
+msgid "Select claim for"
+msgstr "Seleccionar reclamo para"
+
+msgid "No claims available for"
+msgstr "No hay reclamos disponibles para"
+
+msgid "URL for company logo"
+msgstr "URL del logotipo"
+
+msgid "Managed Agent"
+msgstr "Agente gestionado"
+
+msgid "Agent Admin Endpoint"
+msgstr "Punto de administrador del agente"
+
+msgid "Agent Http Endpoint"
+msgstr "Agente Http Point"
+
+msgid "Agent Admin API Key"
+msgstr "Clave API del administrador del agente"
+
+msgid "Agent Webhook Callback Key"
+msgstr "Clave de devolución de llamada del agente"
+
+msgid "Credential Attrs"
+msgstr "Atributos de credenciales"
+
+msgid "Requested Proof"
+msgstr "Prueba solicitada"
+
+msgid "First Name"
+msgstr "Primeiro nombre"
+
+msgid "Last Name"
+msgstr "Ultimo nombre"
+
+msgid "Email Address"
+msgstr "Dirección de correo electrónico"
+
+msgid "Required. Provide a valid email address."
+msgstr "Requerido. Proporcione una dirección de correo electrónico válida."
+
+msgid "Mobile Agent"
+msgstr "Agente móvil"
+
+msgid "Company Name"
+msgstr "Nombre de la organización"
+
+msgid "Company Role"
+msgstr "Regla de la organización"
