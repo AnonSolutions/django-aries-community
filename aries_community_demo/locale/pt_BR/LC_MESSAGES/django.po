@@ -1,0 +1,270 @@
+# This file is distributed under the same license as the Django package.
+#
+# Translators:
+# Guilherme Funchal da Silva <guilherme.funchal@gmail.com>, 2020
+msgid ""
+msgstr ""
+"Project-Id-Version: django\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-03-23 20:42+0100\n"
+"PO-Revision-Date: 2020-03-23 16:23-0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pt_BR\n"
+"X-Generator: Poedit 2.2.1\n"
+
+msgid "Individual"
+msgstr "Pessoa"
+
+msgid "Organization"
+msgstr "Organização"
+
+msgid "Welcome to Anon.world"
+msgstr "Benvindo a página"
+
+msgid "Already Have an Account?"
+msgstr "Já tem uma conta?"
+
+msgid "Sign in as:"
+msgstr "Conectar como:"
+
+msgid "Individual Login"
+msgstr "Login pessoal"
+
+msgid "Your username and password didn't match."
+msgstr "Seu usuário ou senha não coincidem."
+
+msgid "Please try again."
+msgstr "Por favor, tente novamente."
+
+msgid "Your account doesn't have access to this page."
+msgstr "Sua conta não tem acesso a esta página."
+
+msgid "To proceed, please login with an account that has access."
+msgstr "Para continuar, faça login com uma conta que tenha acesso."
+
+msgid "Forgot Password?"
+msgstr "Esqueceu a senha?"
+
+msgid "Sign In"
+msgstr "Conectar"
+
+msgid "Stay Signed In"
+msgstr "Fique conectado"
+
+msgid "Organization Login"
+msgstr "Login na Organização"
+
+msgid "Please login to see this page."
+msgstr "Por favor faça o login para ver esta página."
+
+msgid "Create User Account"
+msgstr "Criar Conta Pessoal"
+
+msgid "Create Organization Account"
+msgstr "Criar Conta na Organização"
+
+msgid "Sign up"
+msgstr "inscrever-se"
+
+msgid "Profile"
+msgstr "Perfil"
+
+msgid "Application-Managed Data"
+msgstr "Dados do APP"
+
+msgid "Connections"
+msgstr "Conexões"
+
+msgid "Conversations"
+msgstr "Mensagens"
+
+msgid "Credentials"
+msgstr "Credenciais"
+
+msgid "Wallet"
+msgstr "Carteira"
+
+msgid "Message"
+msgstr "Mensagem"
+
+msgid "Connect"
+msgstr "Conectar"
+
+msgid "Submit"
+msgstr "Enviar"
+
+msgid "Log Out"
+msgstr "Sair"
+
+msgid "Send Connection Invite"
+msgstr "Enviar convite de conexão"
+
+msgid "Respond to (External) Invite"
+msgstr "Responder a convite externo"
+
+msgid "Agent Connections"
+msgstr "Conexões do agente"
+
+msgid "Accept"
+msgstr "Aceitar"
+
+msgid "Check Status"
+msgstr "Verifica estado"
+
+msgid "Send Credential"
+msgstr "Envia credencial"
+
+msgid "Send Proof Request"
+msgstr "Enviar solicitação de prova"
+
+msgid "Accept Offer"
+msgstr "Aceita oferta"
+
+msgid "Credential"
+msgstr "Credencial"
+
+msgid "Schema"
+msgstr "Esquema"
+
+msgid "Referent"
+msgstr "Referente"
+
+msgid "Cred Def"
+msgstr "Cred Def"
+
+msgid "User Data"
+msgstr "Dados do usuário"
+
+msgid "Date Aquired"
+msgstr "Data de aquisição"
+
+msgid "Your Connections"
+msgstr "Suas conexões"
+
+msgid "or:"
+msgstr "ou:"
+
+msgid "Account Name"
+msgstr "Nome da conta"
+
+msgid "Exit"
+msgstr "Sair"
+
+msgid "Mobile QR"
+msgstr "QR Code"
+
+
+msgid "Connection Response"
+msgstr "Resposta de conexão"
+
+msgid "Supply Proof"
+msgstr "Prova de fornecimento"
+
+msgid "Select Claims for Proof"
+msgstr "Selecionar reivindicações para prova"
+
+msgid "Revealed:"
+msgstr "Revelado:"
+
+msgid "Predicates (ZKP's):"
+msgstr "Predicados (ZKP's):"
+
+msgid "Self-attested:"
+msgstr "Auto-atestado:"
+
+msgid "Connection Type:"
+msgstr "Tipo de conexão:"
+
+msgid "Connection Status:"
+msgstr "Estado da conexão:"
+
+msgid "Partner Name"
+msgstr "Nome da organização"
+
+msgid "Failed to create invitation for"
+msgstr "Falhou para criar convite para"
+
+msgid "Form error"
+msgstr "Erro no formulário"
+
+msgid "Invitation"
+msgstr "Convite"
+
+msgid "Invitation URL"
+msgstr "URL do convite"
+
+msgid "Credential Name"
+msgstr "Nome da credencial"
+
+msgid "Credential Attributes"
+msgstr "Atributos da credencial"
+
+msgid "Proof Request Type"
+msgstr "Tipo de requisição de prova"
+
+msgid "Proof Name"
+msgstr "Nome da prova"
+
+msgid "Proof Attributes"
+msgstr "Atributos da prova"
+
+msgid "Proof Predicates"
+msgstr "Predicados da prova"
+
+msgid "Proof Request Name"
+msgstr "Nome do pedido de prova"
+
+msgid "Select claim for"
+msgstr "Selecionar reivindicação para"
+
+msgid "No claims available for"
+msgstr "Nenhuma reivindicação disponível para"
+
+msgid "URL for company logo"
+msgstr "URL do logo"
+
+msgid "Managed Agent"
+msgstr "Agente gerenciado"
+
+msgid "Agent Admin Endpoint"
+msgstr "Ponto do administrador do agente"
+
+msgid "Agent Http Endpoint"
+msgstr "Ponto Http do agente"
+
+msgid "Agent Admin API Key"
+msgstr "API Key do Agent Admin"
+
+msgid "Agent Webhook Callback Key"
+msgstr "Chave de retorno de chamada do agente"
+
+msgid "Credential Attrs"
+msgstr "Atributos da credencial"
+
+msgid "Requested Proof"
+msgstr "Prova solicitada"
+
+msgid "First Name"
+msgstr "Primeiro nome"
+
+msgid "Last Name"
+msgstr "Último nome"
+
+msgid "Email Address"
+msgstr "Endereço de email"
+
+msgid "Required. Provide a valid email address."
+msgstr "Requerido. Fornecer um endereço de e-mail válido."
+
+msgid "Mobile Agent"
+msgstr "Agente mobile"
+
+msgid "Company Name"
+msgstr "Nome da organização"
+
+msgid "Company Role"
+msgstr "Regra da organização"

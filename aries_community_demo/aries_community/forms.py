@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+from django.utils.translation import ugettext_lazy as trans
 
 import json
 
@@ -12,16 +13,16 @@ from .models import *
 # Forms to support user and organization registration
 ###############################################################
 class BaseSignUpForm(UserCreationForm):
-    first_name = forms.CharField(max_length=80, label='First Name', required=False,
+    first_name = forms.CharField(max_length=80, label=trans('First Name'), required=False,
                                  help_text='Optional.')
-    last_name = forms.CharField(max_length=150, label='Last Name', required=False,
+    last_name = forms.CharField(max_length=150, label=trans('Last Name'), required=False,
                                  help_text='Optional.')
-    email = forms.EmailField(max_length=254, label='Email Address', required=True,
-                                 help_text='Required. Provide a valid email address.')
+    email = forms.EmailField(max_length=254, label=trans('Email Address'), required=True,
+                                 help_text=trans('Required. Provide a valid email address.'))
 
 
 class UserSignUpForm(BaseSignUpForm):
-    mobile_agent = forms.BooleanField(required=False, initial=False, label='Mobile Agent')
+    mobile_agent = forms.BooleanField(required=False, initial=False, label=trans('Mobile Agent'))
 
     class Meta:
         model = get_user_model()
@@ -29,19 +30,19 @@ class UserSignUpForm(BaseSignUpForm):
 
 
 class OrganizationSignUpForm(BaseSignUpForm):
-    org_name = forms.CharField(max_length=60, label='Company Name', required=True,
+    org_name = forms.CharField(max_length=60, label=trans('Company Name'), required=True,
                                  help_text='Required.')
-    org_role_name = forms.CharField(max_length=40, label='Company Role', required=True,
+    org_role_name = forms.CharField(max_length=40, label=trans('Company Role'), required=True,
                                  help_text='Required.')
-    ico_url = forms.CharField(max_length=120, label="URL for company logo", required=False)
+    ico_url = forms.CharField(max_length=120, label=trans("URL for company logo"), required=False)
 
-    managed_agent = forms.BooleanField(required=False, initial=True, label='Managed Agent')
+    managed_agent = forms.BooleanField(required=False, initial=True, label=trans('Managed Agent'))
     admin_port = forms.IntegerField(label='Agent Admin Port', required=False)
-    admin_endpoint = forms.CharField(max_length=200, label='Agent Admin Endpoint', required=False)
+    admin_endpoint = forms.CharField(max_length=200, label=trans('Agent Admin Endpoint'), required=False)
     http_port = forms.IntegerField(label='Agent Http Port', required=False)
-    http_endpoint = forms.CharField(max_length=200, label='Agent Http Endpoint', required=False)
-    api_key = forms.CharField(max_length=40, label='Agent Admin API Key', required=False)
-    webhook_key = forms.CharField(max_length=20, label='Agent Webhook Callback Key', required=False)
+    http_endpoint = forms.CharField(max_length=200, label=trans('Agent Http Endpoint'), required=False)
+    api_key = forms.CharField(max_length=40, label=trans('Agent Admin API Key'), required=False)
+    webhook_key = forms.CharField(max_length=20, label=trans('Agent Webhook Callback Key'), required=False)
 
     class Meta:
         model = get_user_model()
@@ -70,7 +71,7 @@ class VisibleAgentNameForm(forms.Form):
 
 
 class SendConnectionInvitationForm(AgentNameForm):
-    partner_name = forms.CharField(label='Partner Name', max_length=60)
+    partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
 
     def __init__(self, *args, **kwargs):
         super(SendConnectionInvitationForm, self).__init__(*args, **kwargs)
@@ -80,8 +81,8 @@ class SendConnectionInvitationForm(AgentNameForm):
 
 class SendConnectionResponseForm(SendConnectionInvitationForm):
     invitation_id = forms.IntegerField(widget=forms.HiddenInput())
-    invitation_details = forms.CharField(label='Invitation', max_length=4000, widget=forms.Textarea)
-    invitation_url = forms.CharField(label='Invitation URL', max_length=4000, widget=forms.Textarea)
+    invitation_details = forms.CharField(label=trans('Invitation'), max_length=4000, widget=forms.Textarea)
+    invitation_url = forms.CharField(label=trans('Invitation URL'), max_length=4000, widget=forms.Textarea)
 
     def __init__(self, *args, **kwargs):
         super(SendConnectionResponseForm, self).__init__(*args, **kwargs)
@@ -123,7 +124,7 @@ class PollConversationStatusForm(VisibleAgentNameForm):
 
 class SelectCredentialOfferForm(AgentNameForm):
     connection_id = forms.CharField(widget=forms.HiddenInput())
-    partner_name = forms.CharField(label='Partner Name', max_length=60)
+    partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
     cred_def = forms.ModelChoiceField(label='Cred Def', queryset=IndyCredentialDefinition.objects.all())
 
     def __init__(self, *args, **kwargs):
@@ -142,10 +143,10 @@ class SelectCredentialOfferForm(AgentNameForm):
 
 class SendCredentialOfferForm(AgentNameForm):
     connection_id = forms.CharField(widget=forms.HiddenInput())
-    partner_name = forms.CharField(label='Partner Name', max_length=60)
+    partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
     cred_def = forms.CharField(max_length=80, widget=forms.HiddenInput())
-    credential_name = forms.CharField(label='Credential Name', max_length=80)
-    schema_attrs = forms.CharField(label='Credential Attributes', max_length=4000, widget=forms.Textarea)
+    credential_name = forms.CharField(label=trans('Credential Name'), max_length=80)
+    schema_attrs = forms.CharField(label=trans('Credential Attributes'), max_length=4000, widget=forms.Textarea)
 
     def __init__(self, *args, **kwargs):
         super(SendCredentialOfferForm, self).__init__(*args, **kwargs)
@@ -168,10 +169,10 @@ class SendCredentialOfferForm(AgentNameForm):
 
 class SendCredentialResponseForm(SendConversationResponseForm):
     # a bunch of fields that are read-only to present to the user
-    from_partner_name = forms.CharField(label='Partner Name', max_length=60)
-    claim_name = forms.CharField(label='Credential Name', max_length=400)
+    from_partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
+    claim_name = forms.CharField(label=trans('Credential Name'), max_length=400)
     libindy_offer_schema_id = forms.CharField(max_length=120, widget=forms.HiddenInput())
-    credential_attrs = forms.CharField(label='Credential Attrs', max_length=4000, widget=forms.Textarea)
+    credential_attrs = forms.CharField(label=trans('Credential Attrs'), max_length=4000, widget=forms.Textarea)
 
     def __init__(self, *args, **kwargs):
         super(SendCredentialResponseForm, self).__init__(*args, **kwargs)
@@ -196,8 +197,8 @@ class SendCredentialResponseForm(SendConversationResponseForm):
 ######################################################################
 class SelectProofRequestForm(AgentNameForm):
     connection_id = forms.CharField(widget=forms.HiddenInput())
-    partner_name = forms.CharField(label='Partner Name', max_length=60)
-    proof_request = forms.ModelChoiceField(label='Proof Request Type', queryset=IndyProofRequest.objects.all())
+    partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
+    proof_request = forms.ModelChoiceField(label=trans('Proof Request Type'), queryset=IndyProofRequest.objects.all())
 
     def __init__(self, *args, **kwargs):
         super(SelectProofRequestForm, self).__init__(*args, **kwargs)
@@ -209,10 +210,10 @@ class SelectProofRequestForm(AgentNameForm):
 
 class SendProofRequestForm(AgentNameForm):
     connection_id = forms.CharField(widget=forms.HiddenInput())
-    partner_name = forms.CharField(label='Partner Name', max_length=60)
-    proof_name = forms.CharField(label='Proof Name', max_length=400)
-    proof_attrs = forms.CharField(label='Proof Attributes', max_length=4000, widget=forms.Textarea)
-    proof_predicates = forms.CharField(label='Proof Predicates', max_length=4000, widget=forms.Textarea)
+    partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
+    proof_name = forms.CharField(label=trans('Proof Name'), max_length=400)
+    proof_attrs = forms.CharField(label=trans('Proof Attributes'), max_length=4000, widget=forms.Textarea)
+    proof_predicates = forms.CharField(label=trans('Proof Predicates'), max_length=4000, widget=forms.Textarea)
 
     def __init__(self, *args, **kwargs):
         super(SendProofRequestForm, self).__init__(*args, **kwargs)
@@ -224,8 +225,8 @@ class SendProofRequestForm(AgentNameForm):
 
 class SendProofReqResponseForm(SendConversationResponseForm):
     # a bunch of fields that are read-only to present to the user
-    from_partner_name = forms.CharField(label='Partner Name', max_length=60)
-    proof_req_name = forms.CharField(label='Proof Request Name', max_length=400)
+    from_partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
+    proof_req_name = forms.CharField(label=trans('Proof Request Name'), max_length=400)
 
     def __init__(self, *args, **kwargs):
         super(SendProofReqResponseForm, self).__init__(*args, **kwargs)
@@ -234,7 +235,7 @@ class SendProofReqResponseForm(SendConversationResponseForm):
 
 
 class SelectProofReqClaimsForm(SendProofReqResponseForm):
-    proof_request = forms.CharField(label='Requested Proof', widget=forms.HiddenInput)
+    proof_request = forms.CharField(label=trans('Requested Proof'), widget=forms.HiddenInput)
 
     def __init__(self, *args, **kwargs):
         super(SelectProofReqClaimsForm, self).__init__(*args, **kwargs)
@@ -256,9 +257,9 @@ class SelectProofReqClaimsForm(SendProofReqResponseForm):
                         choices.append(('ref::'+claim['cred_info']['referent'], json.dumps(claim['cred_info']['attrs'])))
                         claim_no = claim_no + 1
                 if 0 < len(choices):
-                    self.fields[field_name] = forms.ChoiceField(label='Select claim for '+attr, choices=tuple(choices), widget=forms.RadioSelect())
+                    self.fields[field_name] = forms.ChoiceField(label=trans('Select claim for')+attr, choices=tuple(choices), widget=forms.RadioSelect())
                 else:
-                    self.fields[field_name] = forms.CharField(label='No claims available for '+attr+', enter value:', max_length=80)
+                    self.fields[field_name] = forms.CharField(label=trans('No claims available for')+attr+', enter value:', max_length=80)
 
             for attr in proof_request['presentation_request']['requested_predicates']:
                 field_name = 'proof_req_attr_' + attr
@@ -269,7 +270,7 @@ class SelectProofReqClaimsForm(SendProofReqResponseForm):
                         choices.append(('ref::'+claim['cred_info']['referent'], json.dumps(claim['cred_info']['attrs'])))
                         claim_no = claim_no + 1
                 if 0 < len(choices):
-                    self.fields[field_name] = forms.ChoiceField(label='Select claim for '+attr, choices=tuple(choices), widget=forms.RadioSelect())
+                    self.fields[field_name] = forms.ChoiceField(label=trans('Select claim for')+attr, choices=tuple(choices), widget=forms.RadioSelect())
                 else:
-                    self.fields[field_name] = forms.CharField(label='No claims available for '+attr+', enter value:', max_length=80)
+                    self.fields[field_name] = forms.CharField(label=trans('No claims available for')+attr+', enter value:', max_length=80)
 
