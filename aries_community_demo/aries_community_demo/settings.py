@@ -165,3 +165,6 @@ MODELTRANSLATION_TRANSLATION_REGISTRY = "aries_community.translation"
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+SITE_ROOT = os.path.dirname(os.path.realpath(__name__))
+LOCALE_PATHS = ( os.path.join(SITE_ROOT, 'locale'), )

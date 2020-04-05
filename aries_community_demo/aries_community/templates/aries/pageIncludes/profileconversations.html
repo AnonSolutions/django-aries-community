@@ -3,11 +3,11 @@
 
 <div class='profile-msgs'>
 	<div class='profile-msgs-left'>
-	<h4>Your Connections</h4>
-		<h5>Account Name</h5>
-		<h5>Account Name</h5>
-		<h5>Account Name</h5>
-		<h5>Account Name</h5>
+	<h4>{% trans "Your Connections" %}</h4>
+		<h5>{% trans "Account Name" %}</h5>
+		<h5>{% trans "Account Name" %}</h5>
+		<h5>{% trans "Account Name" %}</h5>
+		<h5>{% trans "Account Name" %}</h5>
 	</div>
 	<div class='profile-msgs-right'>
 
@@ -22,12 +22,12 @@
 			<h5>
 	          {% if conversation.conversation_type == 'CredExchange' %}
 		          {% if conversation.status == 'offer_received' %}
-		              <a href={% url 'cred_offer_response' %}?conversation_id={{conversation.guid}}>Accept Offer</a>
+		              <a href={% url 'cred_offer_response' %}?conversation_id={{conversation.guid}}>{% trans "Accept Offer" %}</a>
 		          {% endif %}
 	          {% endif %}
 	          {% if conversation.conversation_type == 'ProofRequest' %}
 		          {% if conversation.status == 'request_received' %}
-		            <a href={% url 'proof_req_response' %}?conversation_id={{conversation.guid}}>Supply Proof</a>
+		            <a href={% url 'proof_req_response' %}?conversation_id={{conversation.guid}}>{% trans "Supply Proof" %}</a>
 		          {% endif %}
 			      {% if conversation.status == 'verified' %}
 		            [Completed]
@@ -36,7 +36,7 @@
 		          {% endif %}
 	          {% endif %}
 		      {% if conversation.status == 'Sent' %}
-		            <a href={% url 'check_conversation' %}?conversation_id={{conversation.guid}}>Check Status</a>
+		            <a href={% url 'check_conversation' %}?conversation_id={{conversation.guid}}>{% trans "Check Status" %}</a>
 		      {% endif %}
 		      {% if conversation.status == 'Accepted' %}
 		            [Completed]

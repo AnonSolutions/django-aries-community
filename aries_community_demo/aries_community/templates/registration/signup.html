@@ -9,7 +9,7 @@
       <div class='innercont-center-body'>
         <div class='innercont-center-inner'>
           <div class='form-cont'>
-            <h2>Signup</h2>
+            <h2>{% trans "Sign up" %}</h2>
             <div class='newsfeed-post-seperator'></div>
             <form method="POST">
               {% csrf_token %}
@@ -22,7 +22,7 @@
                   {% endfor %}
                 </div>
               {% endfor %}
-              <button class='btn' type="submit">Sign up</button>
+              <button class='btn' type="submit">{% trans "Sign up" %}</button>
             </form>
           </div>
         </div>
