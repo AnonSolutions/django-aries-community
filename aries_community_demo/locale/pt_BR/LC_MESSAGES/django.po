@@ -268,3 +268,6 @@ msgstr "Nome da organização"
 
 msgid "Company Role"
 msgstr "Regra da organização"
+
+msgid "Connection Request"
+msgstr "Connection Request"
