@@ -270,4 +270,10 @@ msgid "Company Role"
 msgstr "Regra da organização"
 
 msgid "Connection Request"
-msgstr "Connection Request"
+msgstr "Solicitação de conexão"
+
+msgid "invitation"
+msgstr "convite"
+
+msgid "Credentials receives"
+msgstr "Credenciais recebidas"
