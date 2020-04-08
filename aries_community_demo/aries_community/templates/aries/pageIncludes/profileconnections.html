@@ -54,9 +54,7 @@
         				<h2>{{ connection.partner_name }}</h2>
         			</a>
         		</div>
-        		<div>
-        			<h5>{% trans "Connection Type:" %} {{ connection.connection_type }}</h5>
-        		</div>
+
         		<div>
         			<h5>{% trans "Connection Status:" %} {{ connection.status }}</h5>
         		        {% if connection.status == 'invitation' %}
