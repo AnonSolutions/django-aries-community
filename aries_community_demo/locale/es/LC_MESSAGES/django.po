@@ -276,3 +276,24 @@ msgstr "convite"
 
 msgid "Credentials receives"
 msgstr "Credenciais recebidas"
+
+msgid "enter value:"
+msgstr "ingresar valor"
+
+msgid "enter value:"
+msgstr "digite o valor"
+
+msgid "Completed"
+msgstr "Completo"
+
+msgid "Proof is"
+msgstr "La prova és"
+
+msgid "Sent"
+msgstr "Enviado"
+
+msgid "Accepted"
+msgstr "Aceita"
+
+msgid "verified"
+msgstr "verificada"
