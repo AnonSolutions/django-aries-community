@@ -267,3 +267,12 @@ msgstr "Nombre de la organización"
 
 msgid "Company Role"
 msgstr "Regla de la organización"
+
+msgid "Connection Request"
+msgstr "Solicitud de conexión"
+
+msgid "invitation"
+msgstr "convite"
+
+msgid "Credentials receives"
+msgstr "Credenciais recebidas"
