@@ -294,3 +294,6 @@ msgstr "Aceito"
 
 msgid "verified"
 msgstr "verificada"
+
+msgid "Created invitation for"
+msgstr "Convite criado para"
