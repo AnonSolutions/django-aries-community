@@ -1,8 +1,8 @@
 ## Server ##
-GET	/plugins	Fetch the list of loaded plugins
-GET	/status		Fetch the server status
+GET	  /plugins      Fetch the list of loaded plugins
+GET	  /status		    Fetch the server status
 POST	/status/reset	Reset statistics 
-GET	/features	Query supported feature
+GET	  /features	    Query supported feature
 
 ## Connections ##
 GET	/connections	Query agent-to-agent connections
