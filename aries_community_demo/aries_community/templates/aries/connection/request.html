@@ -9,7 +9,7 @@
       <div class='innercont-center-body'>
         <div class='innercont-center-inner'>
           <div class='form-cont'>
-            <h2>Connection Request</h2>
+            <h2>{% trans "Connection Request" %}</h2>
             <div class='newsfeed-post-seperator'></div>
             <form action="{% url 'send_invitation' %}" method="POST">
               {% csrf_token %}

@@ -319,7 +319,7 @@ def handle_connection_request(
                 # ignore errors for now
                 print(" >>> Failed to create request for", agent.agent_name)
                 print(e)
-                return render(request, 'aries/form_response.html', {'msg': trans('Failed to create invitation for')  +  agent.agent_name})
+                return render(request, 'aries/form_response.html', {'msg': trans('Failed to create invitation for')  + ' ' + agent.agent_name})
 
     else:
         (agent, agent_type, agent_owner) = agent_for_current_session(request)

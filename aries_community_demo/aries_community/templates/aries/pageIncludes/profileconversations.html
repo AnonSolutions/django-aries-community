@@ -30,19 +30,19 @@
 		            <a href={% url 'proof_req_response' %}?conversation_id={{conversation.guid}}>{% trans "Supply Proof" %}</a>
 		          {% endif %}
 			      {% if conversation.status == 'verified' %}
-		            [Completed]
-		            Proof is <a href={% url 'view_proof' %}?conversation_id={{conversation.guid}}>
-		            {{ conversation.status }}</a>
+		            [{% trans "Completed" %}]
+		            {% trans "Proof is" %} <a href={% url 'view_proof' %}?conversation_id={{conversation.guid}}>
+			    {% trans "verified" %}</a>
 		          {% endif %}
 	          {% endif %}
 		      {% if conversation.status == 'Sent' %}
 		            <a href={% url 'check_conversation' %}?conversation_id={{conversation.guid}}>{% trans "Check Status" %}</a>
 		      {% endif %}
 		      {% if conversation.status == 'Accepted' %}
-		            [Completed]
+		            [{% trans "Completed" %}]
 		          {% if conversation.conversation_type == 'ProofRequest' %}
-		            Proof is <a href={% url 'view_proof' %}?conversation_id={{conversation.guid}}>
-		            {{ conversation.status }}</a>
+			    {% trans "Proof is" %} <a href={% url 'view_proof' %}?conversation_id={{conversation.guid}}>
+			    {% trans "Accepted" %}</a>			    
 		          {% endif %}
 		      {% endif %}
 			</h5>

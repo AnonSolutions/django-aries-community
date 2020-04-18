@@ -56,8 +56,8 @@ JQ_EXE=jq
 
 function checkJQPresent () {
   if [ -z $(type -P "$JQ_EXE") ]; then
-    echoError "The ${JQ_EXE} executable is needed and not on your path."
-    echoError "Installation instructions can be found here: https://stedolan.github.io/jq/download"
+    echo "The ${JQ_EXE} executable is needed and not on your path."
+    echo "Installation instructions can be found here: https://stedolan.github.io/jq/download"
     exit 1
   fi
 }
