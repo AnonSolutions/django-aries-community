@@ -407,6 +407,37 @@ def get_public_did(agent):
     except:
         raise
 
+### Retorna dados da wallet
+def get_wallet_dids(agent, initialize_agent=False):
+    """
+    Fetch credentials from the agent (wallet).
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    wallets = None
+
+    # create connection and check status
+    try:
+        response = requests.get(
+            agent.admin_endpoint
+            + "/wallet/did",
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+
+        wallets = response.json()["results"]
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return wallets
+
+
+
+
 def create_schema_json(schema_name, schema_version, schema_attrs):
     """
     Create an Indy Schema object based on a list of attributes.
@@ -916,9 +947,8 @@ def fetch_credentials(agent, initialize_agent=False):
     finally:
         if agent_started:
             stop_agent(agent)
-
+    print(credentials)
     return credentials
-
 
 ######################################################################
 # utilities to request, send and receive proofs
