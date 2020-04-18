@@ -42,7 +42,7 @@ class Command(BaseCommand):
         self.stdout.write("config_file = %s" % str(options['config_file']))
         with open(str(options['config_file'][0]), 'r') as stream:
             try:
-                orgs = yaml.load(stream)
+                orgs = yaml.full_load(stream)
             except yaml.YAMLError as exc:
                 self.stdout.write(exc)
                 raise
