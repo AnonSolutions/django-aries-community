@@ -88,7 +88,7 @@ services:
         cd /home/aries/aries_community_demo/aries_community_demo;
         touch db.sqlite3;
         DJANGO_SETTINGS_MODULE=aries_community_demo.${DJANGO_SETTINGS} ./reload_db.sh;
-        sleep 5;
+        sleep 15;
         DJANGO_SETTINGS_MODULE=aries_community_demo.${DJANGO_SETTINGS} ./init_data_docker.sh;
         sleep 5;
         DJANGO_SETTINGS_MODULE=aries_community_demo.${DJANGO_SETTINGS} python manage.py runserver 0.0.0.0:8000;"

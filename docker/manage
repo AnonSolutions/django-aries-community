@@ -56,8 +56,8 @@ JQ_EXE=jq
 
 function checkJQPresent () {
   if [ -z $(type -P "$JQ_EXE") ]; then
-    echoError "The ${JQ_EXE} executable is needed and not on your path."
-    echoError "Installation instructions can be found here: https://stedolan.github.io/jq/download"
+    echo "The ${JQ_EXE} executable is needed and not on your path."
+    echo "Installation instructions can be found here: https://stedolan.github.io/jq/download"
     exit 1
   fi
 }
@@ -130,6 +130,12 @@ configureEnvironment() {
       export LEDGER_PROTOCOL_VERSION=${LEDGER_PROTOCOL_VERSION-}
       export DJANGO_SETTINGS=greenlight_settings
       ;;
+    stn-test*)
+      export LEDGER_URL=http://test.bcovrin.vonx.io
+      export GENESIS_URL=https://raw.githubusercontent.com/sovrin-foundation/sovrin/stable/sovrin/pool_transactions_sandbox_genesis
+      export LEDGER_PROTOCOL_VERSION=${LEDGER_PROTOCOL_VERSION-}
+      export DJANGO_SETTINGS=stn_settings
+      ;;
     *)
       export LEDGER_URL=${LEDGER_URL-http://$DOCKERHOST:9000}
       export GENESIS_URL=${GENESIS_URL-$LEDGER_URL/genesis}
@@ -142,7 +148,7 @@ configureEnvironment() {
   # trustee-agent
   export AGENT_WALLET_NAME=o_anon_solutions_inc812434
   export WALLET_ENCRYPTION_KEY=pass12345
-  export WALLET_SEED=itution_0000o_anon_solutions_inc
+  export WALLET_SEED=000000000000o_anon_solutions_inc
   export WEBHOOK_URL=http://aries-django:8000/agent_cb/1JZCV9DP8ETL9O2Q7T2A
   export AGENT_HTTP_INTERFACE_PORT=8042
   export AGENT_ADMIN_INTERFACE_PORT=8041
@@ -278,14 +284,16 @@ start-dev|up-dev)
  ;;
 start-bcovrin|up-bcovrin)
   _startupParams=$(getStartupParams $@)
+  export INDY_NETWORK=bcovrin-test
   configureEnvironment $@
-  docker-compose -f docker-compose-bcovrin.yml up -d ${_startupParams} 
+  docker-compose up -d ${_startupParams} 
   docker-compose logs -f
  ;;
 start-stn|up-stn)
   _startupParams=$(getStartupParamsStn $@)
+  export INDY_NETWORK=stn-test
   configureEnvironment $@
-  docker-compose -f docker-compose-stn.yml up -d ${_startupParams} 
+  docker-compose up -d ${_startupParams} 
   docker-compose logs -f
  ;;
 logs)
