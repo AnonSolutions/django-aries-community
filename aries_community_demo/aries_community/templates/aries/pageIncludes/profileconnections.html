@@ -10,12 +10,14 @@
 		</div>
 		<div>
 			<h5>
-                {% if request.session.ACTIVE_ORG %}
+                		{% if request.session.ACTIVE_ORG %}
 				<a href="{% url 'send_invitation' %}">{% trans "Send Connection Invite" %}</a>
-                or:
-                {% endif %}
+                		{% else %}
+                		<a href="{% url 'send_invitation_org' %}">{% trans "Send Connection Invite to organization" %}</a>
+                		{% trans "or:" %}
+                		{% endif %}
 				<a href="{% url 'connection_response' %}?id=0">{% trans "Respond to (External) Invite" %}</a>
-            </h5>
+            		</h5>
 		</div>
 	</div>
     <div class='newsfeed-post-seperator'></div>
