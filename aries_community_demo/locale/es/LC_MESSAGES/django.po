@@ -297,3 +297,6 @@ msgstr "Aceita"
 
 msgid "verified"
 msgstr "verificada"
+
+msgid "Send Connection Invite to organization"
+msgstr "Envia invitación a organizacion"
