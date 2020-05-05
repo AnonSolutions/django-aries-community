@@ -69,7 +69,14 @@ class VisibleAgentNameForm(forms.Form):
         super(VisibleAgentNameForm, self).__init__(*args, **kwargs)
         self.fields['agent_name'].widget.attrs['readonly'] = True
 
-
+class SendConnectionInvitationFormList(AgentNameForm):
+    partner_name = forms.ModelChoiceField(queryset=AriesOrganization.objects.all())
+    def __init__(self, *args, **kwargs):
+        super(SendConnectionInvitationFormList, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
+        
+        
 class SendConnectionInvitationForm(AgentNameForm):
     partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
 
