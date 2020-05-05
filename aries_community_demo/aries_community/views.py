@@ -209,13 +209,21 @@ def data_view(
     return render(request, 'aries/data.html')
 
 def wallet_view(
-    request,
-    template=''
+   request
     ):
     """
-    Example of user-defined view for Wallet tab.
+    List info about wallet.
     """
-    return render(request, 'aries/wallet.html')
+    try:
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+        wallets = get_wallet_dids(agent)
+        print("Wallet->", wallets)
+        return render(request, 'aries/wallet/list.html', {'agent_name': agent.agent_name, 'wallets': wallets})
+    except:
+        raise
+    finally:
+        pass
+
 
 import importlib
 
