@@ -252,6 +252,7 @@ def list_connections(
     invitations = AgentInvitation.objects.filter(agent=agent, connecion_guid='').all()
     return render(request, template, {'agent_name': agent.agent_name, 'connections': connections, 'invitations': invitations})
 
+
 def handle_connection_request_organization(
     request,
     form_template='aries/connection/request_org.html',
@@ -267,7 +268,9 @@ def handle_connection_request_organization(
             return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
         else:
             cd = form.cleaned_data
-            partner_name = cd.get('partner_name')
+            id = cd.get('partner_name')
+            partner_name_tmp = AriesOrganization.objects.filter(id=id).get()
+            partner_name = partner_name_tmp
 
             # get user or org associated with this agent
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
@@ -286,10 +289,8 @@ def handle_connection_request_organization(
 
             if 0 < len(target_user):
                 their_agent = target_user[0].agent
-                print('their_agent->',their_agent)
             elif 0 < len(target_org):
                 their_agent = target_org[0].agent
-                print('their_agent->', their_agent)
             else:
                 their_agent = None
 
@@ -302,9 +303,10 @@ def handle_connection_request_organization(
                 connecion_guid = my_connection.guid
 
                 if their_agent is not None:
+
                     their_invitation = AgentInvitation(
                         agent = their_agent,
-                        partner_name = agent_owner,
+                        partner_name = partner_name_tmp,
                         invitation = my_connection.invitation,
                         invitation_url = my_connection.invitation_url,
                         )
@@ -320,9 +322,9 @@ def handle_connection_request_organization(
                 orgazinational_connection = receive_connection_invitation(agent, partner_name, invitation_details)
                 connecion_guid = orgazinational_connection.guid
                 invitation = AgentInvitation.objects.filter(id=their_invitation.id, agent=agent).get()
+
                 invitation.connecion_guid = orgazinational_connection.guid
                 invitation.save()
-
 
                 if my_connection.agent.agent_org.get():
                     source_name = my_connection.agent.agent_org.get().org_name
@@ -344,11 +346,9 @@ def handle_connection_request_organization(
 
     else:
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
-
-        form = SendConnectionInvitationForm(initial={'agent_name': agent.agent_name})
+        form = SendConnectionInvitationFormList(initial={'agent_name': agent.agent_name})
         return render(request, form_template, {'form': form})
-
-
+    
 
 def handle_connection_request(
     request,
