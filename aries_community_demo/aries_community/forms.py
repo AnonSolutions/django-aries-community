@@ -247,6 +247,13 @@ class RemoveConnectionForm(AgentNameForm):
         self.fields['partner_name'].widget.attrs['readonly'] = True
         self.fields['agent_name'].widget.attrs['readonly'] = True
         self.fields['agent_name'].widget.attrs['hidden'] = True
+       
+class SendConnectionInvitationFormList(AgentNameForm):
+    partner_name = forms.ModelChoiceField(queryset=AriesOrganization.objects.all())
+    def __init__(self, *args, **kwargs):
+        super(SendConnectionInvitationFormList, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
         
 class SelectProofReqClaimsForm(SendProofReqResponseForm):
     proof_request = forms.CharField(label=trans('Requested Proof'), widget=forms.HiddenInput)
