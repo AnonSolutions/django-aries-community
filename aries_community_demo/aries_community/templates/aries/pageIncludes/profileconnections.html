@@ -73,6 +73,8 @@
                         {% if connection.status == 'active' or connection.status == 'response' %}
                             <a href="{% url 'select_credential_offer' %}?connection_id={{connection.guid}}">{% trans "Send Credential" %}</a>
                             {% trans "or:" %}
+                            <a href="{% url 'remove_connection' %}?connection_id={{connection.guid}}">{% trans "Remove connection" %}</a>
+                            {% trans "or:" %}
                             <a href="{% url 'select_proof_request' %}?connection_id={{connection.guid}}">{% trans "Send Proof Request" %}</a>
                         {% endif %}
         			</h5>
