@@ -247,14 +247,21 @@ class RemoveConnectionForm(AgentNameForm):
         self.fields['partner_name'].widget.attrs['readonly'] = True
         self.fields['agent_name'].widget.attrs['readonly'] = True
         self.fields['agent_name'].widget.attrs['hidden'] = True
-       
+
 class SendConnectionInvitationFormList(AgentNameForm):
-    partner_name = forms.ModelChoiceField(queryset=AriesOrganization.objects.all())
     def __init__(self, *args, **kwargs):
         super(SendConnectionInvitationFormList, self).__init__(*args, **kwargs)
         self.fields['agent_name'].widget.attrs['readonly'] = True
         self.fields['agent_name'].widget.attrs['hidden'] = True
-        
+#Create list of organizations that have not yet been connected to the person
+        initial = kwargs.get('initial')
+        agent = initial.get('agent_name', {})
+        exclude_filter = AgentConnection.objects.filter(agent=agent).values_list('partner_name', flat=True)
+        list = AriesOrganization.objects.values_list('org_name', flat=True)
+        if initial:
+            field_name = 'partner_name'
+            self.fields[field_name] = forms.ModelChoiceField(queryset=AriesOrganization.objects.exclude(org_name__in=exclude_filter))
+       
 class SelectProofReqClaimsForm(SendProofReqResponseForm):
     proof_request = forms.CharField(label=trans('Requested Proof'), widget=forms.HiddenInput)
 
