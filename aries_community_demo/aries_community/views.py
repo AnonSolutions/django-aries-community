@@ -209,13 +209,20 @@ def data_view(
     return render(request, 'aries/data.html')
 
 def wallet_view(
-    request,
-    template=''
+   request
     ):
     """
-    Example of user-defined view for Wallet tab.
+    List info about wallet.
     """
-    return render(request, 'aries/wallet.html')
+    try:
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+        wallets = get_wallet_dids(agent)
+        print("Wallet->", wallets)
+        return render(request, 'aries/wallet/list.html', {'agent_name': agent.agent_name, 'wallets': wallets})
+    except:
+        raise
+    finally:
+        pass
 
 import importlib
 
@@ -252,6 +259,103 @@ def list_connections(
     invitations = AgentInvitation.objects.filter(agent=agent, connecion_guid='').all()
     return render(request, template, {'agent_name': agent.agent_name, 'connections': connections, 'invitations': invitations})
 
+
+def handle_connection_request_organization(
+    request,
+    form_template='aries/connection/request_org.html',
+    response_template='aries/connection/form_connection_info_org.html'
+    ):
+    """
+    Send a Connection request and approves automatic invitation from person to organization
+    """
+
+    if request.method=='POST':
+        form = SendConnectionInvitationForm(request.POST)
+        if not form.is_valid():
+            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+        else:
+            cd = form.cleaned_data
+            id = cd.get('partner_name')
+            partner_name_tmp = AriesOrganization.objects.filter(id=id).get()
+            partner_name = partner_name_tmp
+
+            # get user or org associated with this agent
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+            if agent_type == 'user':
+                org = AriesOrganization.objects.filter(org_name=partner_name).get()
+                partner_name = agent_owner
+            else:
+                return render(request, response_template, {'msg': 'Invitations are available for org only', 'msg_txt': 'You are logged in as ' + agent_owner })
+
+            # get user or org associated with target partner
+
+            target_user = get_user_model().objects.filter(email=partner_name).all()
+            target_org = AriesOrganization.objects.filter(org_name=partner_name).all()
+
+
+            if 0 < len(target_user):
+                their_agent = target_user[0].agent
+            elif 0 < len(target_org):
+                their_agent = target_org[0].agent
+            else:
+                their_agent = None
+
+            # set agent password
+            # TODO vcx_config['something'] = raw_password
+
+            # build the connection and get the invitation data back
+            try:
+                my_connection = request_connection_invitation(org, partner_name)
+                connecion_guid = my_connection.guid
+
+                if their_agent is not None:
+
+                    their_invitation = AgentInvitation(
+                        agent = their_agent,
+                        partner_name = partner_name_tmp,
+                        invitation = my_connection.invitation,
+                        invitation_url = my_connection.invitation_url,
+                        )
+                    their_invitation.save()
+
+                invitations = AgentInvitation.objects.filter(id=their_invitation.id, agent=agent).all()
+                agent_name = invitations[0].agent.agent_name
+
+                # approves automatic invitation from person to organization
+                partner_name = invitations[0].partner_name
+                invitation_details = invitations[0].invitation
+                (agent, agent_type, agent_owner) = agent_for_current_session(request)
+                orgazinational_connection = receive_connection_invitation(agent, partner_name, invitation_details)
+                connecion_guid = orgazinational_connection.guid
+                invitation = AgentInvitation.objects.filter(id=their_invitation.id, agent=agent).get()
+
+                invitation.connecion_guid = orgazinational_connection.guid
+                invitation.save()
+
+                if my_connection.agent.agent_org.get():
+                    source_name = my_connection.agent.agent_org.get().org_name
+                else:
+                    source_name = my_connection.agent.agent_user.get().email
+                target_name = my_connection.partner_name
+                institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
+                return render(request, response_template, {
+                    'msg':  trans('Created invitation for ') + target_name,
+                    'msg_txt': my_connection.invitation,
+                    'msg_txt2': their_invitation.id,
+                    })
+
+            except Exception as e:
+                # ignore errors for now
+                print(" >>> Failed to create request for", agent.agent_name)
+                print(e)
+                return render(request, 'aries/form_response.html', {'msg': trans('Failed to create invitation for')  + ' ' + agent.agent_name})
+
+    else:
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+        form = SendConnectionInvitationFormList(initial={'agent_name': agent.agent_name})
+        return render(request, form_template, {'form': form})
+    
 
 def handle_connection_request(
     request,

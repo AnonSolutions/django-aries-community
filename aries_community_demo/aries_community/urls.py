@@ -12,6 +12,7 @@ urlpatterns = [
     path('org_signup/', org_signup_view, name='org_signup'),
     #path('mobile_request/', mobile_request_connection, name='mobile_request'),
     path('send_invitation/', handle_connection_request, name='send_invitation'),
+    path('send_invitation_org/', handle_connection_request_organization, name='send_invitation_org'),
     path('list_connections/', list_connections, name='list_connections'),
     path('connection_response/', handle_connection_response, name='connection_response'),
     path('check_connection/', poll_connection_status, name='check_connection'),

@@ -1,0 +1,12 @@
+{% extends request.session.ARIES_PROFILE %}
+
+{% load i18n %}
+{% load static %}
+
+{% block profile_content %}
+	<div class='profile-tabs profile-tabs-credentials'>
+		<div id='profilecredentials'>
+			{% include "aries/pageIncludes/profilewallet.html" %}
+		</div>
+	</div>
+{% endblock %}
