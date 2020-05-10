@@ -1094,3 +1094,52 @@ def list_wallet_credentials(
     finally:
         pass
 
+#Remove connection in database
+def handle_remove_connection(
+    request,
+#    form_template='aries/connection/select_request.html',
+    form_template='aries/connection/form_remove_connection.html',
+    response_template='aries/connection/list.html'
+    ):
+    """
+    Select a Proof Request to send, based on the templates available in the database.
+    """
+
+    if request.method=='POST':
+        form = RemoveConnectionForm(request.POST)
+
+        if not form.is_valid():
+            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+        else:
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+            cd = form.cleaned_data
+            connection_id = cd.get('connection_id')
+            partner_name = cd.get('partner_name')
+            agent_name = cd.get('agent_name')
+
+            print('agent->', agent_owner)
+            print('agent_name->', agent_name)
+
+            guid_partner_name = AgentConnection.objects.filter(partner_name=partner_name, agent=agent_name).get()
+            guid_partner_name.delete()
+            agent_org = AriesOrganization.objects.filter(org_name=partner_name).get()
+            guid_partner_agent_owner = AgentConnection.objects.filter(partner_name=agent_owner, agent=agent_org.agent).get()
+            guid_partner_agent_owner.delete()
+
+            return list_connections(
+                request,
+                template='aries/connection/list.html'
+            )
+
+    else:
+        # find conversation request
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+        connection_id = request.GET.get('connection_id', None)
+        connection = AgentConnection.objects.filter(guid=connection_id, agent=agent).get()
+
+        form = RemoveConnectionForm(initial={'connection_id': connection_id,
+                                               'partner_name': connection.partner_name,
+                                               'agent_name': connection.agent.agent_name})
+
+        return render(request, form_template, {'form': form})

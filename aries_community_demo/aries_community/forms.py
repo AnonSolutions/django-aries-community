@@ -69,7 +69,14 @@ class VisibleAgentNameForm(forms.Form):
         super(VisibleAgentNameForm, self).__init__(*args, **kwargs)
         self.fields['agent_name'].widget.attrs['readonly'] = True
 
-
+class SendConnectionInvitationFormList(AgentNameForm):
+    partner_name = forms.ModelChoiceField(queryset=AriesOrganization.objects.all())
+    def __init__(self, *args, **kwargs):
+        super(SendConnectionInvitationFormList, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
+        
+        
 class SendConnectionInvitationForm(AgentNameForm):
     partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
 
@@ -233,7 +240,28 @@ class SendProofReqResponseForm(SendConversationResponseForm):
         self.fields['from_partner_name'].widget.attrs['readonly'] = True
         self.fields['proof_req_name'].widget.attrs['readonly'] = True
 
+class RemoveConnectionForm(AgentNameForm):
+    partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
+    def __init__(self, *args, **kwargs):
+        super(RemoveConnectionForm, self).__init__(*args, **kwargs)
+        self.fields['partner_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
 
+class SendConnectionInvitationFormList(AgentNameForm):
+    def __init__(self, *args, **kwargs):
+        super(SendConnectionInvitationFormList, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
+#Create list of organizations that have not yet been connected to the person
+        initial = kwargs.get('initial')
+        agent = initial.get('agent_name', {})
+        exclude_filter = AgentConnection.objects.filter(agent=agent).values_list('partner_name', flat=True)
+        list = AriesOrganization.objects.values_list('org_name', flat=True)
+        if initial:
+            field_name = 'partner_name'
+            self.fields[field_name] = forms.ModelChoiceField(queryset=AriesOrganization.objects.exclude(org_name__in=exclude_filter))
+       
 class SelectProofReqClaimsForm(SendProofReqResponseForm):
     proof_request = forms.CharField(label=trans('Requested Proof'), widget=forms.HiddenInput)
 
@@ -273,4 +301,5 @@ class SelectProofReqClaimsForm(SendProofReqResponseForm):
                     self.fields[field_name] = forms.ChoiceField(label=trans('Select claim for')+attr, choices=tuple(choices), widget=forms.RadioSelect())
                 else:
                     self.fields[field_name] = forms.CharField(label=trans('No claims available for')+attr+', enter value:', max_length=80)
+
 

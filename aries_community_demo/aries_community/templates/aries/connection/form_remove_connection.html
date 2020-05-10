@@ -5,7 +5,7 @@
 
 
 {% block profile_content %}
-        <form action="{% url 'send_invitation_org' %}" method="POST">
+	<form action="{% url 'remove_connection' %}" method="POST">
               {% csrf_token %}
               {% for field in form %}
                 <div>
@@ -19,5 +19,5 @@
                 </div>
               {% endfor %}
               <button class='btn' type="submit">{% trans "Submit" %}</button>
-    </form>
+	</form>
 {% endblock %}
