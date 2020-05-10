@@ -224,7 +224,6 @@ def wallet_view(
     finally:
         pass
 
-
 import importlib
 
 def plugin_view(request, view_name):
