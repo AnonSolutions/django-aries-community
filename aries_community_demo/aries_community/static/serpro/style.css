@@ -209,13 +209,15 @@ LANDING PAGE / SIGN IN
 }
 
 .atria-logo {
-	margin: 0 0 1rem -12.5rem;
-	width: 35rem;
-	height: auto;
+	margin-left: auto;
+    margin-right: auto;
+    width: 100%;
 }
 
 .atria-logo img {
-	width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
 }
 
 .btn-guest {
