@@ -9,12 +9,10 @@
 		<div class='profile-org-top-cont profile-anon-top-cont'>
 			<div class='profile-org-top-info-bar profile-anon-top-info-bar'>
 						<h2 class='profile-name'>{{ request.session.agent_owner }} ({{ request.session.agent_name }})</h2>
-				<!--
 				<div class='profile-top-bar-right'>
 					<div class='btn btn-connect'><i class="fas fa-user-plus"></i>{% trans "Connect" %}</div>
 					<div class='btn btn-connect'><i class="fas fa-comment"></i>{% trans "Message" %}</div>
 				</div>
-				-->
 			</div>
 		</div>
 
@@ -44,12 +42,10 @@
 
 			<div class='profile-tab-cont'>
 				<div class='profile-search-input'>
-					<!--
 					<input placeholder='Search'>
 					<div class='btn btn-search-input'>
 						<i class='fas fa-search'></i>
 					</div>
-					-->
 				</div>
 
 				{% block profile_content %}

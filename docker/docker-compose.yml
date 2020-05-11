@@ -79,8 +79,6 @@ services:
       - anon
     ports:
       - 8000:8000
-    volumes:
-      - "..:/home/aries/aries_community_demo"    
     depends_on:
       - wallet-db
     entrypoint: >
