@@ -68,7 +68,7 @@ msgid "Create Organization Account"
 msgstr "Criar Conta na Organização"
 
 msgid "Sign up"
-msgstr "inscrever-se"
+msgstr "Inscrever-se"
 
 msgid "Profile"
 msgstr "Perfil"
@@ -301,4 +301,20 @@ msgstr "Convite criado para"
 msgid "Send Connection Invite to organization"
 msgstr "Envia convite a organização"
 
- 
+msgid "Date of birth"
+msgstr "Data de nascimento"
+
+msgid "Photo"
+msgstr "Foto"
+
+msgid "Remove connection"
+msgstr "Remover conexão"
+
+msgid "Name"
+msgstr "Nome"
+
+msgid "Date joined"
+msgstr "Data de inclusão"
+
+msgid "Last login"
+msgstr "Último login"
