@@ -5,20 +5,20 @@
 
 {% block profile_content %}
 {% for connection in connections %}
-    <div class='newsfeed-posted-top-cont'>
-        <div class='newsfeed-posted-img-info'>
-            <div class='newsfeed-posted-info'>
+    <div class='newsfeed-posted-cont'>
+	    <div class='newsfeed-posted-event-opps-cont'>
         	<div>
-                    <h5><b>Agent :</b> {{ connection.agent }}</h5><br>
-                    <h5><b>Email :</b> {{ connection.email }}</h5><br>
-                    <h5><b>First name :</b> {{ connection.first_name }}</h5><br>
-                    <h5><b>Last name :</b> {{ connection.last_name }}</h5><br>
-                    <h5><b>Date joined :</b> {{ connection.date_joined }}</h5><br>
-                    <h5><b>Last login :</b> {{ connection.last_login }}</h5><br>
-                    <h5><b>Date birth:</b> {{ connection.date_birth }}</h5><br>
-                    <img src='/media/{{ connection.photo }}' />
-                </div>
+                <h5>
+                    <img src='/media/{{ connection.photo }}'/><br><br>
+                    <b>Email : </b>{{ connection.email }}</b><br>
+                    <b>Name : </b>{{ connection.first_name }} {{ connection.last_name }}</b><br>
+                    <b>Date birth :</b> {{ connection.date_birth }}</b><br>
+                    <b>Date joined :</b> {{ connection.date_joined }}<br>
+                    <b>Last login :</b> {{ connection.last_login }}<br>
+                    <b>Date birth:</b> {{ connection.date_birth }}<br>
+                </h5>
             </div>
+
         </div>
     </div>
     <div class='newsfeed-post-seperator'></div>
