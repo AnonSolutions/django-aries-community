@@ -17,8 +17,11 @@ class BaseSignUpForm(UserCreationForm):
                                  help_text='Optional.')
     last_name = forms.CharField(max_length=150, label=trans('Last Name'), required=False,
                                  help_text='Optional.')
+    date_birth = forms.CharField(max_length=150, label=trans('Date of birth'), required=False, 
+                                 help_text='Optional.') 
     email = forms.EmailField(max_length=254, label=trans('Email Address'), required=True,
                                  help_text=trans('Required. Provide a valid email address.'))
+    photo = forms.ImageField(label=trans('Photo'), required=False, help_text='Optional.')
 
 
 class UserSignUpForm(BaseSignUpForm):
@@ -26,7 +29,7 @@ class UserSignUpForm(BaseSignUpForm):
 
     class Meta:
         model = get_user_model()
-        fields = ('first_name', 'last_name', 'email', 'password1', 'password2', 'mobile_agent')
+        fields = ('first_name', 'last_name', 'date_birth', 'email', 'photo', 'password1', 'password2', 'mobile_agent')
 
 
 class OrganizationSignUpForm(BaseSignUpForm):

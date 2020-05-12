@@ -2,6 +2,7 @@ from django.urls import path, include
 from django.conf.urls import url
 from django.contrib.auth import views as auth_views
 from django.conf import settings
+from django.conf.urls.static import static
 
 from .views import *
 
@@ -37,3 +38,6 @@ urlpatterns = [
     path('agent_cb/<cb_key>/topic/<topic>/', agent_cb_view, name='agent_callback'),
     path('', auth_views.LoginView.as_view(), name='login'),
 ]
+
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

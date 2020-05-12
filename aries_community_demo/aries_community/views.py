@@ -36,7 +36,7 @@ def user_signup_view(
     """
 
     if request.method == 'POST':
-        form = UserSignUpForm(request.POST)
+        form = UserSignUpForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             username = form.cleaned_data.get('email')
@@ -192,12 +192,19 @@ def agent_for_current_session(request):
 ###############################################################
 def profile_view(
     request,
-    template=''
+    template='aries/profile.html'
     ):
     """
-    Example of user-defined view for Profile tab.
+    List Connections for the current agent.
     """
-    return render(request, 'aries/profile.html')
+
+# expects a agent to be opened in the current session
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
+    connections = AriesUser.objects.filter(email=agent_owner).all()
+
+    return render(request, template,
+              {'agent_name': agent.agent_name, 'connections': connections})
+
 
 def data_view(
     request,
