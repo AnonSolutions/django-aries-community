@@ -7,15 +7,17 @@
 {% for connection in connections %}
     <div class='newsfeed-posted-cont'>
 	    <div class='newsfeed-posted-event-opps-cont'>
+            <div>
+            <h5><a href="{% url 'update_user' %}">{% trans "Update user profile" %}</a></h5><br>
+            </div>
         	<div>
                 <h5>
                     <img src='/media/{{ connection.photo }}'/><br><br>
-                    <b>Email : </b>{{ connection.email }}</b><br>
-                    <b>Name : </b>{{ connection.first_name }} {{ connection.last_name }}</b><br>
-                    <b>Date birth :</b> {{ connection.date_birth }}</b><br>
-                    <b>Date joined :</b> {{ connection.date_joined }}<br>
-                    <b>Last login :</b> {{ connection.last_login }}<br>
-                    <b>Date birth:</b> {{ connection.date_birth }}<br>
+                    <b>{% trans "Email Address" %} :</b> {{ connection.email }}</b><br>
+                    <b>{% trans "Name" %} :</b> {{ connection.first_name }} {{ connection.last_name }}</b><br>
+                    <b>{% trans "Date of birth" %} :</b> {{ connection.date_birth }}</b><br>
+                    <b>{% trans "Date joined" %} :</b> {{ connection.date_joined }}<br>
+                    <b>{% trans "Last login" %} :</b> {{ connection.last_login }}<br>
                 </h5>
             </div>
 
