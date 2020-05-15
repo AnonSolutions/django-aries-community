@@ -1150,3 +1150,43 @@ def handle_remove_connection(
                                                'agent_name': connection.agent.agent_name})
 
         return render(request, form_template, {'form': form})
+
+#Function created to allow updating of information in the user's profile
+def handle_update_user(
+    request,
+    form_template='aries/request_update.html',
+    response_template='aries/profile.html'
+    ):
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
+    connections = AriesUser.objects.get(email=agent_owner)
+
+    if request.method == 'POST':
+        form = UserUpdateForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            cd = form.cleaned_data
+            connections.first_name = cd.get('first_name')
+            connections.last_name = cd.get('last_name')
+            connections.date_birth = cd.get('date_birth')
+            ori_photo = cd.get('ori_photo')
+            new_photo = cd.get('new_photo')
+            password1 = cd.get('password1')
+
+            if new_photo is None:
+                connections.photo = cd.get('ori_photo')
+            else:
+                connections.photo = cd.get('new_photo')
+
+            if password1 != '':
+                connections.set_password(password1)
+
+        connections.save()
+
+        connections = AriesUser.objects.filter(email=agent_owner).all()
+        return render(request, response_template,
+                      {'agent_name': agent.agent_name, 'connections': connections})
+
+    else:
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+        form = UserUpdateForm(initial={'agent_name': agent})
+        return render(request, form_template, {'form': form})
