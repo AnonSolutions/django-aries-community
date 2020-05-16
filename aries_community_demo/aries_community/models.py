@@ -74,6 +74,8 @@ class AriesUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=80, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
+    date_birth = models.CharField(max_length=150, blank=True)
+    photo = models.ImageField(upload_to='media/', blank=True)
     is_staff = models.BooleanField(
         default=False,
         help_text="Designates whether the user can log into the admin site."

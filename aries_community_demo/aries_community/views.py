@@ -36,7 +36,7 @@ def user_signup_view(
     """
 
     if request.method == 'POST':
-        form = UserSignUpForm(request.POST)
+        form = UserSignUpForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             username = form.cleaned_data.get('email')
@@ -192,12 +192,19 @@ def agent_for_current_session(request):
 ###############################################################
 def profile_view(
     request,
-    template=''
+    template='aries/profile.html'
     ):
     """
-    Example of user-defined view for Profile tab.
+    List Connections for the current agent.
     """
-    return render(request, 'aries/profile.html')
+
+# expects a agent to be opened in the current session
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
+    connections = AriesUser.objects.filter(email=agent_owner).all()
+
+    return render(request, template,
+              {'agent_name': agent.agent_name, 'connections': connections})
+
 
 def data_view(
     request,
@@ -1142,4 +1149,44 @@ def handle_remove_connection(
                                                'partner_name': connection.partner_name,
                                                'agent_name': connection.agent.agent_name})
 
+        return render(request, form_template, {'form': form})
+
+#Function created to allow updating of information in the user's profile
+def handle_update_user(
+    request,
+    form_template='aries/request_update.html',
+    response_template='aries/profile.html'
+    ):
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
+    connections = AriesUser.objects.get(email=agent_owner)
+
+    if request.method == 'POST':
+        form = UserUpdateForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            cd = form.cleaned_data
+            connections.first_name = cd.get('first_name')
+            connections.last_name = cd.get('last_name')
+            connections.date_birth = cd.get('date_birth')
+            ori_photo = cd.get('ori_photo')
+            new_photo = cd.get('new_photo')
+            password1 = cd.get('password1')
+
+            if new_photo is None:
+                connections.photo = cd.get('ori_photo')
+            else:
+                connections.photo = cd.get('new_photo')
+
+            if password1 != '':
+                connections.set_password(password1)
+
+        connections.save()
+
+        connections = AriesUser.objects.filter(email=agent_owner).all()
+        return render(request, response_template,
+                      {'agent_name': agent.agent_name, 'connections': connections})
+
+    else:
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+        form = UserUpdateForm(initial={'agent_name': agent})
         return render(request, form_template, {'form': form})

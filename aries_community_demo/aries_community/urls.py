@@ -2,6 +2,7 @@ from django.urls import path, include
 from django.conf.urls import url
 from django.contrib.auth import views as auth_views
 from django.conf import settings
+from django.conf.urls.static import static
 
 from .views import *
 
@@ -12,6 +13,7 @@ urlpatterns = [
     path('org_signup/', org_signup_view, name='org_signup'),
     #path('mobile_request/', mobile_request_connection, name='mobile_request'),
     path('send_invitation/', handle_connection_request, name='send_invitation'),
+    path('update_user/', handle_update_user, name='update_user'),
     path('send_invitation_org/', handle_connection_request_organization, name='send_invitation_org'),
     path('list_connections/', list_connections, name='list_connections'),
     path('connection_response/', handle_connection_response, name='connection_response'),
@@ -37,3 +39,6 @@ urlpatterns = [
     path('agent_cb/<cb_key>/topic/<topic>/', agent_cb_view, name='agent_callback'),
     path('', auth_views.LoginView.as_view(), name='login'),
 ]
+
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -7,14 +7,14 @@ msgstr ""
 "Project-Id-Version: django\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-03-23 20:42+0100\n"
-"PO-Revision-Date: 2020-04-08 19:41-0300\n"
+"PO-Revision-Date: 2020-05-15 11:10-0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pt_BR\n"
-"X-Generator: Poedit 2.2.1\n"
+"X-Generator: Poedit 2.3\n"
 
 msgid "Individual"
 msgstr "Pessoa"
@@ -68,7 +68,7 @@ msgid "Create Organization Account"
 msgstr "Criar Conta na Organização"
 
 msgid "Sign up"
-msgstr "inscrever-se"
+msgstr "Inscrever-se"
 
 msgid "Profile"
 msgstr "Perfil"
@@ -301,4 +301,23 @@ msgstr "Convite criado para"
 msgid "Send Connection Invite to organization"
 msgstr "Envia convite a organização"
 
- 
+msgid "Date of birth"
+msgstr "Data de nascimento"
+
+msgid "Photo"
+msgstr "Foto"
+
+msgid "Remove connection"
+msgstr "Remover conexão"
+
+msgid "Name"
+msgstr "Nome"
+
+msgid "Date joined"
+msgstr "Data de inclusão"
+
+msgid "Last login"
+msgstr "Último login"
+
+msgid "Update user profile"
+msgstr "Atualizar perfil"

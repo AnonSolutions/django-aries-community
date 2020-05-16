@@ -12,4 +12,5 @@ pyyaml
 pyqrcode
 pypng
 requests
+pillow
 git+https://github.com/ianco/aries-cloudagent-python#egg=aries-cloudagent

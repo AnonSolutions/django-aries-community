@@ -1,0 +1,36 @@
+{% load i18n %}
+{% load static %}
+
+<div class='newsfeed-posted-cont'>
+	<div class='newsfeed-posted-info'>
+		<div>
+			<a href=''>
+				<h2>{% trans "User Profile" %}</h2>
+			</a>
+		</div>
+	</div>
+    <div class='newsfeed-post-seperator'></div>
+
+
+{% for connection in connections %}
+    <div class='newsfeed-posted-top-cont'>
+        <div class='newsfeed-posted-img-info'>
+            <div class='newsfeed-posted-info'>
+
+        		<div>
+                    <h5><b>Agent :</b> {{ connection.agent }}</h5><br>
+                    <h5><b>Email :</b> {{ connection.email }}</h5><br>
+                    <h5><b>First name :</b> {{ connection.first_name }}</h5><br>
+                    <h5><b>Last name :</b> {{ connection.last_name }}</h5><br>
+                    <h5><b>Date joined :</b> {{ connection.date_joined }}</h5><br>
+                    <h5><b>Last login :</b> {{ connection.last_login }}</h5><br>
+                    <h5><b>Password :</b> {{ connection.password }}</h5><br>
+                    <h5><b>Date birth:</b> {{ connection.date_birth }}</h5><br>
+                    <img src='/media/{{ connection.photo }}' />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class='newsfeed-post-seperator'></div>
+{% endfor %}
+</div>

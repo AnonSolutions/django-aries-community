@@ -17,8 +17,11 @@ class BaseSignUpForm(UserCreationForm):
                                  help_text='Optional.')
     last_name = forms.CharField(max_length=150, label=trans('Last Name'), required=False,
                                  help_text='Optional.')
+    date_birth = forms.CharField(max_length=150, label=trans('Date of birth'), required=False, 
+                                 help_text='Optional.') 
     email = forms.EmailField(max_length=254, label=trans('Email Address'), required=True,
                                  help_text=trans('Required. Provide a valid email address.'))
+    photo = forms.ImageField(label=trans('Photo'), required=False, help_text='Optional.')
 
 
 class UserSignUpForm(BaseSignUpForm):
@@ -26,7 +29,7 @@ class UserSignUpForm(BaseSignUpForm):
 
     class Meta:
         model = get_user_model()
-        fields = ('first_name', 'last_name', 'email', 'password1', 'password2', 'mobile_agent')
+        fields = ('first_name', 'last_name', 'date_birth', 'email', 'photo', 'password1', 'password2', 'mobile_agent')
 
 
 class OrganizationSignUpForm(BaseSignUpForm):
@@ -303,3 +306,35 @@ class SelectProofReqClaimsForm(SendProofReqResponseForm):
                     self.fields[field_name] = forms.CharField(label=trans('No claims available for')+attr+', enter value:', max_length=80)
 
 
+class UserUpdateForm(AgentNameForm):
+    first_name = forms.CharField(max_length=80, label=trans('First Name'), required=False,
+                                 help_text='Optional.')
+    last_name = forms.CharField(max_length=150, label=trans('Last Name'), required=False,
+                                 help_text='Optional.')
+    email = forms.CharField(max_length=80, label=trans('Email'), required=False,
+                                 help_text='Optional.')
+    date_birth = forms.CharField(max_length=150, label=trans('Date of birth'), required=False,
+                                 help_text='Optional.')
+    ori_photo = forms.CharField(label=trans('Original photo'), required=False, help_text='Optional.')
+    new_photo = forms.ImageField(label=trans('New photo'), required=False, help_text='Optional.')
+    password1 = forms.CharField(max_length=150, label=trans('New password'), required=False,
+                                 help_text='Optional.', widget=forms.PasswordInput)
+
+
+    def __init__(self, *args, **kwargs):
+        super(UserUpdateForm, self).__init__(*args, **kwargs)
+        self.fields['email'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
+
+        initial = kwargs.get('initial')
+
+        if initial:
+            agent = initial.get('agent_name', {})
+            filters = AriesUser.objects.filter(agent=agent).values()
+            self.fields['first_name'].initial = filters[0]['first_name']
+            self.fields['last_name'].initial = filters[0]['last_name']
+            self.fields['email'].initial = filters[0]['email']
+            self.fields['date_birth'].initial = filters[0]['date_birth']
+            self.fields['ori_photo'].initial = filters[0]['photo']
+            self.fields['password1'].initial = filters[0]['password']
