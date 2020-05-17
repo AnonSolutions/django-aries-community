@@ -59,7 +59,7 @@
 
         		<div>
                     <h5><b>Guid :</b> {{ connection.guid }}</h5>
-        			<h5><b>{% trans "Connection Status :" %}</b> {{ connection.status }}</h5>
+        			<h5><b>{% trans "Connection Status:" %}</b> {{ connection.status }}</h5>
         		        {% if connection.status == 'invitation' %}
                             <a href="{% url 'check_connection' %}?id={{connection.guid}}">({% trans "Check Status" %})</a>
         		        {% endif %}
