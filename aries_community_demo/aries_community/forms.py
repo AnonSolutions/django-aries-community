@@ -338,3 +338,11 @@ class UserUpdateForm(AgentNameForm):
             self.fields['date_birth'].initial = filters[0]['date_birth']
             self.fields['ori_photo'].initial = filters[0]['photo']
             self.fields['password1'].initial = filters[0]['password']
+
+class RemoveCredentialForm(AgentNameForm):
+    referent = forms.CharField(label=trans('Referent'), max_length=60)
+    def __init__(self, *args, **kwargs):
+        super(RemoveCredentialForm, self).__init__(*args, **kwargs)
+        self.fields['referent'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
