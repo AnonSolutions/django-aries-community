@@ -36,6 +36,7 @@ urlpatterns = [
     path('connections/', list_connections, name='connections'),
     path('conversations/', list_conversations, name='conversations'),
     path('credentials/', list_wallet_credentials, name='credentials'),
+    path('remove_credentials/', handle_remove_credentials, name='remove_credentials'),
     path('agent_cb/<cb_key>/topic/<topic>/', agent_cb_view, name='agent_callback'),
     path('', auth_views.LoginView.as_view(), name='login'),
 ]

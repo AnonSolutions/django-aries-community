@@ -1190,3 +1190,38 @@ def handle_update_user(
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
         form = UserUpdateForm(initial={'agent_name': agent})
         return render(request, form_template, {'form': form})
+    
+def handle_remove_credentials(
+    request,
+    form_template='aries/credential/form_remove_credential.html',
+    response_template='aries/credential/list.html'
+    ):
+    """
+    Select a Proof Request to send, based on the templates available in the database.
+    """
+
+    if request.method=='POST':
+        form = RemoveCredentialForm(request.POST)
+
+        if not form.is_valid():
+            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+        else:
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+            cd = form.cleaned_data
+            connection_id = cd.get('referent')
+            credentials = remove_credential(agent, connection_id)
+
+            return list_wallet_credentials(
+                request
+            )
+
+    else:
+        # find conversation request
+        (connection, agent_type, agent_owner) = agent_for_current_session(request)
+        connection_id = request.GET.get('connection_id', None)
+        form = RemoveCredentialForm(initial={'connection_id': connection_id,
+                                               'referent': connection_id,
+                                               'agent_name': connection_id})
+
+        return render(request, form_template, {'form': form})
