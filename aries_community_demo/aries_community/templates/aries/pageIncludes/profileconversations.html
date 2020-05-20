@@ -1,16 +1,8 @@
-{% load i18n %}
+% load i18n %}
 {% load static %}
 
-<div class='profile-msgs'>
-	<div class='profile-msgs-left'>
-	<h4>{% trans "Your Connections" %}</h4>
-		<h5>{% trans "Account Name" %}</h5>
-		<h5>{% trans "Account Name" %}</h5>
-		<h5>{% trans "Account Name" %}</h5>
-		<h5>{% trans "Account Name" %}</h5>
-	</div>
-	<div class='profile-msgs-right'>
 
+<div class='newsfeed-posted-cont'>
     {% for conversation in conversations %}
 	<div class='newsfeed-posted-info'>
 		<div>
