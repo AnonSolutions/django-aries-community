@@ -682,13 +682,22 @@ def handle_select_credential_offer(
         # find conversation request
         connection_id = request.GET.get('connection_id', None)
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
-        connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
-        # TODO validate connection id
-        form = SelectCredentialOfferForm(initial={ 'connection_id': connection_id,
-                                                   'partner_name': connections[0].partner_name,
-                                                   'agent_name': connections[0].agent.agent_name})
 
-        return render(request, form_template, {'form': form})
+        connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
+        agent_target = AriesUser.objects.filter(email=connections[0].partner_name).all()
+        credentials = fetch_credentials(agent_target[0].agent)
+
+        if len(credentials) > 0:
+            return render(request, 'aries/credential/exist.html',
+                           {'agent_name': agent.agent_name, 'credentials': credentials})
+        else:
+# TODO validate connection id
+            form = SelectCredentialOfferForm(initial={ 'connection_id': connection_id,
+                                                       'partner_name': connections[0].partner_name,
+                                                       'agent_name': connections[0].agent.agent_name})
+            return render(request, form_template, {'form': form})
+
+
 
 
 def handle_credential_offer(
