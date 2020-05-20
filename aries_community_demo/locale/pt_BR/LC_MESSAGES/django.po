@@ -321,3 +321,23 @@ msgstr "Último login"
 
 msgid "Update user profile"
 msgstr "Atualizar perfil"
+
+msgid "Updated conversation for"
+msgstr "Credencial enviada para"
+
+msgid "Send Credential Offer"
+msgstr "Envia oferta de credencial"
+
+msgid "Credential has already been sent"
+msgstr "Credencial já enviada"
+
+msgid "Personal"
+msgstr "Pessoal"
+
+msgid "Connection Invite"
+msgstr "Convite de conexão"
+
+msgid "External"
+msgstr "Externo"
+
+
