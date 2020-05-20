@@ -1141,3 +1141,28 @@ def handle_agent_proof_callback(agent, topic, payload):
             conversation.save()
 
     return Response("{}")
+
+def remove_credential(agent, connection_id, initialize_agent=False):
+    """
+    Fetch credentials from the agent (wallet).
+    """
+
+    # start the agent if requested (and necessary)     
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    credentials = None
+    print('agent->', agent)
+    print('Remover->', connection_id)
+
+    try:
+        response = requests.post(
+            agent.admin_endpoint
+            + "/credential/" + connection_id + "/remove",
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return credentials
