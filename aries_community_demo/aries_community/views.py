@@ -644,6 +644,7 @@ def list_conversations(
 def handle_select_credential_offer(
     request,
     form_template='aries/credential/select_offer.html',
+    response_exist = 'aries/credential/exist.html',
     response_template='aries/credential/offer.html'
     ):
     """
@@ -686,19 +687,18 @@ def handle_select_credential_offer(
         connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
         agent_target = AriesUser.objects.filter(email=connections[0].partner_name).all()
         credentials = fetch_credentials(agent_target[0].agent)
+        search = [sub['schema_id'] for sub in credentials]
 
-        if len(credentials) > 0:
+        matching = [s for s in search if agent_owner in s]
+        if matching:
             return render(request, 'aries/credential/exist.html',
-                           {'agent_name': agent.agent_name, 'credentials': credentials})
+                          {'agent_name': agent.agent_name})
         else:
-# TODO validate connection id
             form = SelectCredentialOfferForm(initial={ 'connection_id': connection_id,
                                                        'partner_name': connections[0].partner_name,
                                                        'agent_name': connections[0].agent.agent_name})
             return render(request, form_template, {'form': form})
-
-
-
+        
 
 def handle_credential_offer(
     request,
