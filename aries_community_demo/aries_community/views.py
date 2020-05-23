@@ -741,11 +741,11 @@ def handle_credential_offer(
             try:
                 my_conversation = send_credential_offer(agent, my_connection, cred_attrs, cred_def_id)
 
-                return render(request, template, {'msg': 'Updated conversation for ' + agent.agent_name})
+                return render(request, template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
-                return render(request, 'aries/form_response.html', {'msg': 'Failed to update conversation for ' + agent.agent_name})
+                return render(request, 'aries/form_response.html', {'msg': trans('Failed to update conversation for') + ' ' + agent.agent_name})
 
     else:
         return render(request, 'aries/form_response.html', {'msg': 'Method not allowed'})
@@ -780,11 +780,11 @@ def handle_cred_offer_response(
             try:
                 my_conversation = send_credential_request(agent, my_conversation)
 
-                return render(request, response_template, {'msg': 'Updated conversation for ' + agent.agent_name})
+                return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
-                return render(request, 'aries/form_response.html', {'msg': 'Failed to update conversation for ' + agent.agent_name})
+                return render(request, 'aries/form_response.html', {'msg': trans('Failed to update conversation for') + ' ' + agent.agent_name})
 
     else:
         # find conversation request, fill in form details
