@@ -8,11 +8,11 @@
 			<div class='topnav-item'>
             {% if request.user.is_authenticated %}
                 <a href="{% url 'aries_profile' %}">
-                   <img src="{% static "/serpro/serpro-letters.png" %}">
+                   <img src="{% static "/aries/Anon5-letters.png" %}">
                 </a>
             {% else %}
                 <a href="{% url 'login' %}">
-                   <img src="{% static "/serpro/serpro-letters.png" %}">
+                   <img src="{% static "/aries/Anon5-letters.png" %}">
                 </a>
             {% endif %}
 			</div>
