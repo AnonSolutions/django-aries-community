@@ -10,14 +10,18 @@
 		</div>
 		<div>
 			<h5>
-                		{% if request.session.ACTIVE_ORG %}
-				<a href="{% url 'send_invitation' %}">{% trans "Send Connection Invite" %}</a>
-                		{% else %}
-                		<a href="{% url 'send_invitation_org' %}">{% trans "Send Connection Invite to organization" %}</a>
-                		{% trans "or:" %}
-                		{% endif %}
-				<a href="{% url 'connection_response' %}?id=0">{% trans "Respond to (External) Invite" %}</a>
-            		</h5>
+                {% if request.session.ACTIVE_ORG %}
+                <br>
+                {% trans "Connection Invite" %}:
+				        <a href="{% url 'send_invitation' %}">{% trans "Personal" %}</a>
+                        <a href="{% url 'send_invitation_org' %}">{% trans "Organization" %}</a>
+                {% else %}
+                <br>
+                {% trans "Connection Invite" %}:
+                		<a href="{% url 'send_invitation_org' %}">{% trans "Organization" %}</a>
+                {% endif %}
+				        <a href="{% url 'connection_response' %}?id=0">{% trans "External" %}</a>
+            </h5>
 		</div>
 	</div>
     <div class='newsfeed-post-seperator'></div>
@@ -26,7 +30,7 @@
     <div class='newsfeed-posted-top-cont'>
         <div class='newsfeed-posted-img-info'>
             <div class='newsfeed-posted-img'>
-                <img src="{% static "/aries/accounticon.png" %}">
+                <img src="{% static "/serpro/certificado.png" %}">
             </div>
             <div class='newsfeed-posted-info'>
                 <div>
@@ -48,12 +52,13 @@
     <div class='newsfeed-posted-top-cont'>
         <div class='newsfeed-posted-img-info'>
             <div class='newsfeed-posted-img'>
-                <img src="{% static "/aries/accounticon.png" %}">
+                <img src="{% static "/serpro/certificado.png" %}">
             </div>
+
             <div class='newsfeed-posted-info'>
         		<div>
         			<a href=''>
-        				<h2>{{ connection.partner_name }}</h2>
+                        <h2>{{ connection.partner_name }}</h2>
         			</a>
         		</div>
 
@@ -82,7 +87,7 @@
                             <a href="{% url 'select_proof_request' %}?connection_id={{connection.guid}}">{% trans "Send Proof Request" %}</a>
                         {% endif %}
                     {% else %}
-                            <a href="{% url 'remove_connection' %}?connection_id={{connection.guid}}">{% trans "Remove connection" %}</a>
+                            <a href="{% url 'remove_connection' %}?connection_id={{connection.guid}}">{% trans "Remove" %}</a>
                     {% endif %}
         			</h5>
         		</div>
