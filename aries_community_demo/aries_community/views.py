@@ -1234,3 +1234,49 @@ def handle_remove_credentials(
                                                'agent_name': connection_id})
 
         return render(request, form_template, {'form': form})
+
+    
+def handle_select_credential_proposal(
+    request,
+    form_template='aries/credential/select_proposal.html',
+    response_exist = 'aries/credential/exist.html',
+    response_template='aries/credential/proposal.html'
+    ):
+    """
+    Select a Credential Definition and display a form to enter Credential Offer information.
+    """
+
+    if request.method=='POST':
+        form = CredentialProposalForm(request.POST)
+        if not form.is_valid():
+            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+        else:
+            print('cheguei aqui 3...')
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+            cd = form.cleaned_data
+            connection_id = cd.get('connection_id')
+            partner_name = cd.get('partner_name')
+            credential_name = cd.get('credential_name')
+            agent_name = cd.get('agent_name')
+            print('Infor->', connection_id, partner_name, credential_name, agent_name)
+            query = IndyCredentialDefinition.objects.filter(id=credential_name).all()
+
+            print(query)
+
+    else:
+        # find conversation request
+        connection_id = request.GET.get('connection_id', None)
+        connection_partner_id = request.GET.get('connection_partner_name', None)
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+        connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
+        agent_target = AriesUser.objects.filter(email=agent_owner).all()
+        credentials = fetch_credentials(agent_target[0].agent)
+
+        print('sai->', connection_id, connection_partner_id, connections[0].agent.agent_name)
+
+        form = CredentialProposalForm(initial={'connection_id': connection_id,
+                                                  'partner_name': connection_partner_id,
+                                                  'agent_name': connections[0].agent.agent_name})
+
+        return render(request, form_template, {'form': form})
