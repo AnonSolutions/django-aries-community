@@ -346,3 +346,21 @@ class RemoveCredentialForm(AgentNameForm):
         self.fields['referent'].widget.attrs['readonly'] = True
         self.fields['agent_name'].widget.attrs['readonly'] = True
         self.fields['agent_name'].widget.attrs['hidden'] = True
+
+class CredentialProposalForm(AgentNameForm):
+    connection_id = forms.CharField(label=trans('connection_id'), max_length=100)
+    partner_name = forms.CharField(label=trans('Partner Name'), max_length=100)
+    credential_name = forms.CharField(label=trans('Credential Name'), max_length=100)
+    agent_name = forms.CharField(label=trans('Agent Name'), max_length=100)
+
+    def __init__(self, *args, **kwargs):
+        super(CredentialProposalForm, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+#       self.fields['agent_name'].widget.attrs['hidden'] = True
+        self.fields['connection_id'].widget.attrs['readonly'] = True
+        self.fields['partner_name'].widget.attrs['readonly'] = True
+        initial = kwargs.get('initial')
+
+        if initial:
+            agent = initial.get('partner_name', {})
+            self.fields['credential_name'] = forms.ModelChoiceField(queryset=IndyCredentialDefinition.objects.filter(agent__agent_name='o_'+agent))
