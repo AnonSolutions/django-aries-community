@@ -364,3 +364,46 @@ class CredentialProposalForm(AgentNameForm):
         if initial:
             agent = initial.get('partner_name', {})
             self.fields['credential_name'] = forms.ModelChoiceField(queryset=IndyCredentialDefinition.objects.filter(agent__agent_name='o_'+agent))
+            
+class CredentialProposalForm(AgentNameForm):
+    connection_id = forms.CharField(widget=forms.HiddenInput())
+    partner_name = forms.CharField(label=trans('Partner Name'), max_length=100)
+    credential_name = forms.CharField(label=trans('Credential Name'), max_length=100)
+    agent_name = forms.CharField(widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        super(CredentialProposalForm, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+#       self.fields['agent_name'].widget.attrs['hidden'] = True
+        self.fields['connection_id'].widget.attrs['readonly'] = True
+        self.fields['partner_name'].widget.attrs['readonly'] = True
+        initial = kwargs.get('initial')
+
+        if initial:
+            agent = initial.get('partner_name', {})
+            self.fields['credential_name'] = forms.ModelChoiceField(queryset=IndyCredentialDefinition.objects.filter(agent__agent_name='o_'+agent))
+
+class SendCredentialProposalForm(AgentNameForm):
+    connection_id = forms.CharField(widget=forms.HiddenInput())
+    partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
+    cred_def = forms.CharField(max_length=80, widget=forms.HiddenInput())
+    credential_name = forms.CharField(widget=forms.HiddenInput())
+    schema_attrs = forms.CharField(label=trans('Credential Attributes'), max_length=4000, widget=forms.Textarea)
+
+    def __init__(self, *args, **kwargs):
+        super(SendCredentialProposalForm, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
+        self.fields['connection_id'].widget.attrs['readonly'] = True
+        self.fields['partner_name'].widget.attrs['readonly'] = True
+        self.fields['cred_def'].widget.attrs['readonly'] = True
+
+        # build a list of attributes for the given schema
+        initial = kwargs.get('initial')
+        if initial:
+            schema_attrs = initial.get('schema_attrs', '{}')
+            schema_attrs = json.loads(schema_attrs)
+            self.fields['schema_attrs'].widget.attrs['hidden'] = True
+            for attr in schema_attrs:
+                field_name = 'schema_attr_' + attr
+                self.fields[field_name] = forms.CharField(label=attr, max_length=200)
