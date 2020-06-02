@@ -796,7 +796,6 @@ def handle_cred_offer_response(
         # TODO validate conversation id
         conversation = conversations[0]
         agent_conversation = get_agent_conversation(agent, conversation_id, CRED_EXCH_CONVERSATION)
-        print("agent_conversation:", agent_conversation)
         proposed_attrs = agent_conversation["credential_proposal_dict"]["credential_proposal"]["attributes"]
         cred_attrs = {}
         for i in range(len(proposed_attrs)):
@@ -1136,9 +1135,6 @@ def handle_remove_connection(
             partner_name = cd.get('partner_name')
             agent_name = cd.get('agent_name')
 
-            print('agent->', agent_owner)
-            print('agent_name->', agent_name)
-
             guid_partner_name = AgentConnection.objects.filter(partner_name=partner_name, agent=agent_name).get()
             guid_partner_name.delete()
             agent_org = AriesOrganization.objects.filter(org_name=partner_name).get()
@@ -1253,7 +1249,6 @@ def handle_credential_proposal(
         else:
             cd = form.cleaned_data
             connection_id = cd.get('connection_id')
-            print('connection_id->', connection_id)
             cred_def_id = cd.get('cred_def')
             credential_name = cd.get('credential_name')
             partner_name = cd.get('partner_name')
@@ -1270,14 +1265,15 @@ def handle_credential_proposal(
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
             connections = AgentConnection.objects.filter(guid=connection_id).all()
 
-            print('connections sai->', connections)
 
             # TODO validate connection id
             my_connection = connections[0]
+            
 
             cred_defs = IndyCredentialDefinition.objects.filter(ledger_creddef_id=cred_def_id, agent='o_'+partner_name).all()
+            schema_name = cred_defs[0].ledger_schema
             cred_def = cred_defs[0]
-            schema = IndySchema.objects.filter(schema_name=partner_name).all()
+            schema = IndySchema.objects.filter(schema_name=schema_name).all()
 
             try:
                 my_conversation = send_credential_proposal(agent, my_connection, cred_attrs, cred_def_id, schema, connection_id)
@@ -1337,8 +1333,12 @@ def handle_select_credential_proposal(
         # find conversation request
         connection_id = request.GET.get('connection_id', None)
         connection_partner_id = request.GET.get('connection_partner_name', None)
+        
+        connection_partner_id = connection_partner_id.lower()
+        connection_partner_id = connection_partner_id.replace(" ", "_")
 
         connection_destination_id = AgentConnection.objects.filter(agent='o_'+connection_partner_id).all()
+
         connection_destination = connection_destination_id[0].guid
 
         (agent, agent_type, agent_owner) = agent_for_current_session(request)

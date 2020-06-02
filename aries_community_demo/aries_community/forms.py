@@ -407,3 +407,60 @@ class SendCredentialProposalForm(AgentNameForm):
             for attr in schema_attrs:
                 field_name = 'schema_attr_' + attr
                 self.fields[field_name] = forms.CharField(label=attr, max_length=200)
+
+
+class SendCredentialResponseFormProposal(SendConversationResponseForm):
+    # a bunch of fields that are read-only to present to the user
+    agent_name = forms.CharField(widget=forms.HiddenInput())
+    libindy_offer_schema_id = forms.CharField(widget=forms.HiddenInput())
+    conversation_id = forms.CharField(label=trans('conversation_id'), max_length=400)
+    from_partner_name = forms.CharField(widget=forms.HiddenInput())
+    claim_name = forms.CharField(widget=forms.HiddenInput())
+    credential_attrs = forms.CharField(label=trans('Credential Attributs'), max_length=200)
+
+    def __init__(self, *args, **kwargs):
+        super(SendCredentialResponseFormProposal, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
+        self.fields['libindy_offer_schema_id'].widget.attrs['readonly'] = True
+        self.fields['libindy_offer_schema_id'].widget.attrs['hidden'] = True
+        self.fields['conversation_id'].widget.attrs['readonly'] = True
+        self.fields['claim_name'].widget.attrs['readonly'] = True
+        self.fields['claim_name'].widget.attrs['hidden'] = True
+        self.fields['from_partner_name'].widget.attrs['hidden'] = True
+        self.fields['from_partner_name'].widget.attrs['hidden'] = True
+#       self.fields['credential_attrs'].widget.attrs['readonly'] = False
+
+
+        # build a list of attributes for the current schema
+        initial = kwargs.get('initial')
+        if initial:
+            credential_attrs = initial.get('credential_attrs', {})
+            self.fields['credential_attrs'].widget.attrs['hidden'] = True
+            for attr in credential_attrs:
+                field_name = 'credential_attr_' + attr
+                self.fields[field_name] = forms.CharField(label=attr, initial=credential_attrs[attr])
+                self.fields[field_name].widget.attrs['readonly'] = True
+
+class CredentialDeleteForm(forms.Form):
+    # a bunch of fields that are read-only to present to the user
+    agent_name = forms.CharField(widget=forms.HiddenInput())
+    conversation_id = forms.CharField(label=trans('conversation_id'), max_length=400)
+    credential_attrs= forms.CharField(label=trans('credential_attrs'), max_length=400)
+
+    def __init__(self, *args, **kwargs):
+        super(CredentialDeleteForm, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
+        self.fields['conversation_id'].widget.attrs['readonly'] = True
+
+        # build a list of attributes for the current schema
+        initial = kwargs.get('initial')
+        if initial:
+            credential_attrs = initial.get('credential_attrs', {})
+            self.fields['credential_attrs'].widget.attrs['hidden'] = True
+            for attr in credential_attrs:
+                field_name = 'credential_attr_' + attr
+                self.fields[field_name] = forms.CharField(label=attr, initial=credential_attrs[attr])
+                self.fields[field_name].widget.attrs['readonly'] = True
+
