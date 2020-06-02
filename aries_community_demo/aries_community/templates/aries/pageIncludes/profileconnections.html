@@ -88,6 +88,7 @@
                         {% endif %}
                     {% else %}
                             <a href="{% url 'remove_connection' %}?connection_id={{connection.guid}}">{% trans "Remove" %}</a>
+                            <a href="{% url 'select_credential_proposal' %}?connection_id={{connection.guid}}&connection_partner_name={{connection.partner_name}}">{% trans "Credential proposal" %}</a>
                     {% endif %}
         			</h5>
         		</div>
