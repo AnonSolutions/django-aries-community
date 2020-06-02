@@ -11,6 +11,8 @@ from rest_framework.response import Response
 
 import pyqrcode
 import uuid
+import string
+import ast
 
 from .forms import *
 from .models import *
@@ -1348,5 +1350,172 @@ def handle_select_credential_proposal(
         form = CredentialProposalForm(initial={'connection_id': connection_id,
                                                'partner_name': connection_partner_id,
                                                'agent_name': 'o_'+ connection_partner_id})
+
+        return render(request, form_template, {'form': form})
+
+ 
+def handle_cred_proposal_response(
+        request,
+        form_template='aries/credential/proposal_response.html',
+        response_template='aries/form_response.html'
+        ):
+    """
+    Respond to a Credential Offer by sending a Credential Request.
+    """
+
+    if request.method == 'POST':
+        form = SendCredentialResponseFormProposal(request.POST)
+        if not form.is_valid():
+            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+        else:
+            cd = form.cleaned_data
+            conversation_id = cd.get('conversation_id')
+            claim_name =  cd.get('claim_name')
+            credential_attrs = cd.get('credential_attrs')
+            libindy_offer_schema_id = cd.get('libindy_offer_schema_id')
+
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+            # find conversation request
+            my_connection = AgentConnection.objects.filter(agent=agent).all()
+            schema_attrs = cd.get('credential_attrs')
+
+            res = ast.literal_eval(schema_attrs)
+            cred_attrs = []
+            for attr in res:
+                cred_attrs.append({"name": attr, "value": res[attr]})
+
+            try:
+                my_conversation = send_credential_offer_proposal(conversation_id, agent, my_connection[0], cred_attrs, claim_name)
+                return render(request, response_template, {'msg': 'Updated conversation for' + ' ' + agent.agent_name})
+            except:
+                # ignore errors for now
+                print(" >>> Failed to update conversation for", agent.agent_name)
+                return render(request, 'aries/form_response.html',
+                              {'msg': 'Failed to update conversation for' + ' ' + agent.agent_name})
+
+    else:
+        # find conversation request, fill in form details
+        conversation_id = request.GET.get('conversation_id', None)
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+        conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
+        # TODO validate conversation id
+        conversation = conversations[0]
+        agent_conversation = get_agent_conversation(agent, conversation_id, CRED_EXCH_CONVERSATION)
+        proposed_attrs = agent_conversation["credential_proposal_dict"]["credential_proposal"]["attributes"]
+
+        cred_attrs = {}
+        for i in range(len(proposed_attrs)):
+            cred_attrs[proposed_attrs[i]["name"]] = proposed_attrs[i]["value"]
+        # TODO validate connection id
+
+        connection = conversation.connection
+
+        cred_def_id = agent_conversation['credential_proposal_dict']['cred_def_id']
+        schema_id = agent_conversation['credential_proposal_dict']['schema_id']
+
+        form = SendCredentialResponseFormProposal(initial={
+            'agent_name': connection.agent.agent_name,
+            'conversation_id': conversation_id,
+            'from_partner_name': connection.partner_name,
+            'claim_name': cred_def_id,
+            'credential_attrs': cred_attrs,
+            'libindy_offer_schema_id': schema_id
+        })
+
+        return render(request, form_template, {'form': form})
+
+def handle_cred_proposal_show(
+    request
+    ):
+    """
+    List all credentials in the current wallet.
+    """
+
+    try:
+
+        conversation_id = request.GET.get('conversation_id', None)
+
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+        conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
+        conversation = conversations[0]
+
+        agent_conversation = get_agent_conversation(agent, conversation_id, CRED_EXCH_CONVERSATION)
+        proposed_attrs = agent_conversation["credential_proposal_dict"]["credential_proposal"]["attributes"]
+
+        cred_attrs = {}
+        for i in range(len(proposed_attrs)):
+            cred_attrs[proposed_attrs[i]["name"]] = proposed_attrs[i]["value"]
+        # TODO validate connection id
+
+        connection = conversation.connection
+        cred_def_id = agent_conversation['credential_proposal_dict']['cred_def_id']
+        schema_id = agent_conversation['credential_proposal_dict']['schema_id']
+        return render(request, 'aries/credential/list_view.html', {'conversation_id': conversation_id, 'partner_name': connection.partner_name, 'proposed_attrs' : proposed_attrs})
+    except:
+        raise
+    finally:
+        pass
+
+
+
+def handle_cred_proposal_delete(
+        request,
+        form_template='aries/credential/proposal_delete.html',
+        response_template='aries/form_response.html'
+        ):
+    """
+    Respond to a Credential Offer by sending a Credential Request.
+    """
+
+    if request.method == 'POST':
+        form = CredentialDeleteForm(request.POST)
+        if not form.is_valid():
+            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+        else:
+            cd = form.cleaned_data
+            conversation_id = cd.get('conversation_id')
+            credential_attrs = cd.get('credential_attrs')
+
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+            try:
+                credentials = remove_issue_credential(agent, conversation_id)
+                conversations = AgentConversation.objects.filter(guid=conversation_id).delete()
+                return render(request, response_template, {'msg': 'Deleted credential proposal for' + ' ' + agent.agent_name})
+            except:
+                # ignore errors for now
+                print(" >>> Failed to update conversation for", agent.agent_name)
+                return render(request, 'aries/form_response.html',
+                              {'msg': 'Failed to update conversation for' + ' ' + agent.agent_name})
+
+    else:
+        # find conversation request, fill in form details
+        conversation_id = request.GET.get('conversation_id', None)
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+        conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
+        # TODO validate conversation id
+        conversation = conversations[0]
+        agent_conversation = get_agent_conversation(agent, conversation_id, CRED_EXCH_CONVERSATION)
+        proposed_attrs = agent_conversation["credential_proposal_dict"]["credential_proposal"]["attributes"]
+
+        cred_attrs = {}
+        for i in range(len(proposed_attrs)):
+            cred_attrs[proposed_attrs[i]["name"]] = proposed_attrs[i]["value"]
+        # TODO validate connection id
+
+        connection = conversation.connection
+
+        cred_def_id = agent_conversation['credential_proposal_dict']['cred_def_id']
+        schema_id = agent_conversation['credential_proposal_dict']['schema_id']
+
+        form = CredentialDeleteForm(initial={
+            'agent_name': connection.agent.agent_name,
+            'conversation_id': conversation_id,
+            'credential_attrs': cred_attrs
+        })
 
         return render(request, form_template, {'form': form})
