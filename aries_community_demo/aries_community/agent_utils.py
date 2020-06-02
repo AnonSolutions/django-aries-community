@@ -1236,3 +1236,27 @@ def send_credential_proposal(agent, connection, credential_attrs, cred_def_id, s
         if agent_started:
             stop_agent(agent)
     return conversation
+
+def remove_issue_credential(agent, connection_id, initialize_agent=False):
+    """
+    Fetch credentials from the agent (wallet).
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+    print(agent)
+
+    credentials = None
+
+    try:
+        response = requests.post(
+            agent.admin_endpoint
+            + "/issue-credential/records/" + connection_id + "/remove",
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return credentials
