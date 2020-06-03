@@ -388,7 +388,7 @@ class SendCredentialProposalForm(AgentNameForm):
     partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
     cred_def = forms.CharField(max_length=80, widget=forms.HiddenInput())
     credential_name = forms.CharField(widget=forms.HiddenInput())
-    schema_attrs = forms.CharField(label=trans('Credential Attributes'), max_length=4000, widget=forms.Textarea)
+    schema_attrs = forms.CharField(label=trans('Credential Attributes'), max_length=400, widget=forms.Textarea)
 
     def __init__(self, *args, **kwargs):
         super(SendCredentialProposalForm, self).__init__(*args, **kwargs)
@@ -406,7 +406,7 @@ class SendCredentialProposalForm(AgentNameForm):
             self.fields['schema_attrs'].widget.attrs['hidden'] = True
             for attr in schema_attrs:
                 field_name = 'schema_attr_' + attr
-                self.fields[field_name] = forms.CharField(label=attr, max_length=200)
+                self.fields[field_name] = forms.CharField(label=attr, max_length=400)
 
 
 class SendCredentialResponseFormProposal(SendConversationResponseForm):
@@ -416,7 +416,7 @@ class SendCredentialResponseFormProposal(SendConversationResponseForm):
     conversation_id = forms.CharField(label=trans('conversation_id'), max_length=400)
     from_partner_name = forms.CharField(widget=forms.HiddenInput())
     claim_name = forms.CharField(widget=forms.HiddenInput())
-    credential_attrs = forms.CharField(label=trans('Credential Attributs'), max_length=200)
+    credential_attrs = forms.CharField(label=trans('Credential Attributs'), max_length=400)
 
     def __init__(self, *args, **kwargs):
         super(SendCredentialResponseFormProposal, self).__init__(*args, **kwargs)
