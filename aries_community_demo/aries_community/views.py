@@ -201,11 +201,18 @@ def profile_view(
     """
 
 # expects a agent to be opened in the current session
-    (agent, agent_type, agent_owner) = agent_for_current_session(request)
-    connections = AriesUser.objects.filter(email=agent_owner).all()
-
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)  
+    
+    if agent_type == 'user':
+    	connections = AriesUser.objects.filter(email=agent_owner).all()
+    else:
+    	name = agent_owner.split()
+    	first_name = name[0]
+    	last_name = name[1]
+    	connections = AriesUser.objects.filter(first_name=first_name, last_name=last_name).all()
     return render(request, template,
               {'agent_name': agent.agent_name, 'connections': connections})
+
 
 
 def data_view(
@@ -1165,7 +1172,14 @@ def handle_update_user(
     response_template='aries/profile.html'
     ):
     (agent, agent_type, agent_owner) = agent_for_current_session(request)
-    connections = AriesUser.objects.get(email=agent_owner)
+    
+    if agent_type == 'user':
+    	connections = AriesUser.objects.get(email=agent_owner)
+    else:
+    	name = agent_owner.split()
+    	first_name = name[0]
+    	last_name = name[1]
+    	connections = AriesUser.objects.get(first_name=first_name)
 
     if request.method == 'POST':
         form = UserUpdateForm(request.POST, request.FILES)
