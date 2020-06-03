@@ -1172,7 +1172,14 @@ def handle_update_user(
     response_template='aries/profile.html'
     ):
     (agent, agent_type, agent_owner) = agent_for_current_session(request)
-    connections = AriesUser.objects.get(email=agent_owner)
+    
+    if agent_type == 'user':
+    	connections = AriesUser.objects.get(email=agent_owner)
+    else:
+    	name = agent_owner.split()
+    	first_name = name[0]
+    	last_name = name[1]
+    	connections = AriesUser.objects.get(first_name=first_name)
 
     if request.method == 'POST':
         form = UserUpdateForm(request.POST, request.FILES)
