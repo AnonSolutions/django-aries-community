@@ -4,7 +4,6 @@
 
 <div class='newsfeed-posted-cont'>
 	<div class='newsfeed-posted-event-opps-cont'>
-
     {% for conversation in conversations %}
 	<div class='newsfeed-posted-info'>
 		<div>
@@ -18,6 +17,12 @@
 		          {% if conversation.status == 'offer_received' %}
 		              <a href={% url 'cred_offer_response' %}?conversation_id={{conversation.guid}}>{% trans "Accept Offer" %}</a>
 		          {% endif %}
+				  {% if conversation.status == 'proposal_received' %}
+				      	<a href={% url 'cred_proposal_show' %}?conversation_id={{conversation.guid}}>{% trans "Show" %}</a>
+						<a href={% url 'cred_proposal_response' %}?conversation_id={{conversation.guid}}>{% trans "Accept" %}</a>
+				      	<a href={% url 'cred_proposal_delete' %}?conversation_id={{conversation.guid}}>{% trans "Delete" %}</a>
+		          {% endif %}
+
 	          {% endif %}
 	          {% if conversation.conversation_type == 'ProofRequest' %}
 		          {% if conversation.status == 'request_received' %}

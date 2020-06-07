@@ -340,4 +340,11 @@ msgstr "Convite de conexão"
 msgid "External"
 msgstr "Externo"
 
+msgid "Show"
+msgstr "Visualizar"
 
+msgid "Delete"
+msgstr "Excluir"
+
+msgid "Credential proposal"
+msgstr "Propor credencial"

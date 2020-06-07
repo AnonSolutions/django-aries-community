@@ -912,7 +912,16 @@ def handle_agent_credentials_callback(agent, topic, payload):
         conversation = cred_exches[0]
         conversation.status = state
         conversation.save()
-
+        
+    elif state == "proposal_received":
+        #   holder save a credential propose (no action; "auto store")
+        conversation = AgentConversation(
+                connection = connection,
+                conversation_type = CRED_EXCH_CONVERSATION,
+                guid = cred_exch_id,
+                status = "proposal_received")
+        conversation.save()
+        
     else:
         # ignore all other statuses (but update state)
         if 0 < len(cred_exches):
@@ -1158,6 +1167,151 @@ def remove_credential(agent, connection_id, initialize_agent=False):
         response = requests.post(
             agent.admin_endpoint
             + "/credential/" + connection_id + "/remove",
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return credentials
+
+def build_credential_proposal(agent, connection, credential_attrs, cred_def_id, issuer_did, schema_id, schema_issuer_did):
+    credential_proposal = {
+        "credential_proposal": {
+            "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/issue-credential/1.0/credential-preview",
+            "attributes": credential_attrs
+        },
+        'connection_id': connection.guid,
+        'comment': "Issued by " + agent.agent_name,
+        'schema_name': 'serpro',
+        'schema_version': '1.0',
+        'issuer_did': schema_issuer_did,
+        'schema_issuer_did': schema_issuer_did,
+        "auto_remove": False,
+        'cred_def_id': cred_def_id,
+        'schema_id': schema_id
+    }
+    return credential_proposal
+
+
+def send_credential_proposal(agent, connection, credential_attrs, cred_def_id, schema, initialize_agent=False):
+    """
+    Send a Credential Offer.
+    """
+
+    # start the agent if requested (and necessary)
+
+    issuer_did = schema[0].ledger_schema_id
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+    schema_id = schema[0].ledger_schema_id
+    schema_issuer_did = schema_id[:22]
+
+    try:
+
+        credential_proposal = build_credential_proposal(agent, connection, credential_attrs, cred_def_id, issuer_did, schema_id, schema_issuer_did)
+
+        response = requests.post(
+            agent.admin_endpoint
+            + "/issue-credential/send-proposal",
+            json.dumps(credential_proposal),
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+
+        response.raise_for_status()
+
+        my_cred_exchange = response.json()
+        print('>>>', my_cred_exchange)
+
+        conversation = AgentConversation(
+            connection = connection,
+            conversation_type = CRED_EXCH_CONVERSATION,
+            guid = my_cred_exchange["credential_exchange_id"],
+            status = my_cred_exchange["state"])
+        conversation.save()
+
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return conversation
+
+def remove_issue_credential(agent, connection_id, initialize_agent=False):
+    """
+    Fetch credentials from the agent (wallet).
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+    print(agent)
+
+    credentials = None
+
+    try:
+        response = requests.post(
+            agent.admin_endpoint
+            + "/issue-credential/records/" + connection_id + "/remove",
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return credentials
+
+def send_credential_offer_proposal(conversation_id, agent, connection, credential_attrs, cred_def_id, initialize_agent=False):
+    """
+    Send a Credential Offer.
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    try:
+        credential_offer = build_credential_offer(agent, connection, credential_attrs, cred_def_id)
+
+        print('credential_offer->', agent, connection, credential_attrs, cred_def_id)
+
+        response = requests.post(
+            agent.admin_endpoint
+            + "/issue-credential/send-offer",
+            json.dumps(credential_offer),
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        my_cred_exchange = "proposal_acked"
+
+        conversation = AgentConversation(
+            connection=connection,
+            conversation_type=CRED_EXCH_CONVERSATION,
+            guid=conversation_id,
+            status=my_cred_exchange)
+        conversation.save()
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+
+    return conversation
+
+def remove_issue_credential(agent, connection_id, initialize_agent=False):
+    """
+    Fetch credentials from the agent (wallet).
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+    print(agent)
+
+    credentials = None
+
+    try:
+        response = requests.post(
+            agent.admin_endpoint
+            + "/issue-credential/records/" + connection_id + "/remove",
             headers=get_ADMIN_REQUEST_HEADERS(agent)
         )
     except:
