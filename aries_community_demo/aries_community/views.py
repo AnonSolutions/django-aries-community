@@ -1180,6 +1180,11 @@ def handle_update_user(
     	first_name = name[0]
     	last_name = name[1]
     	connections = AriesUser.objects.get(first_name=first_name)
+        define = AriesUser.objects.filter(first_name=first_name).get()
+
+        if define.agent is None:
+            define.agent = agent
+            define.save()
 
     if request.method == 'POST':
         form = UserUpdateForm(request.POST, request.FILES)
