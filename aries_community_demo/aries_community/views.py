@@ -1176,12 +1176,12 @@ def handle_update_user(
     if agent_type == 'user':
     	connections = AriesUser.objects.get(email=agent_owner)
     else:
-    	name = agent_owner.split()
-    	first_name = name[0]
-    	last_name = name[1]
-    	connections = AriesUser.objects.get(first_name=first_name)
+        name = agent_owner.split()
+        first_name = name[0]
+        last_name = name[1]
+        connections = AriesUser.objects.get(first_name=first_name)
         define = AriesUser.objects.filter(first_name=first_name).get()
-
+        
         if define.agent is None:
             define.agent = agent
             define.save()
