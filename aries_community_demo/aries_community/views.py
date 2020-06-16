@@ -1254,6 +1254,7 @@ def handle_remove_credentials(
         return render(request, form_template, {'form': form})
 
     
+    
 def handle_credential_proposal(
         request,
         template='aries/form_response.html'
@@ -1391,15 +1392,19 @@ def handle_cred_proposal_response(
             cd = form.cleaned_data
             conversation_id = cd.get('conversation_id')
             claim_name =  cd.get('claim_name')
+            partner_name = cd.get('from_partner_name')
             credential_attrs = cd.get('credential_attrs')
             libindy_offer_schema_id = cd.get('libindy_offer_schema_id')
 
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
-            # find conversation request
-            my_connection = AgentConnection.objects.filter(agent=agent).all()
-            schema_attrs = cd.get('credential_attrs')
 
+            # find conversation request
+
+            my_connection = AgentConnection.objects.filter(agent=agent, partner_name=partner_name).all()
+
+
+            schema_attrs = cd.get('credential_attrs')
             res = ast.literal_eval(schema_attrs)
             cred_attrs = []
             for attr in res:
@@ -1443,7 +1448,7 @@ def handle_cred_proposal_response(
             'credential_attrs': cred_attrs,
             'libindy_offer_schema_id': schema_id
         })
-
+        print('form->', form)
         return render(request, form_template, {'form': form})
 
 def handle_cred_proposal_show(
@@ -1469,6 +1474,8 @@ def handle_cred_proposal_show(
         for i in range(len(proposed_attrs)):
             cred_attrs[proposed_attrs[i]["name"]] = proposed_attrs[i]["value"]
         # TODO validate connection id
+
+        print('agent->', agent)
 
         connection = conversation.connection
         cred_def_id = agent_conversation['credential_proposal_dict']['cred_def_id']
@@ -1504,7 +1511,7 @@ def handle_cred_proposal_delete(
             try:
                 credentials = remove_issue_credential(agent, conversation_id)
                 conversations = AgentConversation.objects.filter(guid=conversation_id).delete()
-                return render(request, response_template, {'msg': 'Deleted credential proposal for' + ' ' + agent.agent_name})
+                return render(request, response_template, {'msg': trans('Deleted credential proposal for') + ' ' + agent.agent_name})
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
