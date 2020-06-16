@@ -1,54 +1,77 @@
 {% load i18n %}
 {% load static %}
 
+<body class="w3-light-grey">
+        <div class="w3-light-grey" style="margin-left:300px; margin-top: 50px;">
+			<div class="w3-container">
+    <body class="w3-light-grey">
+		<h4>{% trans "Messages" %}</h4>
+		<br>
+		<table class="blueTable">
+		<thead>
+		<tr>
+			<th>GUID</th>
+			<th>{% trans "Partner" %}</th>
+			<th>{% trans "Status" %}</th>
+			<th>{% trans "Type" %}</th>
+			<th>{% trans "Operation" %}</th>
+		</tr>
+		</thead>
+		<tbody>
+		{% for conversation in conversations %}
 
-<div class='newsfeed-posted-cont'>
-	<div class='newsfeed-posted-event-opps-cont'>
-    {% for conversation in conversations %}
-	<div class='newsfeed-posted-info'>
-		<div>
-			<a href=''>
-				<h2>{{ conversation.status }} ({{ conversation.conversation_type }}): {{ conversation.connection.partner_name }}</h2>
-			</a>
-		</div>
-		<div>
-			<h5>
-	          {% if conversation.conversation_type == 'CredExchange' %}
-		          {% if conversation.status == 'offer_received' %}
-		              <a href={% url 'cred_offer_response' %}?conversation_id={{conversation.guid}}>{% trans "Accept Offer" %}</a>
-		          {% endif %}
-				  {% if conversation.status == 'proposal_received' %}
-				      	<a href={% url 'cred_proposal_show' %}?conversation_id={{conversation.guid}}>{% trans "Show" %}</a>
-						<a href={% url 'cred_proposal_response' %}?conversation_id={{conversation.guid}}>{% trans "Accept" %}</a>
-				      	<a href={% url 'cred_proposal_delete' %}?conversation_id={{conversation.guid}}>{% trans "Delete" %}</a>
-		          {% endif %}
-
-	          {% endif %}
-	          {% if conversation.conversation_type == 'ProofRequest' %}
-		          {% if conversation.status == 'request_received' %}
-		            <a href={% url 'proof_req_response' %}?conversation_id={{conversation.guid}}>{% trans "Supply Proof" %}</a>
-		          {% endif %}
-			      {% if conversation.status == 'verified' %}
-		            [{% trans "Completed" %}]
-		            {% trans "Proof is" %} <a href={% url 'view_proof' %}?conversation_id={{conversation.guid}}>
-			    {% trans "verified" %}</a>
-		          {% endif %}
-	          {% endif %}
-		      {% if conversation.status == 'Sent' %}
-		            <a href={% url 'check_conversation' %}?conversation_id={{conversation.guid}}>{% trans "Check Status" %}</a>
-		      {% endif %}
-		      {% if conversation.status == 'Accepted' %}
-		            [{% trans "Completed" %}]
-		          {% if conversation.conversation_type == 'ProofRequest' %}
-			    {% trans "Proof is" %} <a href={% url 'view_proof' %}?conversation_id={{conversation.guid}}>
-			    {% trans "Accepted" %}</a>			    
-		          {% endif %}
-		      {% endif %}
-			</h5>
-		</div>
-	</div>
-    <div class='newsfeed-post-seperator'></div>
-    {% endfor %}
-
-	</div>
+			{% if conversation.conversation_type == 'CredExchange' %}
+				<tr>
+					{% if conversation.status == 'offer_received' %}
+						<td><a href={% url 'cred_proposal_show' %}?conversation_id={{conversation.guid}}&partner={{ conversation.connection.partner_name }}>{{ conversation.connection.guid }}</a></td>
+						<td>{{ conversation.connection.partner_name }}</td>
+						<td>{{ conversation.status }}</td>
+						<td>{{ conversation.conversation_type }}</td>
+							<td>
+								<a href={% url 'cred_offer_response' %}?conversation_id={{conversation.guid}}><i class="fa fa-check" style="color:green" aria-hidden="true" title="{% trans "Accept" %}"></i></a></td>
+					{% endif %}
+					{% if conversation.status == 'proposal_received' %}
+						<td><a href={% url 'cred_proposal_show' %}?conversation_id={{conversation.guid}}&partner={{ conversation.connection.partner_name }}>{{ conversation.connection.guid }}</a></td>
+						<td>{{ conversation.connection.partner_name }}</td>
+						<td>{{ conversation.status }}</td>
+						<td>{{ conversation.conversation_type }}</td>
+						<td>
+			    			<a href={% url 'cred_proposal_response' %}?conversation_id={{conversation.guid}}><i class="fa fa-check" style="color:green" aria-hidden="true" title="{% trans "Accept" %}"></i></a>
+							<a href={% url 'cred_proposal_delete' %}?conversation_id={{conversation.guid}}>  <i class="fa fa-times" style="color:red"   aria-hidden="true" title="{% trans "Delete" %}"></i></a>
+						</td>
+					{% endif %}
+					{% if conversation.status == 'proposal_acked' %}
+						<td><a href={% url 'cred_proposal_show' %}?conversation_id={{conversation.guid}}&partner={{ conversation.connection.partner_name }}>{{ conversation.connection.guid }}</a></td>
+						<td>{{ conversation.connection.partner_name }}</td>
+						<td>{{ conversation.status }}</td>
+						<td>{{ conversation.conversation_type }}</td>
+						<td>{% trans "Proposal acked" %}
+						</td>
+					{% endif %}
+					{% if conversation.status == 'offer_sent' %}
+						<td>{{ conversation.connection.guid }}</td>
+						<td>{{ conversation.connection.partner_name }}</td>
+						<td>{{ conversation.status }}</td>
+						<td>{{ conversation.conversation_type }}</td>
+						<td>{% trans "Offer sent" %}</td>
+					{% endif %}
+					{% if conversation.status == 'proposal_sent' %}
+						<td>{{ conversation.connection.guid }}</a></td>
+						<td>{{ conversation.connection.partner_name }}</td>
+						<td>{{ conversation.status }}</td>
+						<td>{{ conversation.conversation_type }}</td>
+						<td>{% trans "Proposal sent" %}</td>
+					{% endif %}
+					{% if conversation.status == 'credential_acked' %}
+						<td>{{ conversation.connection.guid }}</td>
+						<td>{{ conversation.connection.partner_name }}</td>
+						<td>{{ conversation.status }}</td>
+						<td>{{ conversation.conversation_type }}</td>
+						<td>{% trans "Credential acked" %}</td>
+					{% endif %}
+					</tr>
+				{% endif %}
+			{% endfor %}
+			</tbody>
+	</table>
 </div>
