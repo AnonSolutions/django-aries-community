@@ -482,7 +482,7 @@ def handle_connection_response(
                 invitation.connecion_guid = my_connection.guid
                 invitation.save()
 
-                return render(request, response_template, {'msg': 'Updated connection for ' + agent.agent_name})
+                return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
             except IndyError:
                 # ignore errors for now
                 print(" >>> Failed to update request for", agent.agent_name)
@@ -540,7 +540,7 @@ def poll_connection_status(
             try:
                 my_state = check_connection_status(agent, my_connection.guid)
 
-                return render(request, response_template, {'msg': 'Updated connection for ' + agent.agent_name + ', ' + my_connection.partner_name})
+                return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name + ', ' + my_connection.partner_name})
             except Exception as e:
                 # ignore errors for now
                 print(" >>> Failed to update request for", agent.agent_name, e)
@@ -653,7 +653,6 @@ def list_conversations(
 def handle_select_credential_offer(
     request,
     form_template='aries/credential/select_offer.html',
-    response_exist = 'aries/credential/exist.html',
     response_template='aries/credential/offer.html'
     ):
     """
@@ -692,21 +691,15 @@ def handle_select_credential_offer(
         # find conversation request
         connection_id = request.GET.get('connection_id', None)
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
-
         connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
-        agent_target = AriesUser.objects.filter(email=connections[0].partner_name).all()
-        credentials = fetch_credentials(agent_target[0].agent)
-        search = [sub['schema_id'] for sub in credentials]
+        # TODO validate connection id
+        form = SelectCredentialOfferForm(initial={ 'connection_id': connection_id,
+                                                   'partner_name': connections[0].partner_name,
+                                                   'agent_name': connections[0].agent.agent_name})
 
-        matching = [s for s in search if agent_owner in s]
-        if matching:
-            return render(request, 'aries/credential/exist.html',
-                          {'agent_name': agent.agent_name})
-        else:
-            form = SelectCredentialOfferForm(initial={ 'connection_id': connection_id,
-                                                       'partner_name': connections[0].partner_name,
-                                                       'agent_name': connections[0].agent.agent_name})
-            return render(request, form_template, {'form': form})
+        return render(request, form_template, {'form': form})
+
+
         
 
 def handle_credential_offer(
@@ -750,7 +743,7 @@ def handle_credential_offer(
             try:
                 my_conversation = send_credential_offer(agent, my_connection, cred_attrs, cred_def_id)
 
-                return render(request, template, {'msg': 'Updated conversation for ' + agent.agent_name})
+                return render(request, template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
@@ -789,7 +782,7 @@ def handle_cred_offer_response(
             try:
                 my_conversation = send_credential_request(agent, my_conversation)
 
-                return render(request, response_template, {'msg': 'Updated conversation for ' + agent.agent_name})
+                return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
@@ -922,7 +915,7 @@ def handle_send_proof_request(
             try:
                 conversation = send_proof_request(agent, my_connection, proof_name, requested_attrs, requested_predicates)
 
-                return render(request, template, {'msg': 'Updated conversation for ' + agent.agent_name})
+                return render(request, template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
@@ -1412,7 +1405,7 @@ def handle_cred_proposal_response(
 
             try:
                 my_conversation = send_credential_offer_proposal(conversation_id, agent, my_connection[0], cred_attrs, claim_name)
-                return render(request, response_template, {'msg': 'Updated conversation for' + ' ' + agent.agent_name})
+                return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
