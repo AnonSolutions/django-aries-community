@@ -1546,3 +1546,44 @@ def handle_cred_proposal_delete(
         })
 
         return render(request, form_template, {'form': form})
+
+def handle_view_dashboard(
+    request,
+    template='aries/conversation/list_dashboard.html'
+    ):
+    """
+    View dashboard for the current wallet.
+    """
+
+    # expects a wallet to be opened in the current session
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
+    conversations = AgentConversation.objects.filter(connection__agent=agent).all()
+    print('conversations->', conversations)
+    proposal_sent = 0
+    credential_acked = 0
+    proposal_received = 0
+    proposal_acked = 0
+    for conversation in conversations:
+        if conversation.status == 'credential_acked':
+            credential_acked = credential_acked + 1
+        if  conversation.status == 'proposal_sent':
+            proposal_sent = proposal_sent + 1
+        if  conversation.status == 'proposal_received':
+            proposal_received = proposal_received + 1
+        if  conversation.status == 'proposal_acked':
+            proposal_acked = proposal_acked + 1
+
+    count_message = len(conversations)
+    connections = AgentConnection.objects.filter(agent=agent).all()
+    count_connections = len(connections)
+    credentials = fetch_credentials(agent)
+    count_credentials = len(credentials)
+
+    return render(request, template, {'agent_name': agent.agent_name,
+                                      'count_message': count_message,
+                                      'count_connections': count_connections,
+                                      'credential_acked' : credential_acked,
+                                      'proposal_sent' : proposal_sent,
+                                      'proposal_received' : proposal_received,
+                                      'proposal_acked' : proposal_acked,
+                                      'count_credentials': count_credentials})    
