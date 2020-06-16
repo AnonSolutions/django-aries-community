@@ -348,3 +348,39 @@ msgstr "Excluir"
 
 msgid "Credential proposal"
 msgstr "Propor credencial"
+
+msgid "Type"
+msgstr "Tipo"
+
+msgid "Operation"
+msgstr "Operação"
+
+msgid "Status"
+msgstr "Estado"
+
+msgid "Partner"
+msgstr "Parceiro"
+
+msgid "Credential acked"
+msgstr "Credencial recebida"
+
+msgid "Proposal sent" 
+msgstr "Proposta enviada"
+
+msgid "Offer sent"
+msgstr "Oferta enviada"
+
+msgid "Proposal acked"
+msgstr "Proposta recebida"
+
+msgid "Proposal receive"
+msgstr "Proposta recebida"
+
+msgid "Proposal Credential receive"
+msgstr "Proposta de credencial recebida"
+
+msgid "Deleted credential proposal for"
+msgstr "Proposta de credencial deletada para"
+
+msgid "connection created by"
+msgstr "Conexão criada por"
