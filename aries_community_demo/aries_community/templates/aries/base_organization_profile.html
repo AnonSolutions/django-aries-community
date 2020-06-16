@@ -4,61 +4,40 @@
 {% load static %}
 
 {% block main_content %}
+<!-- Sidebar/menu -->
 
-	<div class='profile profile-anon'>
-		<div class='profile-org-top-cont profile-anon-top-cont'>
-			<div class='profile-org-top-info-bar profile-anon-top-info-bar'>
-						<h2 class='profile-name'>{{ request.session.agent_owner }} ({{ request.session.agent_name }})</h2>
-				<!--
-				<div class='profile-top-bar-right'>
-					<div class='btn btn-connect'><i class="fas fa-user-plus"></i>{% trans "Connect" %}</div>
-					<div class='btn btn-connect'><i class="fas fa-comment"></i>{% trans "Message" %}</div>
-				</div>
-				-->
-			</div>
-		</div>
-
-		<div class='profile-bottom-cont profile-anon-bottom-cont'>
-			<div class='profile-nav-cont profile-anon-nav-cont'>
-				<div class='profile-nav'>
-					<div class='profile-nav-btn profile-nav-btn-profile active-profile-nav'>
-						<a href="{% url 'aries_profile' %}"><h5>{% trans "Profile" %}</h5><i class="fas fa-plus"></i></a>
-					</div>
-					<div class='profile-nav-btn profile-nav-btn-data'>
-						<a href="{% url 'aries_data' %}"><h5>{% trans "Application-Managed Data" %}</h5><i class="fas fa-plus"></i></a>
-					</div>
-					<div class='profile-nav-btn profile-nav-btn-connections'>
-						<a href="{% url 'connections' %}"><h5>{% trans "Connections" %}</h5><i class="fas fa-plus"></i></a>
-					</div>
-					<div class='profile-nav-btn profile-nav-btn-conversations'>
-						<a href="{% url 'conversations' %}"><h5>{% trans "Conversations" %}</h5><i class="fas fa-plus"></i></a>
-					</div>
-					<div class='profile-nav-btn profile-nav-btn-credentials'>
-						<a href="{% url 'credentials' %}"><h5>{% trans "Credentials" %}</h5><i class="fas fa-plus"></i></a>
-					</div>
-					<div class='profile-nav-btn profile-nav-btn-wallet'>
-						<a href="{% url 'aries_wallet' %}"><h5>{% trans "Wallet" %}</h5><i class="fas fa-plus"></i></a>
-					</div>
-				</div>
-			</div>
-
-			<div class='profile-tab-cont'>
-				<div class='profile-search-input'>
-					<!--
-					<input placeholder='Search'>
-					<div class='btn btn-search-input'>
-						<i class='fas fa-search'></i>
-					</div>
-					-->
-				</div>
-
+<nav class="w3-sidebar w3-collapse w3-white" style="z-index:3;width:300px;margin-top:0px;" id="mySidebar">
+    <div class="w3-container w3-row">
+    <div class="w3-col s4">
+      <img src="/static/serpro/nobody.png" class="w3-circle w3-margin-right" style="width:46px">
+    </div>
+    <div class="w3-col s8 w3-bar">
+      <span><strong>{{ request.user }}</strong></span><br>
+      <a href="{% url 'aries_profile' %}" class="w3-bar-item w3-button"><i class="fa fa-cog"></i></a>
+    </div>
+  </div>
+  <hr>
+  <div class="w3-container">
+    <h5><a href="{% url 'view_dashboard' %}" >{% trans "Dashboard" %}</a></h5>
+  </div>
+	<div class="w3-bar-block">
+		<a href="{% url 'connections' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-retweet"></i>  {% trans "Connections" %}</a>
+		<a href="{% url 'conversations' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-commenting"></i>  {% trans "Conversations" %}</a>
+		<a href="{% url 'credentials' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-id-card"></i> {% trans "Credentials" %}</a>
+		<a href="{% url 'aries_wallet' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-wallet"></i> {% trans "Wallet" %}</a>
+		<a href="{% url 'logout' %}?next={% url 'login' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-times"></i> {% trans "Exit" %}</a>
+	</div>
+</nav>
+<div class="w3-overlay w3-hide-large w3-animate-opacity" onclick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+<!-- <div class="w3-main" style="margin-left:300px;margin-top:43px;"> -->
 				{% block profile_content %}
 				{% endblock %}
-			</div>
-		</div>
-	</div>
+<!-- </div> -->
+</div>
 
-	{% block profile_script %}
-	{% endblock %}
+{% block profile_script %}
+{% endblock %}
 
 {% endblock %}
+
+

@@ -5,6 +5,8 @@
 
 
 {% block profile_content %}
+<div class="w3-main" style="margin-left:350px;">
+        <body class="w3-light-grey">
         <form action="{% url 'update_user' %}" method="POST" enctype="multipart/form-data">
               {% csrf_token %}
               {% for field in form %}
@@ -20,4 +22,6 @@
               {% endfor %}
               <button class='btn' type="submit">{% trans "Submit" %}</button>
     </form>
+</div>
+</div>
 {% endblock %}

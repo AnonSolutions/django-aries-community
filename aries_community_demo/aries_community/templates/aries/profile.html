@@ -2,28 +2,39 @@
 
 {% load i18n %}
 {% load static %}
-
 {% block profile_content %}
-{% for connection in connections %}
-    <div class='newsfeed-posted-cont'>
-	    <div class='newsfeed-posted-event-opps-cont'>
-            <div>
-            <h5><a href="{% url 'update_user' %}">{% trans "Update user profile" %}</a></h5><br>
-            </div>
-        	<div>
-                <h5>
-                    <img src='/media/{{ connection.photo }}'/><br><br>
-                    <b>{% trans "Email Address" %} :</b> {{ connection.email }}</b><br>
-                    <b>{% trans "Name" %} :</b> {{ connection.first_name }} {{ connection.last_name }}</b><br>
-                    <b>{% trans "Date of birth" %} :</b> {{ connection.date_birth }}</b><br>
-                    <b>{% trans "Date joined" %} :</b> {{ connection.date_joined }}<br>
-                    <b>{% trans "Last login" %} :</b> {{ connection.last_login }}<br>
-                </h5>
-            </div>
 
-        </div>
+<body class="w3-light-grey">
+<div class="w3-main" style="margin-left:270px; margin-top: 50px;">
+    <div class="w3-light-grey">
+        <div class="w3-light-grey">
+            <div class="w3-card-4" style="margin-left:60px;width:35%">
+            <header class="w3-container w3-light-blue">
+                <h1><center><i class="fa fa-user" aria-hidden="true"></i></h1>
+            </header>
+            <div class='newsfeed-posted-info'>
+            <div class="w3-white" >
+                    {% for connection in connections %}
+                        <center><img src='/media/{{ connection.photo }}'/></center>
+                        <center><b><h3>{{ connection.first_name }} {{ connection.last_name }}</b><br></h3></center>
+                <div style="font-size: 10px; margin-left:30px">
+                    <b>Email</b>
+                    <h4>{{ connection.email }}</h4>
+                    <b>{% trans "Date of birth" %}</b>
+                    <h4>{{ connection.date_birth }}</h4>
+                    <b>{% trans "Last login" %}</b>
+                    <h4>{{ connection.last_login }}</h4>
+                </div>
+            </div>
+        <footer class="w3-container w3-light-blue">
+            <h3>
+                <center>
+                    <a href="{% url 'update_user' %}">
+                        <i class="fa fa-pencil-square-o"></i></a>
+                </center>
+            </h3>
+        </footer>
     </div>
-    <div class='newsfeed-post-seperator'></div>
-{% endfor %}
-
-{% endblock %}
+    {% endfor %}
+    {% endblock %}
+</div>

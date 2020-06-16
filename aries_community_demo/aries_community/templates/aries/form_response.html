@@ -3,8 +3,10 @@
 {% load i18n %}
 {% block page_title %} {% trans "Form Response" %} {% endblock %}
 
-
+<body class="w3-light-grey">
 {% block profile_content %}
+<div class="w3-main" style="margin-left:350px;margin-top:53px;">
+    <body class="w3-light-grey">
 <h2>{{ msg }}</h2>
               <div>
                 <h5>{{ msg_txt }}</h5>
@@ -12,4 +14,6 @@
               <div>
                 <h5>{{ msg_txt2 }}</h5>
               </div>
+</div>
+</body>
 {% endblock %}
