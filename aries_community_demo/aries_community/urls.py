@@ -43,6 +43,7 @@ urlpatterns = [
     path('credentials/', list_wallet_credentials, name='credentials'),
     path('remove_credentials/', handle_remove_credentials, name='remove_credentials'),
     path('agent_cb/<cb_key>/topic/<topic>/', agent_cb_view, name='agent_callback'),
+    path('view_dashboard/', handle_view_dashboard, name='view_dashboard'),
     path('', auth_views.LoginView.as_view(), name='login'),
 ]
 
