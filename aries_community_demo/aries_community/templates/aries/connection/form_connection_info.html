@@ -1,23 +1,21 @@
-{% extends 'base_nav.html' %}
-
+{% extends request.session.ARIES_PROFILE %}
 {% load i18n %}
 
 {% block page_title %} {% trans "Form Response" %} {% endblock %}
 
-{% block main_content %} 
+{% load static %}
 
-  <div class='inside-body'>
-    <div class='center-body'>
-      <div class='innercont-center-body'>
-        <div class='innercont-center-inner'>
-          <div class='form-cont'>
+{% block profile_content %}
+<div class="w3-main" style="margin-left:350px;margin-top:43px;">
+        <body class="w3-light-grey">
+           <div class='form-cont'>
             <h2>{{ msg }}</h2>
               <div>
                 <img src="../invitation/{{ msg_txt2 }}"/>
               </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+     <div>
+     </div>
+</body>
 {% endblock %}
