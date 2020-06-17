@@ -4,18 +4,20 @@
 <body class="w3-light-grey">
         <div class="w3-light-grey" style="margin-left:300px; margin-top: 50px;">
                 <!-- <b>{% trans "Agent Connections" %}</b><BR><BR> -->
+                <div>
                 {% if request.session.ACTIVE_ORG %}
-                {% trans "Connection Invite" %}:
-				        <a href="{% url 'send_invitation' %}">{% trans "Personal" %}</a>
-                        <a href="{% url 'send_invitation_org' %}">{% trans "Organization" %}</a>
+                {% trans "Connection Invite" %} :
+                        <a href="{% url 'send_invitation' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-user"></i>{% trans "Personal" %}</a>
+                        <a href="{% url 'send_invitation_org' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-university"></i>{% trans "Organization" %}</a>
                 {% else %}
                 {% trans "Connection Invite" %}:
-                		<a href="{% url 'send_invitation_org' %}">{% trans "Organization" %}</a>
+                        <a href="{% url 'send_invitation_org' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-university"></i>{% trans "Organization" %}</a>
                 {% endif %}
-				        <a href="{% url 'connection_response' %}?id=0">{% trans "External" %}</a>
-                <br><br>
+                        <a href="{% url 'connection_response' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-user-secret"></i>{% trans "External" %}</a>
+                </div>
         </div>
         <div class="w3-light-grey">
+                    <br><br>
         {% for invitation in invitations %}
             <div class="w3-card-4" style="margin-left:350px;width:35%">
                 <header class="w3-container w3-light-blue">
@@ -29,12 +31,13 @@
                 </div>
                 <div>
                     <h4>
-                    <a href="{% url 'connection_response' %}?id={{invitation.id}}"}><i class="fa fa-check" style="color:green" aria-hidden="true" title="{% trans "Accept" %}"></i></a>
-                    <a href="{% url 'connection_qr' token=invitation.id %}"><i class="fa fa-qrcode" style="color:green" aria-hidden="true" title="{% trans "Mobile QR" %}"></i></a>
+                        <a href="{% url 'connection_response' %}?id={{invitation.id}}"><i class="fa fa-check" style="color:green" aria-hidden="true" title="{% trans "Accept" %}"></i></a>
+                        <a href="{% url 'connection_qr' token=invitation.id %}"><i class="fa fa-qrcode" style="color:green" aria-hidden="true" title="{% trans "Mobile QR" %}"></i></a>
                     </h4>
                 </div>
             </div>
         </div>
+        <br>
         {% endfor %}
          {% for connection in connections %}
             <div class="w3-card-4" style="margin-left:350px;width:35%">
