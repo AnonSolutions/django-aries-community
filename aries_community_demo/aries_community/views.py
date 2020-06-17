@@ -233,7 +233,6 @@ def wallet_view(
     try:
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
         wallets = get_wallet_dids(agent)
-        print("Wallet->", wallets)
         return render(request, 'aries/wallet/list.html', {'agent_name': agent.agent_name, 'wallets': wallets})
     except:
         raise
@@ -1441,7 +1440,6 @@ def handle_cred_proposal_response(
             'credential_attrs': cred_attrs,
             'libindy_offer_schema_id': schema_id
         })
-        print('form->', form)
         return render(request, form_template, {'form': form})
 
 def handle_cred_proposal_show(
@@ -1468,7 +1466,6 @@ def handle_cred_proposal_show(
             cred_attrs[proposed_attrs[i]["name"]] = proposed_attrs[i]["value"]
         # TODO validate connection id
 
-        print('agent->', agent)
 
         connection = conversation.connection
         cred_def_id = agent_conversation['credential_proposal_dict']['cred_def_id']
@@ -1556,6 +1553,8 @@ def handle_view_dashboard(
     credential_acked = 0
     proposal_received = 0
     proposal_acked = 0
+    offer_received = 0
+
     for conversation in conversations:
         if conversation.status == 'credential_acked':
             credential_acked = credential_acked + 1
@@ -1565,6 +1564,9 @@ def handle_view_dashboard(
             proposal_received = proposal_received + 1
         if  conversation.status == 'proposal_acked':
             proposal_acked = proposal_acked + 1
+        if conversation.status == 'offer_received':
+            offer_received = offer_received+ 1
+
 
     count_message = len(conversations)
     connections = AgentConnection.objects.filter(agent=agent).all()
@@ -1579,4 +1581,5 @@ def handle_view_dashboard(
                                       'proposal_sent' : proposal_sent,
                                       'proposal_received' : proposal_received,
                                       'proposal_acked' : proposal_acked,
+                                      'offer_received' : offer_received,
                                       'count_credentials': count_credentials})    
