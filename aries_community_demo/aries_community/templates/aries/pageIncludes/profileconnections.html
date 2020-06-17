@@ -28,8 +28,10 @@
                     </a>
                 </div>
                 <div>
-                    <a href="{% url 'connection_response' %}?id={{invitation.id}}"}>{% trans "Accept" %}</a>
-                    <a href="{% url 'connection_qr' token=invitation.id %}"}>{% trans "Mobile QR" %}</a>
+                    <h4>
+                    <a href="{% url 'connection_response' %}?id={{invitation.id}}"}><i class="fa fa-check" style="color:green" aria-hidden="true" title="{% trans "Accept" %}"></i></a>
+                    <a href="{% url 'connection_qr' token=invitation.id %}"><i class="fa fa-qrcode" style="color:green" aria-hidden="true" title="{% trans "Mobile QR" %}"></i></a>
+                    </h4>
                 </div>
             </div>
         </div>
