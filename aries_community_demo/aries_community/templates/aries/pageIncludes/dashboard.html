@@ -27,9 +27,9 @@
 <div>
   <div class="w3-row-padding w3-margin-bottom">
     <div class="w3-quarter">
-      <div class="w3-container w3-orange w3-padding-16">
-        <div class="w3-left" style="color:white"><i class="fa fa-comment w3-xxxlarge"></i></div>
-        <div class="w3-right">
+      <div class="w3-container w3-red w3-padding-16">
+        <div class="w3-left"><i class="fa fa-exclamation-triangle w3-xxxlarge"></i></div>
+        <div class="w3-right" style="color:black">
           <h3>{{ proposal_received }}</h3>
         </div>
         <div class="w3-clear"></div>
@@ -47,10 +47,10 @@
       </div>
     </div>
     <div class="w3-quarter">
-      <div class="w3-container w3-red w3-padding-16">
-        <div class="w3-left"><i class="fa fa-exclamation-triangle w3-xxxlarge"></i></div>
-        <div class="w3-right" style="color:black">
-          <h3>{{ proposal_acked}}</h3>
+      <div class="w3-container w3-orange w3-padding-16">
+        <div class="w3-left" style="color:white"><i class="fa fa-comment w3-xxxlarge"></i></div>
+        <div class="w3-right">
+          <h3>{{ proposal_acked }}</h3>
         </div>
         <div class="w3-clear"></div>
         <h4>{% trans "Proposal acked" %}</h4>
@@ -66,10 +66,22 @@
         <h4>{% trans "Credential acked" %}</h4>
       </div>
     </div>
+
+</div>
+   <div class="w3-row-padding w3-margin-bottom">
+    <div class="w3-quarter">
+      <div class="w3-container w3-purple w3-padding-16">
+        <div class="w3-left" style="color:white"><i class="fa fa-envelope-open w3-xxxlarge"></i></div>
+        <div class="w3-right">
+          <h3>{{ offer_received }}</h3>
+        </div>
+        <div class="w3-clear"></div>
+        <h4>{% trans "Offer received" %}</h4>
+      </div>
+    </div>
     <div class="w3-clear">
       <br><h4><b>{% trans "Messages" %} :</b> {{ count_message }}</h4>
     </div>
-</div>
 <div>
 
   <header class="w3-container">
