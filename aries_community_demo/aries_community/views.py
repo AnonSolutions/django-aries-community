@@ -1548,7 +1548,6 @@ def handle_view_dashboard(
     # expects a wallet to be opened in the current session
     (agent, agent_type, agent_owner) = agent_for_current_session(request)
     conversations = AgentConversation.objects.filter(connection__agent=agent).all()
-    print('conversations->', conversations)
     proposal_sent = 0
     credential_acked = 0
     proposal_received = 0
