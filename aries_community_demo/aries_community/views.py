@@ -430,7 +430,7 @@ def handle_connection_request(
                 target_name = my_connection.partner_name
                 institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
                 return render(request, response_template, {
-                    'msg':  trans('Created invitation for ') + target_name, 
+                    'msg':  trans('Created invitation for') + ' ' + target_name, 
                     'msg_txt': my_connection.invitation,
                     'msg_txt2': their_invitation.id,
                     })
