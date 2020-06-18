@@ -28,7 +28,8 @@
 						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:red" title="offer_received"></i></center></td>
 						<td>{{ conversation.conversation_type }}</td>
 						<td>
-								<a href="{% url 'cred_offer_response' %}?conversation_id={{conversation.guid}}" class="w3-bar-item w3-button w3-padding">  <i class="fa fa-times"></i>{% trans "Accept" %}</a>
+								{% trans "Offer received" %} :
+								<a href="{% url 'cred_offer_response' %}?conversation_id={{conversation.guid}}" class="w3-bar-item w3-button w3-padding">  <i class="fa fa-check" style="color:green"></i>{% trans "Accept" %}</a>
 					{% endif %}
 					{% if conversation.status == 'proposal_received' %}
 						<td><i class="fa fa-eye" aria-hidden="true">&nbsp;</i><a href="{% url 'cred_proposal_show' %}?conversation_id={{conversation.guid}}&partner={{ conversation.connection.partner_name }}">{{ conversation.connection.guid }}</a></td>
@@ -36,8 +37,9 @@
 						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:red" title="proposal_received"></i></center></td>
 						<td>{{ conversation.conversation_type }}</td>
 						<td>
-							<a href="{% url 'cred_proposal_response' %}?conversation_id={{conversation.guid}}" class="w3-bar-item w3-button w3-padding">  <i class="fa fa-times"></i>{% trans "Accept" %}</a>
-							<a href="{% url 'cred_proposal_delete' %}?conversation_id={{conversation.guid}}" class="w3-bar-item w3-button w3-padding">  <i class="fa fa-times"></i>{% trans "Delete" %}</a>
+							{% trans "Proposal acked" %} :
+							<a href="{% url 'cred_proposal_response' %}?conversation_id={{conversation.guid}}" class="w3-bar-item w3-button w3-padding">  <i class="fa fa-check" style="color:green"></i>{% trans "Accept" %}</a>
+							<a href="{% url 'cred_proposal_delete' %}?conversation_id={{conversation.guid}}" class="w3-bar-item w3-button w3-padding">  <i class="fa fa-ban" style="color:red"></i>{% trans "Delete" %}</a>
 						</td>
 					{% endif %}
 					{% if conversation.status == 'proposal_acked' %}
