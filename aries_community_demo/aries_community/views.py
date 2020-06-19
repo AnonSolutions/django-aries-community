@@ -1103,7 +1103,15 @@ def list_wallet_credentials(
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
         credentials = fetch_credentials(agent)
-
+        
+        count = 0
+        for credential in credentials:
+            partner_name = credentials[count]['schema_id']
+            partner_name = partner_name.split(":")
+            partner_name = partner_name[2]
+            credentials[count]['schema_id'] = partner_name
+            count += 1
+        
         return render(request, 'aries/credential/list.html', {'agent_name': agent.agent_name, 'credentials': credentials})
     except:
         raise
