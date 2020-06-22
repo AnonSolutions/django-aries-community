@@ -859,8 +859,6 @@ def handle_select_proof_request(
                     'proof_predicates': proof_req_predicates})
 
             if proof_req_predicates == '[]':
-                print('entrei aqui')
-
                 proof_req_attrs = json.loads(proof_req_attrs)
 
                 requested_attrs = {}
