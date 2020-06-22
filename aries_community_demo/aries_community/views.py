@@ -819,7 +819,8 @@ def handle_cred_offer_response(
 def handle_select_proof_request(
     request,
     form_template='aries/proof/select_request.html',
-    response_template='aries/proof/send_request.html'
+    response_template='aries/proof/send_request.html',
+    template='aries/form_response.html'
     ):
     """
     Select a Proof Request to send, based on the templates available in the database.
@@ -857,7 +858,31 @@ def handle_select_proof_request(
                     'proof_attrs': proof_req_attrs,
                     'proof_predicates': proof_req_predicates})
 
-            return render(request, response_template, {'form': proof_form})
+            if proof_req_predicates == '[]':
+                print('entrei aqui')
+
+                proof_req_attrs = json.loads(proof_req_attrs)
+
+                requested_attrs = {}
+                for requested_attr in proof_req_attrs:
+                    referent = requested_attr["name"] + "_referent"
+                    requested_attrs[referent] = requested_attr
+
+                requested_predicates = {}
+                try:
+
+                    conversation = send_proof_request(agent, connection, proof_request.proof_req_name, requested_attrs, requested_predicates)
+
+                    return render(request, template,
+                                  {'msg': trans('Proof request was sent to') + ' ' + partner_name})
+                except:
+                    # ignore errors for now
+                    print(" >>> Failed to update conversation for", agent.agent_name)
+                    return render(request, 'aries/form_response.html',
+                                  {'msg': 'Failed to update conversation for ' + agent.agent_name})
+
+            else:
+                return render(request, response_template, {'form': proof_form})
 
     else:
         # find conversation request
@@ -870,7 +895,6 @@ def handle_select_proof_request(
                                                 'agent_name': connection.agent.agent_name })
 
         return render(request, form_template, {'form': form})
-
 
 def handle_send_proof_request(
     request,
