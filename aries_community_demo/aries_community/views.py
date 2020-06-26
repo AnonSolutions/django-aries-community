@@ -945,27 +945,28 @@ def handle_send_proof_request(
     else:
         return render(request, 'aries/form_response.html', {'msg': 'Method not allowed'})
 
-
 def handle_proof_req_response(
-    request,
-    form_template='aries/proof/send_response.html',
-    response_template='aries/proof/select_claims.html'
-    ):
+        request,
+        form_template='aries/proof/send_response.html',
+        response_template='aries/proof/select_claims.html',
+        template='aries/form_response.html'
+):
     """
     First stage in responding to a Proof Request - confirm to search for claims.
     """
 
-    if request.method=='POST':
+    if request.method == 'POST':
         form = SendProofReqResponseForm(request.POST)
         if not form.is_valid():
             return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
         else:
+
             cd = form.cleaned_data
             conversation_id = cd.get('conversation_id')
             proof_req_name = cd.get('proof_req_name')
 
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
-   
+
             # find conversation request
             conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
             my_conversation = conversations[0]
@@ -975,23 +976,39 @@ def handle_proof_req_response(
 
             # find claims for this proof request and display for the user
             try:
+                val = []
+                supplied_attrs = {}
+                supplied_predicates = {}
+                supplied_self_attested_attrs = {}
+
                 proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
+
                 claim_data = get_claims_for_proof_request(agent, my_conversation)
+                size = len(claim_data)
 
-                form = SelectProofReqClaimsForm(initial={
-                         'conversation_id': conversation_id,
-                         'agent_name': my_connection.agent.agent_name,
-                         'from_partner_name': my_connection.partner_name,
-                         'proof_req_name': proof_req_name,
-                         'selected_claims': claim_data,
-                         'proof_request': proof_request,
+                for claim in claim_data:
+                    value = claim['cred_info']['referent']
+
+                if size == 1:
+                    for referent in proof_request["presentation_request"]["requested_attributes"]:
+                        supplied_attrs[referent] = {"cred_id": value, "revealed": True}
+                    proof_data = send_claims_for_proof_request(agent, my_conversation, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
+                    return render(request, template, {'msg': trans('Sent proof request for') + agent.agent_name})
+                else:
+                    form = SelectProofReqClaimsForm(initial={
+                        'conversation_id': conversation_id,
+                        'agent_name': my_connection.agent.agent_name,
+                        'from_partner_name': my_connection.partner_name,
+                        'proof_req_name': proof_req_name,
+                        'selected_claims': claim_data,
+                        'proof_request': proof_request,
                     })
-
-                return render(request, response_template, {'form': form})
+                    return render(request, response_template, {'form': form})
             except Exception as e:
                 # ignore errors for now
                 print(" >>> Failed to find claims for", agent.agent_name, e)
-                return render(request, 'aries/form_response.html', {'msg': 'Failed to find claims for ' + agent.agent_name})
+                return render(request, 'aries/form_response.html',
+                              {'msg': 'Failed to find claims for ' + agent.agent_name})
 
     else:
         # find conversation request, fill in form details
@@ -1004,15 +1021,14 @@ def handle_proof_req_response(
         connection = conversation.connection
         proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
         print("proof_request:", proof_request)
-        form = SendProofReqResponseForm(initial={ 
-                                                 'conversation_id': conversation_id,
-                                                 'agent_name': agent.agent_name,
-                                                 'from_partner_name': connection.partner_name,
-                                                 'proof_req_name': proof_request['presentation_request']['name'],
-                                                })
+        form = SendProofReqResponseForm(initial={
+            'conversation_id': conversation_id,
+            'agent_name': agent.agent_name,
+            'from_partner_name': connection.partner_name,
+            'proof_req_name': proof_request['presentation_request']['name'],
+        })
 
     return render(request, form_template, {'form': form})
-
 
 def handle_proof_select_claims(
     request,
