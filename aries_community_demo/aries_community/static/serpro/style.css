@@ -17,6 +17,7 @@ a {
 
 ul {
 	list-style: none;
+	vertical-align: left;
 }
 
 input,
@@ -27,6 +28,7 @@ textarea {
 	padding: .2rem 1rem;
 	height: 1.7rem;
 	box-sizing: border-box;
+	vertical-align: left;
 	border-radius: 3px;
 	max-width: 100%;
 }
@@ -38,6 +40,12 @@ input[type="radio"] {
 	margin-right: 0;
 	vertical-align: middle;
 	float: left;
+	display: block;
+}
+
+input[type="checkbox"] {
+    border:2px dotted #00f;
+	background:#ff0000;
 	display: block;
 }
 
@@ -1621,3 +1629,5 @@ table.blueTable tfoot .links a{
   padding: 2px 8px;
   border-radius: 5px;
 }
+
+.footer-logos{padding:25px 0;background:#0041b2}
