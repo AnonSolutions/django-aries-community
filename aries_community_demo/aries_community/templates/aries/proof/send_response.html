@@ -20,9 +20,9 @@
               {% for field in form %}
                 <div>
                   {% if not field.is_hidden %}
-                    <h5>{{ field.label_tag }}</h5>
+                    <p class="w3-medium"><b>{{ field.label_tag }}</p></b>
                   {% endif %}
-                  {{ field }}
+                  <p class="w3-medium">{{ field }}</p>
                   {% for error in field.errors %}
                     <p style="color: red">{{ error }}</p>
                   {% endfor %}
