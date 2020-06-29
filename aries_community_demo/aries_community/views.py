@@ -248,7 +248,6 @@ def plugin_view(request, view_name):
     """
 
     view_function = getattr(settings, view_name)
-    print(view_function)
 
     mod_name, func_name = view_function.rsplit('.',1)
     mod = importlib.import_module(mod_name)
@@ -297,13 +296,8 @@ def handle_connection_request_organization(
             # get user or org associated with this agent
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
-            if agent_type == 'user':
-                org = AriesOrganization.objects.filter(org_name=partner_name).get()
-                partner_name = agent_owner
-            else:
-                return render(request, response_template, {'msg': 'Invitations are available for org only', 'msg_txt': 'You are logged in as ' + agent_owner })
-
-            # get user or org associated with target partner
+            org = AriesOrganization.objects.filter(org_name=partner_name).get()
+            partner_name = agent_owner
 
             target_user = get_user_model().objects.filter(email=partner_name).all()
             target_org = AriesOrganization.objects.filter(org_name=partner_name).all()
@@ -353,7 +347,7 @@ def handle_connection_request_organization(
                 else:
                     source_name = my_connection.agent.agent_user.get().email
                 target_name = my_connection.partner_name
-                institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
+#               institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
                 return render(request, response_template, {
                     'msg':  trans('Created invitation for') + ' ' + target_name,
                     'msg_txt': my_connection.invitation,
@@ -428,9 +422,9 @@ def handle_connection_request(
                 else:
                     source_name = my_connection.agent.agent_user.get().email
                 target_name = my_connection.partner_name
-                institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
+#               institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
                 return render(request, response_template, {
-                    'msg':  trans('Created invitation for') + ' ' + target_name, 
+                    'msg':  trans('Created invitation for') + ' ' + target_name,
                     'msg_txt': my_connection.invitation,
                     'msg_txt2': their_invitation.id,
                     })
@@ -467,6 +461,7 @@ def handle_connection_response(
             invitation_details = cd.get('invitation_details')
             invitation_url = cd.get('invitation_url')
 
+
             # get user or org associated with this agent
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
@@ -476,7 +471,6 @@ def handle_connection_response(
             # build the connection and get the invitation data back
             try:
                 my_connection = receive_connection_invitation(agent, partner_name, invitation_details)
-
                 invitation = AgentInvitation.objects.filter(id=invitation_id, agent=agent).get()
                 invitation.connecion_guid = my_connection.guid
                 invitation.save()
@@ -532,6 +526,7 @@ def poll_connection_status(
             # TODO vcx_config['something'] = raw_password
 
             connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
+
             # TODO validate connection id
             my_connection = connections[0]
 
@@ -894,6 +889,7 @@ def handle_select_proof_request(
 
         return render(request, form_template, {'form': form})
 
+
 def handle_send_proof_request(
     request,
     template='aries/form_response.html'
@@ -945,6 +941,7 @@ def handle_send_proof_request(
     else:
         return render(request, 'aries/form_response.html', {'msg': 'Method not allowed'})
 
+
 def handle_proof_req_response(
         request,
         form_template='aries/proof/send_response.html',
@@ -966,6 +963,7 @@ def handle_proof_req_response(
             proof_req_name = cd.get('proof_req_name')
 
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
+            print('agent->', agent)
 
             # find conversation request
             conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
@@ -993,7 +991,7 @@ def handle_proof_req_response(
                     for referent in proof_request["presentation_request"]["requested_attributes"]:
                         supplied_attrs[referent] = {"cred_id": value, "revealed": True}
                     proof_data = send_claims_for_proof_request(agent, my_conversation, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
-                    return render(request, template, {'msg': trans('Sent proof request for') + agent.agent_name})
+                    return render(request, template, {'msg': trans('Sent proof request for') + ' ' + agent.agent_name})
                 else:
                     form = SelectProofReqClaimsForm(initial={
                         'conversation_id': conversation_id,
@@ -1049,6 +1047,7 @@ def handle_proof_select_claims(
 
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
+
             # find conversation request
             conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
             # TODO validate conversation id
@@ -1081,9 +1080,9 @@ def handle_proof_select_claims(
 
             # send claims for this proof request to requestor
             try:
-                proof_data = send_claims_for_proof_request(agent, my_conversation, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
+#               proof_data = send_claims_for_proof_request(agent, my_conversation, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
 
-                return render(request, template, {'msg': 'Sent proof request for ' + agent.agent_name})
+                return render(request, template, {'msg': trans('Sent proof request for') + ' ' + agent.agent_name})
             except Exception as e:
                 # ignore errors for now
                 print(" >>> Failed to find claims for", agent.agent_name, e)
@@ -1091,7 +1090,6 @@ def handle_proof_select_claims(
 
     else:
         return render(request, 'aries/form_response.html', {'msg': 'Method not allowed'})
-
 
 def handle_view_proof(
     request,
@@ -1109,12 +1107,17 @@ def handle_view_proof(
 
     requested_proof = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
 
+    screen = {}
+
+    for attr, value in requested_proof["presentation"]["requested_proof"]["revealed_attrs"].items():
+        attr = attr.replace('_referent', '')
+        attr = attr.capitalize()
+        screen[attr] = value
+
     for attr, value in requested_proof["presentation"]["requested_proof"]["revealed_attrs"].items():
         value["identifier"] = requested_proof["presentation"]["identifiers"][value["sub_proof_index"]]
-    for attr, value in requested_proof["presentation"]["requested_proof"]["predicates"].items():
-        value["identifier"] = requested_proof["presentation"]["identifiers"][value["sub_proof_index"]]
 
-    return render(request, template, {'conversation': conversation, 'proof': requested_proof})
+    return render(request, template, {'conversation': conversation, 'proof': requested_proof, 'screen': screen})
 
 
 ######################################################################
@@ -1141,7 +1144,7 @@ def list_wallet_credentials(
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
         credentials = fetch_credentials(agent)
-        
+        print('credentials->', credentials)
         count = 0
         for credential in credentials:
             partner_name = credentials[count]['schema_id']
@@ -1149,7 +1152,7 @@ def list_wallet_credentials(
             partner_name = partner_name[2]
             credentials[count]['schema_id'] = partner_name
             count += 1
-        
+
         return render(request, 'aries/credential/list.html', {'agent_name': agent.agent_name, 'credentials': credentials})
     except:
         raise
@@ -1180,8 +1183,12 @@ def handle_remove_connection(
             partner_name = cd.get('partner_name')
             agent_name = cd.get('agent_name')
 
-            guid_partner_name = AgentConnection.objects.filter(partner_name=partner_name, agent=agent_name).get()
+#           guid_partner_name = AgentConnection.objects.filter(partner_name=partner_name, agent=agent_name).get()
+            guid_partner_name = AgentConnection.objects.filter(partner_name=partner_name, agent=agent_name, guid=connection_id).get()
+
+
             guid_partner_name.delete()
+
             agent_org = AriesOrganization.objects.filter(org_name=partner_name).get()
             guid_partner_agent_owner = AgentConnection.objects.filter(partner_name=agent_owner, agent=agent_org.agent).get()
             guid_partner_agent_owner.delete()
@@ -1594,24 +1601,38 @@ def handle_view_dashboard(
     # expects a wallet to be opened in the current session
     (agent, agent_type, agent_owner) = agent_for_current_session(request)
     conversations = AgentConversation.objects.filter(connection__agent=agent).all()
+
     proposal_sent = 0
     credential_acked = 0
     proposal_received = 0
     proposal_acked = 0
     offer_received = 0
+    request_received = 0
+    request_sent = 0
+    presentation_sent = 0
+    presentation_acked = 0
 
     for conversation in conversations:
-        if conversation.status == 'credential_acked':
-            credential_acked = credential_acked + 1
-        if  conversation.status == 'proposal_sent':
-            proposal_sent = proposal_sent + 1
-        if  conversation.status == 'proposal_received':
-            proposal_received = proposal_received + 1
-        if  conversation.status == 'proposal_acked':
-            proposal_acked = proposal_acked + 1
-        if conversation.status == 'offer_received':
-            offer_received = offer_received+ 1
-
+            if conversation.status == 'credential_acked':
+                credential_acked = credential_acked + 1
+            if  conversation.status == 'proposal_sent':
+                proposal_sent = proposal_sent + 1
+            if  conversation.status == 'proposal_received':
+                proposal_received = proposal_received + 1
+            if  conversation.status == 'proposal_acked':
+                proposal_acked = proposal_acked + 1
+            if conversation.status == 'offer_received':
+                offer_received = offer_received + 1
+            if conversation.status == 'offer_received':
+                offer_received = offer_received+ 1
+            if conversation.status == 'request_received':
+                request_received = request_received + 1
+            if  conversation.status == 'request_sent':
+                request_sent = request_sent + 1
+            if  conversation.status == 'presentation_sent':
+                presentation_sent = presentation_sent + 1
+            if  conversation.status == 'presentation_acked':
+                presentation_acked = presentation_acked + 1
 
     count_message = len(conversations)
     connections = AgentConnection.objects.filter(agent=agent).all()
@@ -1627,4 +1648,8 @@ def handle_view_dashboard(
                                       'proposal_received' : proposal_received,
                                       'proposal_acked' : proposal_acked,
                                       'offer_received' : offer_received,
+                                      'request_received' : request_received,
+                                      'request_sent' : request_sent,
+                                      'presentation_sent' : presentation_sent,
+                                      'presentation_acked' : presentation_acked,
                                       'count_credentials': count_credentials})    
