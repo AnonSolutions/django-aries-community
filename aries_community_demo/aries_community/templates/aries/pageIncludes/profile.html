@@ -1,6 +1,7 @@
 {% load i18n %}
 {% load static %}
 
+<body class="w3-light-grey">
 <div class='newsfeed-posted-cont'>
 	<div class='newsfeed-posted-info'>
 		<div>
@@ -14,9 +15,8 @@
 
 {% for connection in connections %}
     <div class='newsfeed-posted-top-cont'>
-        <div class='newsfeed-posted-img-info'>
-            <div class='newsfeed-posted-info'>
-
+        <div>
+            <div>
         		<div>
                     <h5><b>Agent :</b> {{ connection.agent }}</h5><br>
                     <h5><b>Email :</b> {{ connection.email }}</h5><br>

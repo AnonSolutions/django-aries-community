@@ -10,11 +10,11 @@
 		<table class="blueTable">
 		<thead>
 		<tr>
-			<th><center>GUID</th></center>
-			<th><center>{% trans "Partner" %}</th></center>
-			<th><center>{% trans "Status" %}</th></center>
-			<th><center>{% trans "Type" %}</th></center>
-			<th><center>{% trans "Operation" %}</th></center>
+			<th style="width:200px"><center>GUID</th></center>
+			<th style="width:50px"><center>{% trans "Partner" %}</th></center>
+			<th style="width:30px"><center>{% trans "Status" %}</th></center>
+			<th style="width:100px"><center>{% trans "Type" %}</th></center>
+			<th style="width:200px"><center>{% trans "Operation" %}</th></center>
 		</tr>
 		</thead>
 		<tbody>
@@ -29,7 +29,7 @@
 						<td>{{ conversation.conversation_type }}</td>
 						<td>
 								{% trans "Offer received" %} :
-								<a href="{% url 'cred_offer_response' %}?conversation_id={{conversation.guid}}" class="w3-bar-item w3-button w3-padding">  <i class="fa fa-check" style="color:green"></i>{% trans "Accept" %}</a>
+								<a href="{% url 'cred_offer_response' %}?conversation_id={{conversation.guid}}" class="w3-bar-item w3-button w3-padding">  <i class="fa fa-check" style="color:green"></i>{% trans "Accept" %}</a></td>
 					{% endif %}
 					{% if conversation.status == 'proposal_received' %}
 						<td><i class="fa fa-eye" aria-hidden="true">&nbsp;</i><a href="{% url 'cred_proposal_show' %}?conversation_id={{conversation.guid}}&partner={{ conversation.connection.partner_name }}">{{ conversation.connection.guid }}</a></td>
@@ -65,7 +65,7 @@
 						<td>{% trans "Proposal sent" %}</td>
 					{% endif %}
 					{% if conversation.status == 'credential_acked' %}
-						<td><i class="fa fa-eye-slash" aria-hidden="true">&nbsp;</i>{{ conversation.connection.guid }}</td>
+						<td><i class="fa fa-eye-slash" aria-hidden="true"></i>{{ conversation.connection.guid }}</td>
 						<td>{{ conversation.connection.partner_name }}</td>
 						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="credential_acked"></i></center></td>
 						<td>{{ conversation.conversation_type }}</td>
@@ -75,5 +75,87 @@
 				{% endif %}
 			{% endfor %}
 			</tbody>
+	</table><br><br><br>
+	<h4>{% trans "Proofs" %}</h4>
+		<br>
+	<table class="blueTable">
+		<thead>
+		<tr>
+			<th style="width:200px"><center>GUID</th></center>
+			<th style="width:50px"><center>{% trans "Partner" %}</th></center>
+			<th style="width:30px"><center>{% trans "Status" %}</th></center>
+			<th style="width:100px"><center>{% trans "Type" %}</th></center>
+			<th style="width:200px"><center>{% trans "Operation" %}</th></center>
+		</tr>
+		</thead>
+
+	<tbody>
+	{% for conversation in conversations %}
+			{% if conversation.conversation_type == 'ProofRequest' %}
+				<tr>
+					{% if conversation.status == 'request_received' %}
+						<td><i class="fa fa-eye-slash" aria-hidden="true">&nbsp;</i>{{ conversation.connection.guid }}</td>
+						<td>{{ conversation.connection.partner_name }}</td>
+						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="request_received"></i></center></td>
+						<td>{{ conversation.conversation_type }}</td>
+						<td>
+							{% trans "Offer received" %} :
+							<a href="{% url 'proof_req_response' %}?conversation_id={{conversation.guid}}" class="w3-bar-item w3-button w3-padding">  <i class="fa fa-check" style="color:green"></i>{% trans "Accept" %}</a>
+						</td>
+		          	{% endif %}
+					{% if conversation.status == 'request_sent' %}
+						<td><i class="fa fa-eye-slash" aria-hidden="true">&nbsp;</i>{{ conversation.connection.guid }}</td>
+						<td>{{ conversation.connection.partner_name }}</td>
+						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="request_sent"></i></center></td>
+						<td>{{ conversation.conversation_type }}</td>
+						<td>{% trans "Request sent" %}</td>
+		          	{% endif %}
+					{% if conversation.status == 'verified' %}
+						<td><i class="fa fa-eye" aria-hidden="true">
+							<a href="{% url 'view_proof' %}?conversation_id={{conversation.guid}}">
+							</i>{{ conversation.connection.guid }}</a>
+						</td>
+						<td>{{ conversation.connection.partner_name }}</td>
+						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="verified"></i></center></td>
+						<td>{{ conversation.conversation_type }}</td>
+						<td>
+							<i class="fa fa-check" style="color:green"></i>{% trans "Verified" %}
+						</td>
+		          	{% endif %}
+					{% if conversation.status == 'presentation_acked' %}
+						<td><i class="fa fa-eye-slash" aria-hidden="true">&nbsp;</i>{{ conversation.connection.guid }}</td>
+						<td>{{ conversation.connection.partner_name }}</td>
+						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="Presentation acked"></i></center></td>
+						<td>{{ conversation.conversation_type }}</td>
+						<td>
+							{% trans "Verified" %}
+						</td>
+		          	{% endif %}
+					{% if conversation.status == 'presentation_sent' %}
+						<td><i class="fa fa-eye-slash" aria-hidden="true">&nbsp;</i>{{ conversation.connection.guid }}</td>
+						<td>{{ conversation.connection.partner_name }}</td>
+						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="Presentation acked"></i></center></td>
+						<td>{{ conversation.conversation_type }}</td>
+						<td>
+							{% trans "Presentation sent" %}
+						</td>
+		          	{% endif %}
+					{% if conversation.status == 'Accepted' %}
+						{% if conversation.conversation_type == 'ProofRequest' %}
+							<td><i class="fa fa-eye-slash" aria-hidden="true">&nbsp;</i>{{ conversation.connection.guid }}</td>
+							<td>{{ conversation.connection.partner_name }}</td>
+							<td><center><i class="fa fa-circle" aria-hidden="true" style="color:red" title="request_received"></i></center></td>
+							<td>{{ conversation.conversation_type }}</td>
+							<td>
+								{% trans "Completed" %} :
+								<a href=""{% url 'view_proof' %}?conversation_id={{conversation.guid}}" class="w3-bar-item w3-button w3-padding">  <i class="fa fa-check" style="color:green"></i>{% trans "Completed" %}</a>
+							</td>
+						{% endif %}
+		      		{% endif %}
+				</tr>
+			{% endif %}
+
+	{% endfor %}
+	</tbody>
 	</table>
 </div>
