@@ -3,9 +3,9 @@
 {% load static %}
 
 {% block profile_content %}
-<div class="w3-main" style="margin-left:350px;margin-top:43px;">
-        <body class="w3-light-grey">
-                <form action="{% url 'send_invitation_org' %}" method="POST">
+<body class="w3-light-grey">
+        <div class="w3-main" style="margin-left:350px;margin-top:50px;">
+            <form action="{% url 'send_invitation_org' %}" method="POST">
                     {% csrf_token %}
                     {% for field in form %}
                         {% if not field.is_hidden %}
@@ -17,10 +17,7 @@
                         {% endfor %}
                     {% endfor %}
                     <button class='btn' type="submit">{% trans "Submit" %}</button>
-                </form>
-
+            </form>
         </div>
-     <div>
-     </div>
 </body>
 {% endblock %}
