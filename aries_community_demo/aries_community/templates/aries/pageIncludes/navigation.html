@@ -8,10 +8,10 @@
                 {% if request.session.ACTIVE_ORG %}
                         <a href="{% url 'aries_profile' %}">
                             {% with '/serpro/'|add:request.session.agent_name|add:'.png' as image_static %}
-                            <img src="{% static image_static %}" title = "{{ request.session.agent_name }}"  alt = "{{ request.session.agent_name }}" tyle="width:50%"/>
+                            <img src="{% static image_static %}" alt = "{{ request.session.agent_name }}" yle="width:50%"/>
                         {% endwith %}
 
-                   <img src="{% static "/anon/Anon5-letters.png" %}"> -->
+                   <img src="{% static "/anon/Anon5-letters.png" %}">
 
                          </a>
                 {% else %}
@@ -21,4 +21,3 @@
 </span>
 
 </div>
-
