@@ -963,7 +963,6 @@ def handle_proof_req_response(
             proof_req_name = cd.get('proof_req_name')
 
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
-            print('agent->', agent)
 
             # find conversation request
             conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
@@ -1018,13 +1017,23 @@ def handle_proof_req_response(
         # TODO validate connection id
         connection = conversation.connection
         proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
-        print("proof_request:", proof_request)
+
+
         form = SendProofReqResponseForm(initial={
             'conversation_id': conversation_id,
             'agent_name': agent.agent_name,
             'from_partner_name': connection.partner_name,
             'proof_req_name': proof_request['presentation_request']['name'],
         })
+
+
+        form = SendProofReqResponseForm(initial={
+            'conversation_id': conversation_id,
+            'agent_name': agent.agent_name,
+            'from_partner_name': connection.partner_name,
+            'proof_req_name': proof_request['presentation_request']['name'],
+        })
+
 
     return render(request, form_template, {'form': form})
 
@@ -1145,6 +1154,14 @@ def list_wallet_credentials(
 
         credentials = fetch_credentials(agent)
         print('credentials->', credentials)
+        count = 0
+        for credential in credentials:
+            partner_name = credentials[count]['schema_id']
+            partner_name = partner_name.split(":")
+            partner_name = partner_name[2]
+            credentials[count]['schema_id'] = partner_name
+            count += 1
+
         count = 0
         for credential in credentials:
             partner_name = credentials[count]['schema_id']
