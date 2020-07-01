@@ -233,7 +233,6 @@ def wallet_view(
     try:
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
         wallets = get_wallet_dids(agent)
-        print("Wallet->", wallets)
         return render(request, 'aries/wallet/list.html', {'agent_name': agent.agent_name, 'wallets': wallets})
     except:
         raise
@@ -249,7 +248,6 @@ def plugin_view(request, view_name):
     """
 
     view_function = getattr(settings, view_name)
-    print(view_function)
 
     mod_name, func_name = view_function.rsplit('.',1)
     mod = importlib.import_module(mod_name)
@@ -298,13 +296,8 @@ def handle_connection_request_organization(
             # get user or org associated with this agent
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
-            if agent_type == 'user':
-                org = AriesOrganization.objects.filter(org_name=partner_name).get()
-                partner_name = agent_owner
-            else:
-                return render(request, response_template, {'msg': 'Invitations are available for org only', 'msg_txt': 'You are logged in as ' + agent_owner })
-
-            # get user or org associated with target partner
+            org = AriesOrganization.objects.filter(org_name=partner_name).get()
+            partner_name = agent_owner
 
             target_user = get_user_model().objects.filter(email=partner_name).all()
             target_org = AriesOrganization.objects.filter(org_name=partner_name).all()
@@ -354,7 +347,7 @@ def handle_connection_request_organization(
                 else:
                     source_name = my_connection.agent.agent_user.get().email
                 target_name = my_connection.partner_name
-                institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
+#               institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
                 return render(request, response_template, {
                     'msg':  trans('Created invitation for') + ' ' + target_name,
                     'msg_txt': my_connection.invitation,
@@ -429,9 +422,9 @@ def handle_connection_request(
                 else:
                     source_name = my_connection.agent.agent_user.get().email
                 target_name = my_connection.partner_name
-                institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
+#               institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
                 return render(request, response_template, {
-                    'msg':  trans('Created invitation for ') + target_name, 
+                    'msg':  trans('Created invitation for') + ' ' + target_name,
                     'msg_txt': my_connection.invitation,
                     'msg_txt2': their_invitation.id,
                     })
@@ -468,6 +461,7 @@ def handle_connection_response(
             invitation_details = cd.get('invitation_details')
             invitation_url = cd.get('invitation_url')
 
+
             # get user or org associated with this agent
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
@@ -477,12 +471,11 @@ def handle_connection_response(
             # build the connection and get the invitation data back
             try:
                 my_connection = receive_connection_invitation(agent, partner_name, invitation_details)
-
                 invitation = AgentInvitation.objects.filter(id=invitation_id, agent=agent).get()
                 invitation.connecion_guid = my_connection.guid
                 invitation.save()
 
-                return render(request, response_template, {'msg': 'Updated connection for ' + agent.agent_name})
+                return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
             except IndyError:
                 # ignore errors for now
                 print(" >>> Failed to update request for", agent.agent_name)
@@ -533,6 +526,7 @@ def poll_connection_status(
             # TODO vcx_config['something'] = raw_password
 
             connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
+
             # TODO validate connection id
             my_connection = connections[0]
 
@@ -540,7 +534,7 @@ def poll_connection_status(
             try:
                 my_state = check_connection_status(agent, my_connection.guid)
 
-                return render(request, response_template, {'msg': 'Updated connection for ' + agent.agent_name + ', ' + my_connection.partner_name})
+                return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name + ', ' + my_connection.partner_name})
             except Exception as e:
                 # ignore errors for now
                 print(" >>> Failed to update request for", agent.agent_name, e)
@@ -653,7 +647,6 @@ def list_conversations(
 def handle_select_credential_offer(
     request,
     form_template='aries/credential/select_offer.html',
-    response_exist = 'aries/credential/exist.html',
     response_template='aries/credential/offer.html'
     ):
     """
@@ -692,21 +685,15 @@ def handle_select_credential_offer(
         # find conversation request
         connection_id = request.GET.get('connection_id', None)
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
-
         connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
-        agent_target = AriesUser.objects.filter(email=connections[0].partner_name).all()
-        credentials = fetch_credentials(agent_target[0].agent)
-        search = [sub['schema_id'] for sub in credentials]
+        # TODO validate connection id
+        form = SelectCredentialOfferForm(initial={ 'connection_id': connection_id,
+                                                   'partner_name': connections[0].partner_name,
+                                                   'agent_name': connections[0].agent.agent_name})
 
-        matching = [s for s in search if agent_owner in s]
-        if matching:
-            return render(request, 'aries/credential/exist.html',
-                          {'agent_name': agent.agent_name})
-        else:
-            form = SelectCredentialOfferForm(initial={ 'connection_id': connection_id,
-                                                       'partner_name': connections[0].partner_name,
-                                                       'agent_name': connections[0].agent.agent_name})
-            return render(request, form_template, {'form': form})
+        return render(request, form_template, {'form': form})
+
+
         
 
 def handle_credential_offer(
@@ -754,7 +741,7 @@ def handle_credential_offer(
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
-                return render(request, 'aries/form_response.html', {'msg': trans('Failed to update conversation for') + ' ' + agent.agent_name})
+                return render(request, 'aries/form_response.html', {'msg': 'Failed to update conversation for ' + agent.agent_name})
 
     else:
         return render(request, 'aries/form_response.html', {'msg': 'Method not allowed'})
@@ -793,7 +780,7 @@ def handle_cred_offer_response(
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
-                return render(request, 'aries/form_response.html', {'msg': trans('Failed to update conversation for') + ' ' + agent.agent_name})
+                return render(request, 'aries/form_response.html', {'msg': 'Failed to update conversation for ' + agent.agent_name})
 
     else:
         # find conversation request, fill in form details
@@ -827,7 +814,8 @@ def handle_cred_offer_response(
 def handle_select_proof_request(
     request,
     form_template='aries/proof/select_request.html',
-    response_template='aries/proof/send_request.html'
+    response_template='aries/proof/send_request.html',
+    template='aries/form_response.html'
     ):
     """
     Select a Proof Request to send, based on the templates available in the database.
@@ -865,7 +853,29 @@ def handle_select_proof_request(
                     'proof_attrs': proof_req_attrs,
                     'proof_predicates': proof_req_predicates})
 
-            return render(request, response_template, {'form': proof_form})
+            if proof_req_predicates == '[]':
+                proof_req_attrs = json.loads(proof_req_attrs)
+
+                requested_attrs = {}
+                for requested_attr in proof_req_attrs:
+                    referent = requested_attr["name"] + "_referent"
+                    requested_attrs[referent] = requested_attr
+
+                requested_predicates = {}
+                try:
+
+                    conversation = send_proof_request(agent, connection, proof_request.proof_req_name, requested_attrs, requested_predicates)
+
+                    return render(request, template,
+                                  {'msg': trans('Proof request was sent to') + ' ' + partner_name})
+                except:
+                    # ignore errors for now
+                    print(" >>> Failed to update conversation for", agent.agent_name)
+                    return render(request, 'aries/form_response.html',
+                                  {'msg': 'Failed to update conversation for ' + agent.agent_name})
+
+            else:
+                return render(request, response_template, {'form': proof_form})
 
     else:
         # find conversation request
@@ -922,7 +932,7 @@ def handle_send_proof_request(
             try:
                 conversation = send_proof_request(agent, my_connection, proof_name, requested_attrs, requested_predicates)
 
-                return render(request, template, {'msg': 'Updated conversation for ' + agent.agent_name})
+                return render(request, template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
@@ -933,25 +943,27 @@ def handle_send_proof_request(
 
 
 def handle_proof_req_response(
-    request,
-    form_template='aries/proof/send_response.html',
-    response_template='aries/proof/select_claims.html'
-    ):
+        request,
+        form_template='aries/proof/send_response.html',
+        response_template='aries/proof/select_claims.html',
+        template='aries/form_response.html'
+):
     """
     First stage in responding to a Proof Request - confirm to search for claims.
     """
 
-    if request.method=='POST':
+    if request.method == 'POST':
         form = SendProofReqResponseForm(request.POST)
         if not form.is_valid():
             return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
         else:
+
             cd = form.cleaned_data
             conversation_id = cd.get('conversation_id')
             proof_req_name = cd.get('proof_req_name')
 
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
-   
+
             # find conversation request
             conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
             my_conversation = conversations[0]
@@ -961,23 +973,39 @@ def handle_proof_req_response(
 
             # find claims for this proof request and display for the user
             try:
+                val = []
+                supplied_attrs = {}
+                supplied_predicates = {}
+                supplied_self_attested_attrs = {}
+
                 proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
+
                 claim_data = get_claims_for_proof_request(agent, my_conversation)
+                size = len(claim_data)
 
-                form = SelectProofReqClaimsForm(initial={
-                         'conversation_id': conversation_id,
-                         'agent_name': my_connection.agent.agent_name,
-                         'from_partner_name': my_connection.partner_name,
-                         'proof_req_name': proof_req_name,
-                         'selected_claims': claim_data,
-                         'proof_request': proof_request,
+                for claim in claim_data:
+                    value = claim['cred_info']['referent']
+
+                if size == 1:
+                    for referent in proof_request["presentation_request"]["requested_attributes"]:
+                        supplied_attrs[referent] = {"cred_id": value, "revealed": True}
+                    proof_data = send_claims_for_proof_request(agent, my_conversation, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
+                    return render(request, template, {'msg': trans('Sent proof request for') + ' ' + agent.agent_name})
+                else:
+                    form = SelectProofReqClaimsForm(initial={
+                        'conversation_id': conversation_id,
+                        'agent_name': my_connection.agent.agent_name,
+                        'from_partner_name': my_connection.partner_name,
+                        'proof_req_name': proof_req_name,
+                        'selected_claims': claim_data,
+                        'proof_request': proof_request,
                     })
-
-                return render(request, response_template, {'form': form})
+                    return render(request, response_template, {'form': form})
             except Exception as e:
                 # ignore errors for now
                 print(" >>> Failed to find claims for", agent.agent_name, e)
-                return render(request, 'aries/form_response.html', {'msg': 'Failed to find claims for ' + agent.agent_name})
+                return render(request, 'aries/form_response.html',
+                              {'msg': 'Failed to find claims for ' + agent.agent_name})
 
     else:
         # find conversation request, fill in form details
@@ -989,16 +1017,15 @@ def handle_proof_req_response(
         # TODO validate connection id
         connection = conversation.connection
         proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
-        print("proof_request:", proof_request)
-        form = SendProofReqResponseForm(initial={ 
-                                                 'conversation_id': conversation_id,
-                                                 'agent_name': agent.agent_name,
-                                                 'from_partner_name': connection.partner_name,
-                                                 'proof_req_name': proof_request['presentation_request']['name'],
-                                                })
+
+        form = SendProofReqResponseForm(initial={
+            'conversation_id': conversation_id,
+            'agent_name': agent.agent_name,
+            'from_partner_name': connection.partner_name,
+            'proof_req_name': proof_request['presentation_request']['name'],
+        })
 
     return render(request, form_template, {'form': form})
-
 
 def handle_proof_select_claims(
     request,
@@ -1018,6 +1045,7 @@ def handle_proof_select_claims(
             proof_req_name = cd.get('proof_req_name')
 
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
 
             # find conversation request
             conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
@@ -1051,9 +1079,9 @@ def handle_proof_select_claims(
 
             # send claims for this proof request to requestor
             try:
-                proof_data = send_claims_for_proof_request(agent, my_conversation, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
+#               proof_data = send_claims_for_proof_request(agent, my_conversation, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
 
-                return render(request, template, {'msg': 'Sent proof request for ' + agent.agent_name})
+                return render(request, template, {'msg': trans('Sent proof request for') + ' ' + agent.agent_name})
             except Exception as e:
                 # ignore errors for now
                 print(" >>> Failed to find claims for", agent.agent_name, e)
@@ -1061,7 +1089,6 @@ def handle_proof_select_claims(
 
     else:
         return render(request, 'aries/form_response.html', {'msg': 'Method not allowed'})
-
 
 def handle_view_proof(
     request,
@@ -1079,12 +1106,17 @@ def handle_view_proof(
 
     requested_proof = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
 
+    screen = {}
+
+    for attr, value in requested_proof["presentation"]["requested_proof"]["revealed_attrs"].items():
+        attr = attr.replace('_referent', '')
+        attr = attr.capitalize()
+        screen[attr] = value
+
     for attr, value in requested_proof["presentation"]["requested_proof"]["revealed_attrs"].items():
         value["identifier"] = requested_proof["presentation"]["identifiers"][value["sub_proof_index"]]
-    for attr, value in requested_proof["presentation"]["requested_proof"]["predicates"].items():
-        value["identifier"] = requested_proof["presentation"]["identifiers"][value["sub_proof_index"]]
 
-    return render(request, template, {'conversation': conversation, 'proof': requested_proof})
+    return render(request, template, {'conversation': conversation, 'proof': requested_proof, 'screen': screen})
 
 
 ######################################################################
@@ -1111,6 +1143,14 @@ def list_wallet_credentials(
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
         credentials = fetch_credentials(agent)
+
+        count = 0
+        for credential in credentials:
+            partner_name = credentials[count]['schema_id']
+            partner_name = partner_name.split(":")
+            partner_name = partner_name[2]
+            credentials[count]['schema_id'] = partner_name
+            count += 1
 
         return render(request, 'aries/credential/list.html', {'agent_name': agent.agent_name, 'credentials': credentials})
     except:
@@ -1142,8 +1182,12 @@ def handle_remove_connection(
             partner_name = cd.get('partner_name')
             agent_name = cd.get('agent_name')
 
-            guid_partner_name = AgentConnection.objects.filter(partner_name=partner_name, agent=agent_name).get()
+#           guid_partner_name = AgentConnection.objects.filter(partner_name=partner_name, agent=agent_name).get()
+            guid_partner_name = AgentConnection.objects.filter(partner_name=partner_name, agent=agent_name, guid=connection_id).get()
+
+
             guid_partner_name.delete()
+
             agent_org = AriesOrganization.objects.filter(org_name=partner_name).get()
             guid_partner_agent_owner = AgentConnection.objects.filter(partner_name=agent_owner, agent=agent_org.agent).get()
             guid_partner_agent_owner.delete()
@@ -1181,10 +1225,11 @@ def handle_update_user(
         last_name = name[1]
         connections = AriesUser.objects.get(first_name=first_name)
         define = AriesUser.objects.filter(first_name=first_name).get()
-
+        
         if define.agent is None:
             define.agent = agent
             define.save()
+
 
     if request.method == 'POST':
         form = UserUpdateForm(request.POST, request.FILES)
@@ -1252,6 +1297,7 @@ def handle_remove_credentials(
 
         return render(request, form_template, {'form': form})
 
+    
     
 def handle_credential_proposal(
         request,
@@ -1390,15 +1436,19 @@ def handle_cred_proposal_response(
             cd = form.cleaned_data
             conversation_id = cd.get('conversation_id')
             claim_name =  cd.get('claim_name')
+            partner_name = cd.get('from_partner_name')
             credential_attrs = cd.get('credential_attrs')
             libindy_offer_schema_id = cd.get('libindy_offer_schema_id')
 
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
-            # find conversation request
-            my_connection = AgentConnection.objects.filter(agent=agent).all()
-            schema_attrs = cd.get('credential_attrs')
 
+            # find conversation request
+
+            my_connection = AgentConnection.objects.filter(agent=agent, partner_name=partner_name).all()
+
+
+            schema_attrs = cd.get('credential_attrs')
             res = ast.literal_eval(schema_attrs)
             cred_attrs = []
             for attr in res:
@@ -1406,7 +1456,7 @@ def handle_cred_proposal_response(
 
             try:
                 my_conversation = send_credential_offer_proposal(conversation_id, agent, my_connection[0], cred_attrs, claim_name)
-                return render(request, response_template, {'msg': 'Updated conversation for' + ' ' + agent.agent_name})
+                return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
@@ -1442,7 +1492,6 @@ def handle_cred_proposal_response(
             'credential_attrs': cred_attrs,
             'libindy_offer_schema_id': schema_id
         })
-
         return render(request, form_template, {'form': form})
 
 def handle_cred_proposal_show(
@@ -1468,6 +1517,7 @@ def handle_cred_proposal_show(
         for i in range(len(proposed_attrs)):
             cred_attrs[proposed_attrs[i]["name"]] = proposed_attrs[i]["value"]
         # TODO validate connection id
+
 
         connection = conversation.connection
         cred_def_id = agent_conversation['credential_proposal_dict']['cred_def_id']
@@ -1503,7 +1553,7 @@ def handle_cred_proposal_delete(
             try:
                 credentials = remove_issue_credential(agent, conversation_id)
                 conversations = AgentConversation.objects.filter(guid=conversation_id).delete()
-                return render(request, response_template, {'msg': 'Deleted credential proposal for' + ' ' + agent.agent_name})
+                return render(request, response_template, {'msg': trans('Deleted credential proposal for') + ' ' + agent.agent_name})
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
@@ -1538,3 +1588,67 @@ def handle_cred_proposal_delete(
         })
 
         return render(request, form_template, {'form': form})
+
+def handle_view_dashboard(
+    request,
+    template='aries/conversation/list_dashboard.html'
+    ):
+    """
+    View dashboard for the current wallet.
+    """
+
+    # expects a wallet to be opened in the current session
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
+    conversations = AgentConversation.objects.filter(connection__agent=agent).all()
+
+    proposal_sent = 0
+    credential_acked = 0
+    proposal_received = 0
+    proposal_acked = 0
+    offer_received = 0
+    request_received = 0
+    request_sent = 0
+    presentation_sent = 0
+    presentation_acked = 0
+
+    for conversation in conversations:
+            if conversation.status == 'credential_acked':
+                credential_acked = credential_acked + 1
+            if  conversation.status == 'proposal_sent':
+                proposal_sent = proposal_sent + 1
+            if  conversation.status == 'proposal_received':
+                proposal_received = proposal_received + 1
+            if  conversation.status == 'proposal_acked':
+                proposal_acked = proposal_acked + 1
+            if conversation.status == 'offer_received':
+                offer_received = offer_received + 1
+            if conversation.status == 'offer_received':
+                offer_received = offer_received+ 1
+            if conversation.status == 'request_received':
+                request_received = request_received + 1
+            if  conversation.status == 'request_sent':
+                request_sent = request_sent + 1
+            if  conversation.status == 'presentation_sent':
+                presentation_sent = presentation_sent + 1
+            if  conversation.status == 'presentation_acked':
+                presentation_acked = presentation_acked + 1
+
+    count_message = len(conversations)
+    connections = AgentConnection.objects.filter(agent=agent).all()
+    count_connections = len(connections)
+    credentials = fetch_credentials(agent)
+    count_credentials = len(credentials)
+
+    return render(request, template, {'agent_name': agent.agent_name,
+                                      'count_message': count_message,
+                                      'count_connections': count_connections,
+                                      'credential_acked' : credential_acked,
+                                      'proposal_sent' : proposal_sent,
+                                      'proposal_received' : proposal_received,
+                                      'proposal_acked' : proposal_acked,
+                                      'offer_received' : offer_received,
+                                      'request_received' : request_received,
+                                      'request_sent' : request_sent,
+                                      'presentation_sent' : presentation_sent,
+                                      'presentation_acked' : presentation_acked,
+                                      'count_credentials': count_credentials})    
