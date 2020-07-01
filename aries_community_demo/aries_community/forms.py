@@ -13,11 +13,11 @@ from .models import *
 # Forms to support user and organization registration
 ###############################################################
 class BaseSignUpForm(UserCreationForm):
-    first_name = forms.CharField(max_length=80, label=trans('First Name'), required=False,
+    first_name = forms.CharField(max_length=100, label=trans('First Name'), required=False,
                                  help_text='Optional.')
-    last_name = forms.CharField(max_length=150, label=trans('Last Name'), required=False,
+    last_name = forms.CharField(max_length=200, label=trans('Last Name'), required=False,
                                  help_text='Optional.')
-    date_birth = forms.CharField(max_length=150, label=trans('Date of birth'), required=False, 
+    date_birth = forms.CharField(max_length=50, label=trans('Date of birth'), required=False,
                                  help_text='Optional.') 
     email = forms.EmailField(max_length=254, label=trans('Email Address'), required=True,
                                  help_text=trans('Required. Provide a valid email address.'))
@@ -180,7 +180,7 @@ class SendCredentialOfferForm(AgentNameForm):
 class SendCredentialResponseForm(SendConversationResponseForm):
     # a bunch of fields that are read-only to present to the user
     from_partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
-    claim_name = forms.CharField(label=trans('Credential Name'), max_length=400)
+    claim_name = forms.CharField(label=trans('Credential Name'), max_length=500)
     libindy_offer_schema_id = forms.CharField(max_length=120, widget=forms.HiddenInput())
     credential_attrs = forms.CharField(label=trans('Credential Attrs'), max_length=4000, widget=forms.Textarea)
 
@@ -221,7 +221,7 @@ class SelectProofRequestForm(AgentNameForm):
 class SendProofRequestForm(AgentNameForm):
     connection_id = forms.CharField(widget=forms.HiddenInput())
     partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
-    proof_name = forms.CharField(label=trans('Proof Name'), max_length=400)
+    proof_name = forms.CharField(label=trans('Proof Name'), max_length=500)
     proof_attrs = forms.CharField(label=trans('Proof Attributes'), max_length=4000, widget=forms.Textarea)
     proof_predicates = forms.CharField(label=trans('Proof Predicates'), max_length=4000, widget=forms.Textarea)
 
@@ -229,6 +229,9 @@ class SendProofRequestForm(AgentNameForm):
         super(SendProofRequestForm, self).__init__(*args, **kwargs)
         self.fields['agent_name'].widget.attrs['readonly'] = True
         self.fields['agent_name'].widget.attrs['hidden'] = True
+
+
+
         self.fields['connection_id'].widget.attrs['readonly'] = True
         self.fields['partner_name'].widget.attrs['readonly'] = True
 
@@ -236,7 +239,7 @@ class SendProofRequestForm(AgentNameForm):
 class SendProofReqResponseForm(SendConversationResponseForm):
     # a bunch of fields that are read-only to present to the user
     from_partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
-    proof_req_name = forms.CharField(label=trans('Proof Request Name'), max_length=400)
+    proof_req_name = forms.CharField(label=trans('Proof Request Name'), max_length=500)
 
     def __init__(self, *args, **kwargs):
         super(SendProofReqResponseForm, self).__init__(*args, **kwargs)
@@ -245,6 +248,7 @@ class SendProofReqResponseForm(SendConversationResponseForm):
 
 class RemoveConnectionForm(AgentNameForm):
     partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
+    connection_id = forms.CharField(label=trans('connection_id'), max_length=60)
     def __init__(self, *args, **kwargs):
         super(RemoveConnectionForm, self).__init__(*args, **kwargs)
         self.fields['partner_name'].widget.attrs['readonly'] = True
@@ -276,34 +280,21 @@ class SelectProofReqClaimsForm(SendProofReqResponseForm):
         if initial:
             available_claims = initial.get('selected_claims', '{}')
             proof_request = initial.get('proof_request', '{}')
-            print("available_claims:", available_claims)
-            print("proof_request:", proof_request)
 
             for attr in proof_request['presentation_request']['requested_attributes']:
                 field_name = 'proof_req_attr_' + attr
                 choices = []
                 claim_no = 0
-                for claim in available_claims:
-                    if attr in claim['presentation_referents']:
-                        choices.append(('ref::'+claim['cred_info']['referent'], json.dumps(claim['cred_info']['attrs'])))
-                        claim_no = claim_no + 1
-                if 0 < len(choices):
-                    self.fields[field_name] = forms.ChoiceField(label=trans('Select claim for')+attr, choices=tuple(choices), widget=forms.RadioSelect())
-                else:
-                    self.fields[field_name] = forms.CharField(label=trans('No claims available for')+attr+', enter value:', max_length=80)
 
-            for attr in proof_request['presentation_request']['requested_predicates']:
-                field_name = 'proof_req_attr_' + attr
-                choices = []
-                claim_no = 0
                 for claim in available_claims:
                     if attr in claim['presentation_referents']:
                         choices.append(('ref::'+claim['cred_info']['referent'], json.dumps(claim['cred_info']['attrs'])))
                         claim_no = claim_no + 1
                 if 0 < len(choices):
-                    self.fields[field_name] = forms.ChoiceField(label=trans('Select claim for')+attr, choices=tuple(choices), widget=forms.RadioSelect())
+                    self.fields[field_name] = forms.MultipleChoiceField(label=attr, choices=tuple(choices), widget=forms.RadioSelect(attrs={"checked":""}))
                 else:
-                    self.fields[field_name] = forms.CharField(label=trans('No claims available for')+attr+', enter value:', max_length=80)
+                    self.fields[field_name] = forms.CharField(label=trans('No claims available for')+ ' ' +attr+', enter value:', max_length=80)
+
 
 
 class UserUpdateForm(AgentNameForm):
@@ -340,7 +331,7 @@ class UserUpdateForm(AgentNameForm):
             self.fields['password1'].initial = filters[0]['password']
 
 class RemoveCredentialForm(AgentNameForm):
-    referent = forms.CharField(label=trans('Referent'), max_length=60)
+    referent = forms.CharField(label=trans('Referent'), max_length=200)
     def __init__(self, *args, **kwargs):
         super(RemoveCredentialForm, self).__init__(*args, **kwargs)
         self.fields['referent'].widget.attrs['readonly'] = True
@@ -388,7 +379,7 @@ class SendCredentialProposalForm(AgentNameForm):
     partner_name = forms.CharField(label=trans('Partner Name'), max_length=60)
     cred_def = forms.CharField(max_length=80, widget=forms.HiddenInput())
     credential_name = forms.CharField(widget=forms.HiddenInput())
-    schema_attrs = forms.CharField(label=trans('Credential Attributes'), max_length=400, widget=forms.Textarea)
+    schema_attrs = forms.CharField(label=trans('Credential Attributes'), max_length=500, widget=forms.Textarea)
 
     def __init__(self, *args, **kwargs):
         super(SendCredentialProposalForm, self).__init__(*args, **kwargs)
@@ -406,17 +397,17 @@ class SendCredentialProposalForm(AgentNameForm):
             self.fields['schema_attrs'].widget.attrs['hidden'] = True
             for attr in schema_attrs:
                 field_name = 'schema_attr_' + attr
-                self.fields[field_name] = forms.CharField(label=attr, max_length=400)
+                self.fields[field_name] = forms.CharField(label=attr, max_length=500)
 
 
 class SendCredentialResponseFormProposal(SendConversationResponseForm):
     # a bunch of fields that are read-only to present to the user
     agent_name = forms.CharField(widget=forms.HiddenInput())
     libindy_offer_schema_id = forms.CharField(widget=forms.HiddenInput())
-    conversation_id = forms.CharField(label=trans('conversation_id'), max_length=400)
+    conversation_id = forms.CharField(label=trans('conversation_id'), max_length=500)
     from_partner_name = forms.CharField(widget=forms.HiddenInput())
     claim_name = forms.CharField(widget=forms.HiddenInput())
-    credential_attrs = forms.CharField(label=trans('Credential Attributs'), max_length=400)
+    credential_attrs = forms.CharField(label=trans('Credential Attributs'), max_length=500)
 
     def __init__(self, *args, **kwargs):
         super(SendCredentialResponseFormProposal, self).__init__(*args, **kwargs)
@@ -445,8 +436,8 @@ class SendCredentialResponseFormProposal(SendConversationResponseForm):
 class CredentialDeleteForm(forms.Form):
     # a bunch of fields that are read-only to present to the user
     agent_name = forms.CharField(widget=forms.HiddenInput())
-    conversation_id = forms.CharField(label=trans('conversation_id'), max_length=400)
-    credential_attrs= forms.CharField(label=trans('credential_attrs'), max_length=400)
+    conversation_id = forms.CharField(label=trans('conversation_id'), max_length=500)
+    credential_attrs= forms.CharField(label=trans('credential_attrs'), max_length=500)
 
     def __init__(self, *args, **kwargs):
         super(CredentialDeleteForm, self).__init__(*args, **kwargs)

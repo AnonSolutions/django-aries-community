@@ -167,7 +167,7 @@ msgid "Select Claims for Proof"
 msgstr "Selecionar reivindicações para prova"
 
 msgid "Revealed:"
-msgstr "Revelado:"
+msgstr "Dados obtidos:"
 
 msgid "Predicates (ZKP's):"
 msgstr "Predicados (ZKP's):"
@@ -348,3 +348,57 @@ msgstr "Excluir"
 
 msgid "Credential proposal"
 msgstr "Propor credencial"
+
+msgid "Type"
+msgstr "Tipo"
+
+msgid "Operation"
+msgstr "Operação"
+
+msgid "Status"
+msgstr "Estado"
+
+msgid "Partner"
+msgstr "Parceiro"
+
+msgid "Credential acked"
+msgstr "Credencial recebida"
+
+msgid "Proposal sent" 
+msgstr "Proposta enviada"
+
+msgid "Offer sent"
+msgstr "Oferta enviada"
+
+msgid "Proposal acked"
+msgstr "Proposta recebida"
+
+msgid "Proposal receive"
+msgstr "Proposta recebida"
+
+msgid "Proposal Credential receive"
+msgstr "Proposta de credencial recebida"
+
+msgid "Deleted credential proposal for"
+msgstr "Proposta de credencial deletada para"
+
+msgid "connection created by"
+msgstr "Conexão criada por"
+
+msgid "Offer received"
+msgstr "Oferta recebida"
+
+msgid "Proof"
+msgstr "Prova"
+
+msgid "State"
+msgstr "Estado"
+
+msgid "Verified"
+msgstr "Verificado"
+
+msgid "Proof request was sent to"
+msgstr "Pedido de prova foi enviado"
+
+msgid "Sent proof request for"
+msgstr "Requisição de prova enviada por"

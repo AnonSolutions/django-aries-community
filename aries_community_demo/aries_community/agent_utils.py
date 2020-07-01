@@ -956,7 +956,6 @@ def fetch_credentials(agent, initialize_agent=False):
     finally:
         if agent_started:
             stop_agent(agent)
-    print(credentials)
     return credentials
 
 ######################################################################
@@ -995,7 +994,6 @@ def send_proof_request(agent, connection, proof_req_name, proof_attrs, proof_pre
     # create connection and generate invitation
     try:
         proof_request = build_proof_request(agent, connection, proof_req_name, proof_attrs, proof_predicates)
-        print("proof_request:", proof_request)
         response = requests.post(
             agent.admin_endpoint
             + "/present-proof/send-request",
@@ -1033,7 +1031,6 @@ def get_claims_for_proof_request(agent, conversation, additional_filters=None, i
     # create connection and generate invitation
     params = ""
     if additional_filters:
-        print("additional_filters:", additional_filters)
         params = "?extra_query=" + urllib.parse.quote_plus(json.dumps(additional_filters))
     try:
         response = requests.get(
@@ -1074,7 +1071,6 @@ def send_claims_for_proof_request(agent, conversation, supplied_attrs, supplied_
     # create connection and generate invitation
     try:
         presentation = build_presentation(agent, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
-        print("presentation:", presentation)
         response = requests.post(
             agent.admin_endpoint
             + "/present-proof/records/" + conversation.guid + "/send-presentation",
@@ -1160,8 +1156,6 @@ def remove_credential(agent, connection_id, initialize_agent=False):
     (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
 
     credentials = None
-    print('agent->', agent)
-    print('Remover->', connection_id)
 
     try:
         response = requests.post(
@@ -1244,7 +1238,6 @@ def remove_issue_credential(agent, connection_id, initialize_agent=False):
 
     # start the agent if requested (and necessary)
     (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
-    print(agent)
 
     credentials = None
 
@@ -1271,8 +1264,6 @@ def send_credential_offer_proposal(conversation_id, agent, connection, credentia
 
     try:
         credential_offer = build_credential_offer(agent, connection, credential_attrs, cred_def_id)
-
-        print('credential_offer->', agent, connection, credential_attrs, cred_def_id)
 
         response = requests.post(
             agent.admin_endpoint
@@ -1304,7 +1295,6 @@ def remove_issue_credential(agent, connection_id, initialize_agent=False):
 
     # start the agent if requested (and necessary)
     (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
-    print(agent)
 
     credentials = None
 

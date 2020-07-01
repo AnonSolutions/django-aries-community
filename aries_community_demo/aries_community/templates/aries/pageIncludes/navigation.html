@@ -10,12 +10,15 @@
                             {% with '/serpro/'|add:request.session.agent_name|add:'.png' as image_static %}
                             <img src="{% static image_static %}" title = "{{ request.session.agent_name }}"  alt = "{{ request.session.agent_name }}" tyle="width:50%"/>
                         {% endwith %}
-                    <!--
+
                    <img src="{% static "/anon/Anon5-letters.png" %}"> -->
+
                          </a>
                 {% else %}
                        <h4><i class="fa fa-user" aria-hidden="true"></i>{{ request.user }}</h4>
                 {% endif %}
         {% endif %}
 </span>
+
 </div>
+

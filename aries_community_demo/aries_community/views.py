@@ -1018,12 +1018,22 @@ def handle_proof_req_response(
         connection = conversation.connection
         proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
 
+
         form = SendProofReqResponseForm(initial={
             'conversation_id': conversation_id,
             'agent_name': agent.agent_name,
             'from_partner_name': connection.partner_name,
             'proof_req_name': proof_request['presentation_request']['name'],
         })
+
+
+        form = SendProofReqResponseForm(initial={
+            'conversation_id': conversation_id,
+            'agent_name': agent.agent_name,
+            'from_partner_name': connection.partner_name,
+            'proof_req_name': proof_request['presentation_request']['name'],
+        })
+
 
     return render(request, form_template, {'form': form})
 
@@ -1143,6 +1153,14 @@ def list_wallet_credentials(
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
         credentials = fetch_credentials(agent)
+        print('credentials->', credentials)
+        count = 0
+        for credential in credentials:
+            partner_name = credentials[count]['schema_id']
+            partner_name = partner_name.split(":")
+            partner_name = partner_name[2]
+            credentials[count]['schema_id'] = partner_name
+            count += 1
 
         count = 0
         for credential in credentials:

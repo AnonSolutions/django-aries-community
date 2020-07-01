@@ -1,14 +1,47 @@
 {% load i18n %}
-<h4>Wallet</h4>
-{% for wallet in wallets %}
-<div class='newsfeed-posted-cont'>
-        <div class='newsfeed-posted-event-opps-cont'>
-                <div>
-                        <p><b>DID : </b>{{ wallet.did }}</p>
-                        <p><b>VERKEY : </b>{{ wallet.verkey }}</p>
-                </div>
-        </div>
-</div>
-{% endfor %}
 
-<div class='newsfeed-post-seperator'></div>
+<body class="w3-light-grey">
+        <div class="w3-light-grey" style="margin-left:300px; margin-top: 50px;">
+<div class="w3-container">
+{% for wallet in wallets %}
+    <body class="w3-light-grey">
+
+    <div class="w3-card-4" style="width:50%">
+
+        <header class="w3-container w3-light-blue">
+            <h1><center><i class="fa fa-wallet" aria-hidden="true"></center></i></h1>
+        </header>
+
+        <div class="w3-container w3-white">
+            <p>
+                <div class="main-description">
+                    <b>DID</b>
+                </div>
+                <i class="material-icons">
+                    {{ wallet.did }}
+                </i>
+            </p>
+            <br>
+            <p>
+                <div class="main-description">
+                    <b>VERKEY</b>
+                </div>
+                <i class="material-icons">
+                    {{ wallet.verkey }}
+                </i>
+            </p>
+            <br>
+            <p>
+                <div class="main-description">
+                    <b>Public</b>
+                </div>
+                <i class="material-icons">
+                    {{ wallet.public }}
+                </i>
+            </p>
+        </div>
+    </div>
+<br>
+{% endfor %}
+</div>
+</div>

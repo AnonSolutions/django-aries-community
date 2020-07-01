@@ -4,29 +4,34 @@
 {% load static %}
 
 {% block main_content %}
-  <div class='inside-body'>
-    <div class='center-body'>
-      <div class='innercont-center-body'>
-        <div class='innercont-center-inner'>
-          <div class='form-cont'>
+
+<body class="w3-light-grey">
+        <div class="w3-light-grey" style="margin-left:400px; margin-top: 50px;">
+<div class="w3-container">
+    <body class="w3-light-grey">
+
+    <div class="w3-card-4" style="width:60%">
+        <header class="w3-container w3-light-blue">
+            <h1><center><i class="fa fa-user-plus" aria-hidden="true"></center></i></h1>
+        </header>
+        <div class="w3-container w3-white" style="font-size: 10px">
+
+          <div class='form-cont' style="width: 80%">
             <h2>{% trans "Sign up" %}</h2>
             <div class='newsfeed-post-seperator'></div>
             <form method="POST" enctype="multipart/form-data">
               {% csrf_token %}
               {% for field in form %}
                 <div>
-                  <h5>{{ field.label_tag }}</h5>
-                  {{ field }}
+                  <h4><b>{{ field.label_tag }}</b></h4>
+                  <h4>{{ field }}</h4>
                   {% for error in field.errors %}
                     <p style="color: red">{{ error }}</p>
                   {% endfor %}
                 </div>
               {% endfor %}
-              <button class='btn' type="submit">{% trans "Sign up" %}</button>
+              <center><button class='btn' type="submit">{% trans "Sign up" %}</button></center>
             </form>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
 {% endblock %}
