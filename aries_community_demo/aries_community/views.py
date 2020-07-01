@@ -1155,14 +1155,7 @@ def list_wallet_credentials(
         credentials = fetch_credentials(agent)
         print('credentials->', credentials)
         count = 0
-        for credential in credentials:
-            partner_name = credentials[count]['schema_id']
-            partner_name = partner_name.split(":")
-            partner_name = partner_name[2]
-            credentials[count]['schema_id'] = partner_name
-            count += 1
 
-        count = 0
         for credential in credentials:
             partner_name = credentials[count]['schema_id']
             partner_name = partner_name.split(":")
