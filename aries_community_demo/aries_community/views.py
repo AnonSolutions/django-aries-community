@@ -1089,7 +1089,7 @@ def handle_proof_select_claims(
 
             # send claims for this proof request to requestor
             try:
-#               proof_data = send_claims_for_proof_request(agent, my_conversation, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
+                proof_data = send_claims_for_proof_request(agent, my_conversation, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
 
                 return render(request, template, {'msg': trans('Sent proof request for') + ' ' + agent.agent_name})
             except Exception as e:
