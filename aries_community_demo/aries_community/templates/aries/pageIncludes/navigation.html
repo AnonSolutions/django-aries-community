@@ -7,11 +7,10 @@
         {% if request.user.is_authenticated %}
                 {% if request.session.ACTIVE_ORG %}
                         <a href="{% url 'aries_profile' %}">
-                            {% with '/serpro/'|add:request.session.agent_name|add:'.png' as image_static %}
+                            {% with '/anon/'|add:request.session.agent_name|add:'.png' as image_static %}
                             <img src="{% static image_static %}" alt = "{{ request.session.agent_name }}" yle="width:50%"/>
                         {% endwith %}
 
-                   <img src="{% static "/anon/Anon5-letters.png" %}">
 
                          </a>
                 {% else %}
