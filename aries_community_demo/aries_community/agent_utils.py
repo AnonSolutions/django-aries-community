@@ -217,8 +217,9 @@ running_procs = {}
 def get_ADMIN_REQUEST_HEADERS(agent):
     ADMIN_REQUEST_HEADERS = {}
     # set admin header per agent
+    ADMIN_REQUEST_HEADERS["Content-Type"] = "application/json"
     if agent.api_key is not None:
-       ADMIN_REQUEST_HEADERS = {"x-api-key": agent.api_key}
+       ADMIN_REQUEST_HEADERS["x-api-key"] = agent.api_key
     return ADMIN_REQUEST_HEADERS
 
 def s_print(*a, **b):
