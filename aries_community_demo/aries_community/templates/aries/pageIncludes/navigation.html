@@ -1,95 +1,22 @@
 {% load i18n %}
 {% load static %}
 
-<div class='site-nav'>
+<div class="w3-bar w3-top w3-blue w3-large" style="z-index:4">
+  <button class="w3-bar-item w3-button w3-hide-large w3-hover-none w3-hover-text-light-grey" onclick="w3_open();"><i class="fa fa-bars"></i>  Menu</button>
+  <span class="w3-bar-item w3-right">
+        {% if request.user.is_authenticated %}
+                {% if request.session.ACTIVE_ORG %}
+                        <a href="{% url 'aries_profile' %}">
+                            {% with '/anon/'|add:request.session.agent_name|add:'.png' as image_static %}
+                            <img src="{% static image_static %}" alt = "{{ request.session.agent_name }}" yle="width:50%"/>
+                        {% endwith %}
 
-	<div class='topnav'>
-		<div class='topnav-con topnav-title'>
-			<div class='topnav-item'>
-            {% if request.user.is_authenticated %}
-                <a href="{% url 'aries_profile' %}">
-                   <img src="{% static "/serpro/serpro-letters.png" %}">
-                </a>
-            {% else %}
-                <a href="{% url 'login' %}">
-                   <img src="{% static "/serpro/serpro-letters.png" %}">
-                </a>
-            {% endif %}
-			</div>
-		</div>
 
-                <div class='topnav-con'>
-                        {% if request.user.is_authenticated %}
-                                <div class='topnav-item topnav-accountnamecon'>
-                                        <a href="{% url 'aries_profile' %}">
-                                                {{ request.user }}
+                         </a>
+                {% else %}
+                       <h4><i class="fa fa-user" aria-hidden="true"></i>{{ request.user }}</h4>
+                {% endif %}
+        {% endif %}
+</span>
 
-                                                {% if request.session.ACTIVE_ROLE %}
-                        [ {{ request.session.ACTIVE_ROLE }} ]
-                        {% endif %}
-                        {% if request.session.ACTIVE_ORG %}
-                          [ {{ request.session.ACTIVE_ORG }} ]
-                        {% endif %}
-                        <a href="{% url 'logout' %}?next={% url 'login' %}">{% trans "Exit" %}</a>
-                                        </a>
-                                </div>
-                        {% else %}
-                                <!-- TODO anon user -->
-                        {% endif %}
-                </div>
-        </div> <!-- top nav ends -->
-
-	{% if request.user.is_authenticated %}
-		<div class='sidenav'>
-			<i class='fas fa-bars'></i>
-			<div class='sidenav-con sidenav-top'>
-				<ul>
-					<li>TBD</li>
-				</ul>
-			</div>
-
-			<div class='sidenav-con sidenav-bottom'>
-				<ul>
-					<li>TBD</li>
-					<li><a href="{% url 'logout' %}?next={% url 'login' %}">{% trans "Log Out" %}</a></li>
-				</ul>
-			</div>
-		</div> <!-- side nav ends -->
-	{% else %}
-		<!-- TODO anon user -->
-	{% endif %}
 </div>
-
-<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
-<!--
-<script>
-	$(document).ready(function() {
-
-		$("#topNavSearch").click(function() {
-			$(".topnav-search-dropdown").slideToggle("fast");
-			$(".topnav-notificat-dropdown").hide();
-			$(".sidenavShow").addClass("sidenav");
-			$(".sidenav").removeClass("sidenavShow");
-			$(".fa-bars").removeClass("fa-times");
-		});
-
-		$("#notifications").click(function() {
-			$(".topnav-notificat-dropdown").slideToggle("fast");
-			$(".topnav-search-dropdown").hide();
-			$(".sidenavShow").addClass("sidenav");
-			$(".sidenav").removeClass("sidenavShow");
-			$(".fa-bars").removeClass("fa-times");
-		});
-
-		$(".fa-bars").click(function() {
-			$(".sidenav").toggleClass("sidenavShow");
-			$(".fa-bars").toggleClass("fa-times");
-			$(".topnav-search-dropdown").hide();
-			$(".topnav-notificat-dropdown").hide();
-		});
-
-	});
-
-</script>
--->

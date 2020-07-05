@@ -1,26 +1,19 @@
-{% extends 'base_nav.html' %}
+{% extends request.session.ARIES_PROFILE %}
 
 {% load i18n %}
-
 {% block page_title %} {% trans "Form Response" %} {% endblock %}
 
-{% block main_content %} 
-
-  <div class='inside-body'>
-    <div class='center-body'>
-      <div class='innercont-center-body'>
-        <div class='innercont-center-inner'>
-          <div class='form-cont'>
-            <h2>{{ msg }}</h2>
+<body class="w3-light-grey">
+{% block profile_content %}
+<div class="w3-main" style="margin-left:350px;margin-top:53px;">
+    <body class="w3-light-grey">
+<h2>{{ msg }}</h2>
               <div>
-                <h5>{{ msg_txt }}</h5>
+                <p class="w3-medium"><b>{{ msg_txt }}</p></b>
               </div>
               <div>
-                <h5>{{ msg_txt2 }}</h5>
+                <p class="w3-medium"><b>{{ msg_txt2 }}</p>
               </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+</div>
+</body>
 {% endblock %}

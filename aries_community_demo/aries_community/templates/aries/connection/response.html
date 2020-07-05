@@ -1,21 +1,12 @@
-{% extends 'base_nav.html' %}
-
+{% extends request.session.ARIES_PROFILE %}
 {% load i18n %}
 {% load static %}
 
-{% block main_content %}
-  <div class='inside-body'>
-    <div class='center-body'>
-      <div class='innercont-center-body'>
-        <div class='innercont-center-inner'>
+{% block profile_content %}
+<div class="w3-main" style="margin-left:350px;margin-top:50px;">
+        <body class="w3-light-grey">
           <div class='form-cont'>
-            <h2>{% trans "Connection Response" %}</h2>
-            <div class='newsfeed-post-seperator'></div>
-            <div>
-              <img src="../invitation/{{ invitation_id }}"/>
-            </div>
-            <div class='newsfeed-post-seperator'></div>
-            <form action="{% url 'connection_response' %}" method="POST">
+             <form action="{% url 'connection_response' %}" method="POST">
               {% csrf_token %}
               {% for field in form %}
                 <div>
@@ -30,9 +21,7 @@
               {% endfor %}
               <button class='btn' type="submit">{% trans "Submit" %}</button>
             </form>
-          </div>
         </div>
-      </div>
-    </div>
-  </div>
+          </div>
+</body>
 {% endblock %}

@@ -1,16 +1,11 @@
-{% extends 'base_nav.html' %}
-
+{% extends request.session.ARIES_PROFILE %}
 {% load i18n %}
 {% load static %}
 
-{% block main_content %}
-  <div class='inside-body'>
-    <div class='center-body'>
-      <div class='innercont-center-body'>
-        <div class='innercont-center-inner'>
+{% block profile_content %}
+<div class="w3-main" style="margin-left:350px;margin-top:43px;">
+        <body class="w3-light-grey">
           <div class='form-cont'>
-            <h2>Connection Status</h2>
-            <div class='newsfeed-post-seperator'></div>
             <form action="{% url 'check_connection' %}" method="POST">
               {% csrf_token %}
               {% for field in form %}
@@ -26,9 +21,9 @@
               {% endfor %}
               <button class='btn' type="submit">{% trans "Submit" %}</button>
             </form>
-          </div>
         </div>
-      </div>
-    </div>
-  </div>
+          </div>
+     <div>
+     </div>
+</body>
 {% endblock %}

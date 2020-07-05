@@ -1,0 +1,147 @@
+{% load i18n %}
+{% load static %}
+
+<body class="w3-light-grey">
+<div class="w3-light-grey" style="margin-left:300px; margin-top: 50px;">
+
+ <!-- Header -->
+<header class="w3-container" style="padding-top:22px">
+    <h5><b><i class="fa fa-thermometer-empty"></i>{% trans "Dashboard Connections" %}</b></h5>
+</header>
+<div>
+  <div class="w3-row-padding w3-margin-bottom">
+    <div class="w3-quarter">
+      <div class="w3-container w3-gray w3-padding-8">
+        <div class="w3-left" style="color:white"><i class="fa fa-retweet w3-xxlarge"></i></div>
+        <div class="w3-right">
+          <h3>{{ count_connections }}</h3>
+        </div>
+        <div class="w3-clear"></div>
+        <h4>{% trans "Connections" %}</h4>
+      </div>
+    </div>
+</div>
+<header class="w3-container" style="padding-top:22px">
+    <h5><b><i class="fa fa-thermometer-empty"></i>{% trans "Dashboard Messages" %}</b></h5>
+</header>
+<div>
+  <div class="w3-row-padding w3-margin-bottom">
+    <div class="w3-quarter">
+      <div class="w3-container w3-red w3-padding-8">
+        <div class="w3-left"><i class="fa fa-exclamation-triangle w3-xxlarge"></i></div>
+        <div class="w3-right" style="color:black">
+          <h3>{{ proposal_received }}</h3>
+        </div>
+        <div class="w3-clear"></div>
+        <h4>{% trans "Proposal received" %}</h4>
+      </div>
+    </div>
+    <div class="w3-quarter">
+      <div class="w3-container w3-blue w3-padding-8">
+        <div class="w3-left"><i class="fa fa-paper-plane w3-xxlarge"></i></div>
+        <div class="w3-right" style="color:black">
+          <h3>{{ proposal_sent }}</h3>
+        </div>
+        <div class="w3-clear"></div>
+        <h4>{% trans "Proposal sent" %}</h4>
+      </div>
+    </div>
+    <div class="w3-quarter">
+      <div class="w3-container w3-orange w3-padding-8">
+        <div class="w3-left" style="color:white"><i class="fa fa-comment w3-xxlarge"></i></div>
+        <div class="w3-right">
+          <h3>{{ proposal_acked }}</h3>
+        </div>
+        <div class="w3-clear"></div>
+        <h4>{% trans "Proposal acked" %}</h4>
+      </div>
+    </div>
+    <div class="w3-quarter">
+      <div class="w3-container w3-teal w3-padding-8">
+        <div class="w3-left"><i class="fa fa-inbox w3-xxlarge"></i></div>
+        <div class="w3-right" style="color:black">
+          <h3>{{ credential_acked }}</h3>
+        </div>
+        <div class="w3-clear"></div>
+        <h4>{% trans "Credential acked" %}</h4>
+      </div>
+    </div>
+</div>
+    <div class="w3-row-padding w3-margin-bottom">
+          <div class="w3-quarter">
+            <div class="w3-container w3-purple w3-padding-8">
+              <div class="w3-left" style="color:white"><i class="fa fa-envelope-open w3-xxlarge"></i></div>
+              <div class="w3-right">
+                <h3>{{ offer_received }}</h3>
+              </div>
+              <div class="w3-clear"></div>
+              <h4>{% trans "Offer received" %}</h4>
+            </div>
+          </div>
+    </div>
+<div>
+  <header class="w3-container" style="padding-top:22px">
+    <h5><b><i class="fa fa-thermometer-empty"></i>{% trans "Dashboard Proofs" %}</b></h5>
+  </header>
+
+    <div class="w3-row-padding w3-margin-bottom">
+      <div class="w3-quarter">
+        <div class="w3-container w3-red w3-padding-8">
+          <div class="w3-left" style="color:white"><i class="fa fa-inbox w3-xxlarge"></i></div>
+          <div class="w3-right">
+            <h3>{{ request_received }}</h3>
+          </div>
+          <div class="w3-clear"></div>
+          <h4>{% trans "Request received" %}</h4>
+      </div>
+    </div>
+    <div class="w3-quarter">
+      <div class="w3-container w3-green w3-padding-8">
+        <div class="w3-left" style="color:white"><i class="fa fa-envelope w3-xxlarge"></i></div>
+        <div class="w3-right">
+          <h3>{{ request_sent }}</h3>
+        </div>
+        <div class="w3-clear"></div>
+        <h4>{% trans "Request sent" %}</h4>
+      </div>
+    </div>
+    <div class="w3-quarter">
+      <div class="w3-container w3-orange w3-padding-8">
+        <div class="w3-left" style="color:white"><i class="fa fa-paper-plane w3-xxlarge"></i></div>
+        <div class="w3-right">
+          <h3>{{ presentation_sent }}</h3>
+        </div>
+        <div class="w3-clear"></div>
+        <h4>{% trans "Presentation sent" %}</h4>
+      </div>
+    </div>
+    <div class="w3-quarter">
+      <div class="w3-container w3-blue w3-padding-8">
+        <div class="w3-left" style="color:white"><i class="fa fa-newspaper-o w3-xxlarge"></i></div>
+        <div class="w3-right">
+          <h3>{{ presentation_acked }}</h3>
+        </div>
+        <div class="w3-clear"></div>
+        <h4>{% trans "Presentation acked" %}</h4>
+      </div>
+    </div>
+</div>
+
+<div>
+  <header class="w3-container" style="padding-top:22px">
+    <h5><b><i class="fa fa-thermometer-empty"></i>{% trans "Dashboard Credentials" %}</b></h5>
+  </header>
+
+  <div class="w3-row-padding w3-margin-bottom">
+    <div class="w3-quarter">
+      <div class="w3-container w3-yellow w3-padding-8">
+        <div class="w3-left" style="color:white"><i class="fa fa-id-card w3-xxlarge"></i></div>
+        <div class="w3-right">
+          <h3>{{ count_credentials }}</h3>
+        </div>
+        <div class="w3-clear"></div>
+        <h4>{% trans "Credentials" %}</h4>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,16 +1,10 @@
-{% extends 'base_nav.html' %}
-
+{% extends request.session.ARIES_PROFILE %}
 {% load i18n %}
 {% load static %}
 
-{% block main_content %}
-  <div class='inside-body'>
-    <div class='center-body'>
-      <div class='innercont-center-body'>
-        <div class='innercont-center-inner'>
-          <div class='form-cont'>
-            <h2>{% trans "Connection Request" %}</h2>
-            <div class='newsfeed-post-seperator'></div>
+{% block profile_content %}
+<div class="w3-main" style="margin-left:350px;margin-top:43px;">
+        <body class="w3-light-grey">
             <form action="{% url 'send_invitation' %}" method="POST">
               {% csrf_token %}
               {% for field in form %}
@@ -26,9 +20,9 @@
               {% endfor %}
               <button class='btn' type="submit">{% trans "Submit" %}</button>
             </form>
-          </div>
+
         </div>
-      </div>
-    </div>
-  </div>
+     <div>
+     </div>
+</body>
 {% endblock %}
