@@ -13,4 +13,5 @@ pyqrcode
 pypng
 requests
 pillow
+django-settings-export
 git+https://github.com/ianco/aries-cloudagent-python#egg=aries-cloudagent
