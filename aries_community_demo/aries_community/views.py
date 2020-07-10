@@ -1089,7 +1089,7 @@ def handle_proof_select_claims(
 
             # send claims for this proof request to requestor
             try:
-#               proof_data = send_claims_for_proof_request(agent, my_conversation, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
+                proof_data = send_claims_for_proof_request(agent, my_conversation, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
 
                 return render(request, template, {'msg': trans('Sent proof request for') + ' ' + agent.agent_name})
             except Exception as e:
@@ -1153,7 +1153,7 @@ def list_wallet_credentials(
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
         credentials = fetch_credentials(agent)
-        print('credentials->', credentials)
+
         count = 0
         for credential in credentials:
             partner_name = credentials[count]['schema_id']
@@ -1161,8 +1161,6 @@ def list_wallet_credentials(
             partner_name = partner_name[2]
             credentials[count]['schema_id'] = partner_name
             count += 1
-
-        count = 0
 
         return render(request, 'aries/credential/list.html', {'agent_name': agent.agent_name, 'credentials': credentials})
     except:
@@ -1173,7 +1171,6 @@ def list_wallet_credentials(
 #Remove connection in database
 def handle_remove_connection(
     request,
-#    form_template='aries/connection/select_request.html',
     form_template='aries/connection/form_remove_connection.html',
     response_template='aries/connection/list.html'
     ):
