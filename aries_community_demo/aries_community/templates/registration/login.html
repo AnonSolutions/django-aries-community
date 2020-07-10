@@ -8,9 +8,10 @@
 {% block main_content %}
 	<div class='landing-page-cont'>
 		<div class='atria-logo'>
-			<img src="{% static "/anon/Anon5-greylime.png" %}" align="middle">
+			{% with '/'|add:settings.SITE_ORG|add:'/logo.png' as image_static %}
+			<img src="{% static image_static %}" align="middle" title = "{{ settings.SITE_ORG }}" >
+			{% endwith %}
 		</div>
-
 		<div class='sign-in-cont'>
 			<div class='btns-sign-in-cont'>
 				<h4>{% trans 'Already Have an Account?' %}<b> {% trans "Sign in as:" %}</b></h4>

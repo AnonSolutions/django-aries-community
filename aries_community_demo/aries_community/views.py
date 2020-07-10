@@ -1153,9 +1153,8 @@ def list_wallet_credentials(
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
         credentials = fetch_credentials(agent)
-        print('credentials->', credentials)
-        count = 0
 
+        count = 0
         for credential in credentials:
             partner_name = credentials[count]['schema_id']
             partner_name = partner_name.split(":")
@@ -1172,7 +1171,6 @@ def list_wallet_credentials(
 #Remove connection in database
 def handle_remove_connection(
     request,
-#    form_template='aries/connection/select_request.html',
     form_template='aries/connection/form_remove_connection.html',
     response_template='aries/connection/list.html'
     ):
