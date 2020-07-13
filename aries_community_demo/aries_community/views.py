@@ -686,13 +686,25 @@ def handle_select_credential_offer(
         connection_id = request.GET.get('connection_id', None)
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
         connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
+        #If number of IndyCredentialDefinition equal one don't need to choose
+        credential = IndyCredentialDefinition.objects.filter(agent__agent_name=agent.agent_name).all()
+        cont = len(credential)
+
+        if cont == 1:
+            form = SendCredentialOfferForm(initial={'connection_id': connection_id,
+                                                    'agent_name': agent.agent_name,
+                                                    'partner_name': connections[0].partner_name,
+                                                    'cred_def': credential[0].ledger_creddef_id,
+                                                    'schema_attrs': credential[0].creddef_template,
+                                                    'credential_name': credential[0].creddef_name})
+            return render(request, response_template, {'form': form})
+        else:
         # TODO validate connection id
-        form = SelectCredentialOfferForm(initial={ 'connection_id': connection_id,
-                                                   'partner_name': connections[0].partner_name,
-                                                   'agent_name': connections[0].agent.agent_name})
+            form = SelectCredentialOfferForm(initial={ 'connection_id': connection_id,
+                                                    'partner_name': connections[0].partner_name,
+                                                    'agent_name': connections[0].agent.agent_name})
 
-        return render(request, form_template, {'form': form})
-
+            return render(request, form_template, {'form': form})
 
         
 
@@ -1421,11 +1433,24 @@ def handle_select_credential_proposal(
         agent_target = AriesUser.objects.filter(email=agent_owner).all()
         credentials = fetch_credentials(agent_target[0].agent)
 
-        form = CredentialProposalForm(initial={'connection_id': connection_id,
-                                               'partner_name': connection_partner_id,
-                                               'agent_name': 'o_'+ connection_partner_id})
+        # If number of IndyCredentialDefinition equal one don't need to choose
+        credentialdef = IndyCredentialDefinition.objects.filter(agent__agent_name='o_' + connection_partner_id).all()
+        cont = len(credentialdef)
 
-        return render(request, form_template, {'form': form})
+        if cont == 1:
+            form = SendCredentialProposalForm(initial={'connection_id': connection_id,
+                                                    'agent_name': agent.agent_name,
+                                                    'partner_name': connection_partner_id,
+                                                    'cred_def': credentialdef[0].ledger_creddef_id,
+                                                    'schema_attrs': credentialdef[0].creddef_template,
+                                                    'credential_name': credentialdef[0].creddef_name})
+            return render(request, response_template, {'form': form})
+        else:
+            form = CredentialProposalForm(initial={'connection_id': connection_id,
+                                                'partner_name': connection_partner_id,
+                                                'agent_name': 'o_'+ connection_partner_id})
+
+            return render(request, form_template, {'form': form})
 
  
 def handle_cred_proposal_response(
