@@ -1030,15 +1030,6 @@ def handle_proof_req_response(
         connection = conversation.connection
         proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
 
-
-        form = SendProofReqResponseForm(initial={
-            'conversation_id': conversation_id,
-            'agent_name': agent.agent_name,
-            'from_partner_name': connection.partner_name,
-            'proof_req_name': proof_request['presentation_request']['name'],
-        })
-
-
         form = SendProofReqResponseForm(initial={
             'conversation_id': conversation_id,
             'agent_name': agent.agent_name,
