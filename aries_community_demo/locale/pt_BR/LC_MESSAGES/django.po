@@ -402,3 +402,18 @@ msgstr "Pedido de prova foi enviado"
 
 msgid "Sent proof request for"
 msgstr "Requisição de prova enviada por"
+
+msgid "Requested attributes"
+msgstr "Atributos solicitados"
+
+msgid "Request received"
+msgstr "Pedido recebido"
+
+msgid "Request sent"
+msgstr "Pedido enviado"
+
+msgid "Presentation sent"
+msgstr "Dados enviado" 
+
+msgid "Presentation acked"
+msgstr "Dados enviados"
