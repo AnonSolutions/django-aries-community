@@ -1105,7 +1105,8 @@ def handle_proof_select_claims(
 
 def handle_view_proof(
     request,
-    template='aries/proof/view_proof.html'
+    template='aries/proof/view_proof.html',
+    template_request_received='aries/proof/view_proof_request_receive.html'
     ):
     """
     View the Proof sent by the Prover.
@@ -1121,15 +1122,27 @@ def handle_view_proof(
 
     screen = {}
 
-    for attr, value in requested_proof["presentation"]["requested_proof"]["revealed_attrs"].items():
-        attr = attr.replace('_referent', '')
-        attr = attr.capitalize()
-        screen[attr] = value
+    print('requested_proof->', requested_proof)
+    print('requested_proof->', requested_proof["state"])
 
-    for attr, value in requested_proof["presentation"]["requested_proof"]["revealed_attrs"].items():
-        value["identifier"] = requested_proof["presentation"]["identifiers"][value["sub_proof_index"]]
+    if requested_proof["state"] == "request_received":
+        name = (requested_proof["presentation_request"]["name"])
+        for attr, value in requested_proof["presentation_request"]["requested_attributes"].items():
+            attr = attr.replace('_referent', '')
+            screen[attr] = value
+        print(screen)
+        return render(request, template_request_received, {'conversation': conversation, 'screen': screen})
 
-    return render(request, template, {'conversation': conversation, 'proof': requested_proof, 'screen': screen})
+    if requested_proof["state"] == "verified":
+        for attr, value in requested_proof["presentation"]["requested_proof"]["revealed_attrs"].items():
+            attr = attr.replace('_referent', '')
+            attr = attr.capitalize()
+            screen[attr] = value
+
+        for attr, value in requested_proof["presentation"]["requested_proof"]["revealed_attrs"].items():
+            value["identifier"] = requested_proof["presentation"]["identifiers"][value["sub_proof_index"]]
+
+        return render(request, template, {'conversation': conversation, 'proof': requested_proof, 'screen': screen})
 
 
 ######################################################################
