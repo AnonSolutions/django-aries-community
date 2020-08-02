@@ -11,6 +11,9 @@ import threading
 import subprocess
 import time
 import requests
+import hashlib
+import base58
+import os.path
 
 from django.conf import settings
 
@@ -497,7 +500,7 @@ def create_creddef(agent, indy_schema, creddef_name, creddef_template):
     """
 
     try:
-        cred_def_request = {"schema_id": indy_schema.ledger_schema_id}
+        cred_def_request = {"support_revocation": True, "schema_id": indy_schema.ledger_schema_id}        
         response = agent_post_with_retry(
             agent.admin_endpoint + "/credential-definitions",
             json.dumps(cred_def_request),
@@ -516,6 +519,8 @@ def create_creddef(agent, indy_schema, creddef_name, creddef_template):
         indy_creddef.save()
     except:
         raise
+    
+    revoke_registry_status = create_revoke_registry(agent, cred_def_id["credential_definition_id"])
 
     return indy_creddef
 
@@ -1310,3 +1315,475 @@ def remove_issue_credential(agent, connection_id, initialize_agent=False):
         if agent_started:
             stop_agent(agent)
     return credentials
+
+def create_revoke_registry(agent, cred_def_id, initialize_agent=False):
+    """
+    Create revogation registry
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    credential_definition = {"max_cred_num": 100, "credential_definition_id": cred_def_id}
+    revocation_status = None
+
+    try:
+        response = requests.post(
+            agent.admin_endpoint
+            + "/revocation/create-registry",
+            json.dumps(credential_definition),
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+
+        response.raise_for_status()
+        print("File ->", response.json())
+
+        revoc_reg_id = response.json()["result"]["revoc_reg_id"]
+        revocation_hash = response.json()["result"]["tails_hash"]
+        revocation_file = response.json()["result"]["tails_local_path"]
+
+        registry_download_status = revoke_registry_download(agent, revoc_reg_id)
+        revoke_patch_registry_status = revoke_patch_registry(agent, cred_def_id, revoc_reg_id)
+        revoke_publish_status = revoke_publish(agent, revoc_reg_id)
+
+#       file_status = upload_file(revocation_file, revo_reg_def)
+
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return revocation_status
+
+def revoke_registry_download(agent, revoke_registry_id, initialize_agent=False):
+    """
+    Fetch credentials from the agent (wallet).
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    print('=======>', get_ADMIN_REQUEST_HEADERS(agent))
+
+    revoke_status = None
+
+    try:
+        response = requests.get(
+            agent.admin_endpoint
+            + "/revocation/registry/" + revoke_registry_id + "/tails-file",
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        revoke_status = response
+        print('revoke_status', revoke_status)
+
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return revoke_status
+
+def get_revoke_registry(agent, revocation_registry_id, initialize_agent=False):
+    """
+    Fetch credentials from the agent (wallet).
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    revoke_status = None
+
+    try:
+        response = requests.get(
+            agent.admin_endpoint
+            + "/revocation/registry/" + revocation_registry_id,
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        revoke_status = response
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return revoke_status
+
+
+
+def get_revoke_active(agent, cred_def_id, initialize_agent=False):
+    """
+    Fetch credentials from the agent (wallet).
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    revoke_status = None
+
+    try:
+        response = requests.get(
+            agent.admin_endpoint
+            + "/revocation/active_registry/" + cred_def_id,
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        revoke_status = response
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return revoke_status
+
+
+def revoke_publish(agent, revoke_registry_id, initialize_agent=False):
+    """
+    Fetch credentials from the agent (wallet).
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    revoke_status = None
+
+    try:
+        response = requests.post(
+            agent.admin_endpoint
+            + "/revocation/registry/" + revoke_registry_id + "/publish",
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        revoke_status = response
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return revoke_status
+
+def revoke_credencial(agent, cred_rev_id, rev_reg_id, initialize_agent=False):
+    """
+    Fetch credentials from the agent (wallet).
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    revoke_status = None
+
+    try:
+        response = requests.post(
+            agent.admin_endpoint
+            + "/issue-credential/revoke?cred_rev_id" + cred_rev_id + "&rev_reg_id" + rev_reg_id + "&publish=true",
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        revoke_status = response
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return revoke_status
+
+def revoke_issue_credential(agent, connection_id, initialize_agent=False):
+    """
+    Fetch credentials from the agent (wallet).
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    credentials = None
+
+    try:
+        response = requests.get(
+            agent.admin_endpoint
+            + "/issue-credential/records/" + connection_id,
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return credentials
+
+def fetch_revoke_registry(agent, cred_def_id, initialize_agent=False):
+    """
+    Search for matching revocation registries that current agent created
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    revoke_status = None
+
+    # create connection and check status
+
+    try:
+        response = requests.get(
+            agent.admin_endpoint
+
+            + "/revocation/registries/created?cred_def_id=" + cred_def_id,
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        revoke_status = response.json()["rev_reg_ids"]
+        print("revoke_status 123->", revoke_status)
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return revoke_status
+
+
+def active_revocation_registry(agent, cred_def_id, initialize_agent=False):
+    """
+    Fetch active revocation registry
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    revoke_status = None
+
+    # create connection and check status
+
+    try:
+        response = requests.get(
+            agent.admin_endpoint
+            + "/revocation/active-registry/" + cred_def_id,
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        revoke_status = response
+        print(response.json())
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+
+    return revoke_status
+
+def active_revoke_registry(agent, cred_def_id, initialize_agent=False):
+    """
+    Fetch revoke_registry exist
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    revoke_status = None
+
+    # create connection and check status
+    try:
+        response = requests.get(
+            agent.admin_endpoint
+            + "/revocation/active-registry/" + cred_def_id,
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        revoke_status = response.json()
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return revoke_status
+
+
+def revoke_patch_registry(agent, cred_def_id, revocation_registry_id, initialize_agent=False):
+    """
+    Create revogation registry
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    webhook_host = settings.ARIES_CONFIG['webhook_host']
+    webhook_port = settings.ARIES_CONFIG['webhook_port']
+
+    credential_definition = {"max_cred_num": 100, "credential_definition_id": cred_def_id}
+    revoke_status = None
+
+    try:
+
+        http_port = agent.agent_http_port
+        http_port = str(http_port)
+        tmp = "http://" + DEFAULT_EXTERNAL_HOST + ":" + http_port + "/revocation/registry/"
+
+        revoke_definition = {"tails_public_uri" : tmp + revocation_registry_id + "/tails-file"}
+
+        response = requests.patch(
+            agent.admin_endpoint
+            + "/revocation/registry/" + revocation_registry_id,
+            json.dumps(revoke_definition),
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+
+        response.raise_for_status()
+        revoke_status = response.json()["result"]["tails_local_path"]
+        revocation_status = response.json()["result"]["revoc_reg_id"]
+        revocation_hash = response.json()["result"]["tails_hash"]
+        revoke_info = response.json()
+        print("revoke_status======>", revoke_status)
+#       print("revoke_info======>", revoke_info)
+        print("revocation_hash====>", revocation_hash)
+
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+
+    return revoke_status
+
+
+def download_file(revo_reg_def):
+    """
+    Create revogation registry
+    """
+    file_status = None
+    tails_server_url = "http://127.0.0.1:6543"
+    try:
+
+        response = requests.get(
+            tails_server_url + "/" + revo_reg_def
+        )
+
+        response.raise_for_status()
+        file_status = response
+
+    except:
+        raise
+
+    finally:
+
+        return file_status
+
+def upload_file(revocation_file, revo_reg_def):
+
+    print('file---->', revocation_file)
+    print('revocation_status---->', revo_reg_def)
+
+    genesis_url = os.environ.get('GENESIS_URL', settings.ARIES_CONFIG['genesis_url'])
+
+    genesis_file = urllib.request.urlopen(genesis_url)
+    tails_file = open(revocation_file, 'rb')
+
+#    for line in genesis_file:
+#        print('====>', line)
+
+    response = requests.put(
+        PUBLIC_TAILS_URL + revo_reg_def,
+        data = {"genesis": genesis_file, "tails": tails_file}
+    )
+    response.raise_for_status()
+    file_status = response
+
+
+def test_hash(file):
+    BLOCKSIZE = 65536
+    sha256 = hashlib.sha256()
+    with open(file, 'rb') as afile:
+        data = afile.read(BLOCKSIZE)
+        while len(data) > 0:
+            sha256.update(data)
+            data = afile.read(BLOCKSIZE)
+    print(sha256.digest())
+
+
+def revoke_credential(agent, rev_reg_id, cred_rev_id, initialize_agent=False):
+    """
+    Fetch revoke_registry exist
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    revoke_status = None
+
+    # create connection and check status
+    try:
+        response = requests.post(
+            agent.admin_endpoint
+            + "/issue-credential/revoke?cred_rev_id=" + cred_rev_id + "&rev_reg_id=" + rev_reg_id + "&publish=true",
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        revoke_status = response.json()
+
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return revoke_status
+
+def create_and_publish_revocation_registry(agent, cred_def_id, initialize_agent=False):
+    """
+    Create and publish revocation registry
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    credential_definition = {"max_cred_num": MAX_CRED_NUM, "credential_definition_id": cred_def_id}
+    revocation_status = None
+
+    try:
+        response = requests.post(
+            agent.admin_endpoint
+            + "/revocation/create-registry",
+            json.dumps(credential_definition),
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+
+        revocation_registry_id = response.json["result"]["revoc_reg_id"]
+        tails_hash = response.json["result"]["tails_hash"]
+
+        tails_file = requests.get(
+            agent.admin_endpoint
+            + "/revocation/registry/" + revocation_registry_id + "/tails-file",
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        tails_file.raise_for_status()
+
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return revocation_status
+
+
+def revoke_credential_search(agent, cred_rev_id, initialize_agent=False):
+    """
+    Fetch revoke_registry exist
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    revoke_status = None
+
+    # create connection and check status
+    try:
+        response = requests.post(
+            agent.admin_endpoint
+            + "/issue-credential/records/" + cred_rev_id + "/issue",
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        revoke_status = response.json()
+
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+    return revoke_status
