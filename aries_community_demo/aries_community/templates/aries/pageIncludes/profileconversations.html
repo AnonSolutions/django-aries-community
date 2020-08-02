@@ -94,7 +94,7 @@
 			{% if conversation.conversation_type == 'ProofRequest' %}
 				<tr>
 					{% if conversation.status == 'request_received' %}
-						td><i class="fa fa-eye" aria-hidden="true">
+						<td><i class="fa fa-eye" aria-hidden="true">
 							<a href="{% url 'view_proof' %}?conversation_id={{conversation.guid}}">
 							</i>{{ conversation.connection.guid }}</a>
 						</td>
