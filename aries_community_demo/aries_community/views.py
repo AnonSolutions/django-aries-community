@@ -1187,6 +1187,7 @@ def list_wallet_credentials(
 #Remove connection in database
 def handle_remove_connection(
     request,
+#    form_template='aries/connection/select_request.html',
     form_template='aries/connection/form_remove_connection.html',
     response_template='aries/connection/list.html'
     ):
@@ -1207,14 +1208,10 @@ def handle_remove_connection(
             partner_name = cd.get('partner_name')
             agent_name = cd.get('agent_name')
 
-#           guid_partner_name = AgentConnection.objects.filter(partner_name=partner_name, agent=agent_name).get()
-            guid_partner_name = AgentConnection.objects.filter(partner_name=partner_name, agent=agent_name, guid=connection_id).get()
-
-
+            guid_partner_name = AgentConnection.objects.filter(partner_name=partner_name).get()
             guid_partner_name.delete()
 
-            agent_org = AriesOrganization.objects.filter(org_name=partner_name).get()
-            guid_partner_agent_owner = AgentConnection.objects.filter(partner_name=agent_owner, agent=agent_org.agent).get()
+            guid_partner_agent_owner = AgentConnection.objects.filter(partner_name=agent_owner).get()
             guid_partner_agent_owner.delete()
 
             return list_connections(
