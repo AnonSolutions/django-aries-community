@@ -220,6 +220,8 @@ class AgentConversation(models.Model):
     connection = models.ForeignKey(AgentConnection, on_delete=models.CASCADE)
     conversation_type = models.CharField(max_length=30)
     status = models.CharField(max_length=80, blank=True)
+    rev_reg_id = models.CharField(max_length=80, blank=True)
+    cred_rev_id = models.CharField(max_length=80, blank=True)
 
     def __str__(self):
         return self.connection.agent.agent_name + ":" + self.connection.partner_name + ":" + self.conversation_type + ", " +  self.guid

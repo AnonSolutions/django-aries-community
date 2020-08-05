@@ -13,6 +13,7 @@ import time
 import requests
 import hashlib
 import base58
+from timeit import default_timer
 import os.path
 
 from django.conf import settings
@@ -26,9 +27,9 @@ from .indy_utils import *
 
 DEFAULT_INTERNAL_HOST = "127.0.0.1"
 DEFAULT_EXTERNAL_HOST = "localhost"
-
+PUBLIC_TAILS_URL = "http://36243114aa0b.ngrok.io/"
 DUMMY_SEED = "00000000000000000000000000000000"
-
+MAX_CRED_NUM = "50"
 
 ######################################################################
 # utilities to provision Aries agents
@@ -71,7 +72,8 @@ def aries_provision_config(
     webhook_url = "http://" + webhook_host + ":" + webhook_port + webhook_root + "/agent_cb/" + callback_key
 
     # endpoint exposed by ngrok
-    #endpoint = "https://9f3a6083.ngrok.io"
+
+#   endpoint = "https://82cd20cd8afa.ngrok.io"
 
     provisionConfig = []
 
@@ -92,7 +94,7 @@ def aries_provision_config(
             ("--admin", "0.0.0.0", str(admin_port)),
             ("--admin-api-key", api_key),
             "--enable-undelivered-queue",
-            #"--admin-insecure-mode",
+#            "--admin-insecure-mode",
         ])
     provisionConfig.extend([
         ("--wallet-type", wallet_type),
@@ -117,6 +119,7 @@ def aries_provision_config(
         )
     provisionConfig.append(("--webhook-url", webhook_url))
 
+    time.sleep(0.5)
     return provisionConfig
 
 
@@ -439,8 +442,6 @@ def get_wallet_dids(agent, initialize_agent=False):
     return wallets
 
 
-
-
 def create_schema_json(schema_name, schema_version, schema_attrs):
     """
     Create an Indy Schema object based on a list of attributes.
@@ -450,7 +451,7 @@ def create_schema_json(schema_name, schema_version, schema_attrs):
     schema = {
         'name': schema_name,
         'version': schema_version,
-        'attributes': schema_attrs
+        'attributes': schema_attrs,
     }
     creddef_template = {}
     for attr in schema_attrs:
@@ -500,7 +501,8 @@ def create_creddef(agent, indy_schema, creddef_name, creddef_template):
     """
 
     try:
-        cred_def_request = {"support_revocation": True, "schema_id": indy_schema.ledger_schema_id}        
+        cred_def_request = {"support_revocation": True, "schema_id": indy_schema.ledger_schema_id}
+#       cred_def_request = {"schema_id": indy_schema.ledger_schema_id}
         response = agent_post_with_retry(
             agent.admin_endpoint + "/credential-definitions",
             json.dumps(cred_def_request),
@@ -517,9 +519,10 @@ def create_creddef(agent, indy_schema, creddef_name, creddef_template):
                             creddef_template = creddef_template
                             )
         indy_creddef.save()
+
     except:
         raise
-    
+
     revoke_registry_status = create_revoke_registry(agent, cred_def_id["credential_definition_id"])
 
     return indy_creddef
@@ -567,7 +570,6 @@ def start_agent_if_necessary(agent, initialize_agent: bool=True, cmd: str='start
     else:
         # didn't start it (assume it's already running)
         return (agent, False)
-
 
 def request_connection_invitation(org, requestee_name, initialize_agent=False):
     """
@@ -734,18 +736,29 @@ def handle_agent_connections_activity_callback(agent, topic, payload):
 # utilities to offer, request, send and receive credentials
 ######################################################################
 
+
 def build_credential_offer(agent, connection, credential_attrs, cred_def_id):
     credential_offer = {
+            "auto_remove": False,
             "auto_issue": True,
-            "connection_id": connection.guid,
             "comment": "Issued by " + agent.agent_name,
-            "cred_def_id": cred_def_id,
             "credential_preview": {
                 "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/issue-credential/1.0/credential-preview",
                 "attributes": credential_attrs
-            }
+            },
+            "cred_def_id": cred_def_id,
+            "connection_id": connection.guid
         }
     return credential_offer
+
+
+def build_credential_definition(agent, cred_def_id):
+    credential_definition = {
+            "max_cred_num": 100,
+            "credential_definition_id": 'JnkAjQLbFzx7TrcJWW1ACw:3:CL:9:default'
+        }
+    return credential_definition
+
 
 def send_credential_offer(agent, connection, credential_attrs, cred_def_id, initialize_agent=False):
     """
@@ -755,16 +768,20 @@ def send_credential_offer(agent, connection, credential_attrs, cred_def_id, init
     # start the agent if requested (and necessary)
     (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
 
+    print(">>>>", agent, connection, credential_attrs, cred_def_id)
+
     try:
         credential_offer = build_credential_offer(agent, connection, credential_attrs, cred_def_id)
+
         response = requests.post(
             agent.admin_endpoint
             + "/issue-credential/send-offer",
             json.dumps(credential_offer),
             headers=get_ADMIN_REQUEST_HEADERS(agent)
         )
-        response.raise_for_status()
+
         my_cred_exchange = response.json()
+        time.sleep(0.5)
 
         conversation = AgentConversation(
             connection = connection,
@@ -797,8 +814,8 @@ def send_credential_request(agent, conversation, initialize_agent=False):
             headers=get_ADMIN_REQUEST_HEADERS(agent)
         )
         response.raise_for_status()
-        my_cred_exchange = response.json()
 
+        my_cred_exchange = response.json()
         conversation.status = my_cred_exchange["state"]
         conversation.save()
     except:
@@ -883,6 +900,8 @@ def handle_agent_credentials_callback(agent, topic, payload):
     """
     # handle callbacks during credential exchange protocol handshake
     # - update credential status
+
+
     state = payload["state"]
     cred_exch_id = payload["credential_exchange_id"]
     connection_id = payload["connection_id"]
@@ -914,8 +933,14 @@ def handle_agent_credentials_callback(agent, topic, payload):
 
     elif state == "credential_acked":
         # issuer receives an acknowledgement that the credential was recevied (no action)
-        conversation = cred_exches[0]
-        conversation.status = state
+#       conversation = cred_exches[0]
+        conversation = AgentConversation(
+                connection=connection,
+                conversation_type=CRED_EXCH_CONVERSATION,
+                guid=cred_exch_id,
+                status=state,
+                rev_reg_id = payload["revoc_reg_id"],
+                cred_rev_id = payload["revocation_id"])
         conversation.save()
         
     elif state == "proposal_received":
@@ -955,6 +980,7 @@ def fetch_credentials(agent, initialize_agent=False):
             headers=get_ADMIN_REQUEST_HEADERS(agent)
         )
         response.raise_for_status()
+        print(response.json())
         credentials = response.json()["results"]
     except:
         raise
@@ -989,6 +1015,7 @@ def build_presentation(agent, requested_attrs, requested_predicates, self_attest
     return proof_presentation
 
 
+
 def send_proof_request(agent, connection, proof_req_name, proof_attrs, proof_predicates, initialize_agent=False):
     """
     Send an Aries Proof Request.
@@ -996,9 +1023,11 @@ def send_proof_request(agent, connection, proof_req_name, proof_attrs, proof_pre
     # start the agent if requested (and necessary)
     (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
 
+
     # create connection and generate invitation
     try:
         proof_request = build_proof_request(agent, connection, proof_req_name, proof_attrs, proof_predicates)
+
         response = requests.post(
             agent.admin_endpoint
             + "/present-proof/send-request",
@@ -1104,8 +1133,6 @@ def handle_agent_proof_callback(agent, topic, payload):
     state = payload["state"]
     proof_request_id = payload["presentation_exchange_id"]
     connection_id = payload["connection_id"]
-    print(">>> callback:", agent.agent_name, topic, state, proof_request_id)
-    print(">>> payload:", json.dumps(payload))
 
     connection = AgentConnection.objects.filter(agent=agent, guid=connection_id).get()
     proof_requests = AgentConversation.objects.filter(connection__agent=agent, guid=proof_request_id).all()
@@ -1220,7 +1247,6 @@ def send_credential_proposal(agent, connection, credential_attrs, cred_def_id, s
         response.raise_for_status()
 
         my_cred_exchange = response.json()
-        print('>>>', my_cred_exchange)
 
         conversation = AgentConversation(
             connection = connection,
@@ -1336,7 +1362,6 @@ def create_revoke_registry(agent, cred_def_id, initialize_agent=False):
         )
 
         response.raise_for_status()
-        print("File ->", response.json())
 
         revoc_reg_id = response.json()["result"]["revoc_reg_id"]
         revocation_hash = response.json()["result"]["tails_hash"]
@@ -1345,8 +1370,6 @@ def create_revoke_registry(agent, cred_def_id, initialize_agent=False):
         registry_download_status = revoke_registry_download(agent, revoc_reg_id)
         revoke_patch_registry_status = revoke_patch_registry(agent, cred_def_id, revoc_reg_id)
         revoke_publish_status = revoke_publish(agent, revoc_reg_id)
-
-#       file_status = upload_file(revocation_file, revo_reg_def)
 
     except:
         raise
@@ -1363,8 +1386,6 @@ def revoke_registry_download(agent, revoke_registry_id, initialize_agent=False):
     # start the agent if requested (and necessary)
     (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
 
-    print('=======>', get_ADMIN_REQUEST_HEADERS(agent))
-
     revoke_status = None
 
     try:
@@ -1374,7 +1395,7 @@ def revoke_registry_download(agent, revoke_registry_id, initialize_agent=False):
             headers=get_ADMIN_REQUEST_HEADERS(agent)
         )
         revoke_status = response
-        print('revoke_status', revoke_status)
+        test = type(response)
 
     except:
         raise
@@ -1400,7 +1421,7 @@ def get_revoke_registry(agent, revocation_registry_id, initialize_agent=False):
             headers=get_ADMIN_REQUEST_HEADERS(agent)
         )
         response.raise_for_status()
-        revoke_status = response
+        revoke_status = response.json()
     except:
         raise
     finally:
@@ -1453,7 +1474,7 @@ def revoke_publish(agent, revoke_registry_id, initialize_agent=False):
             headers=get_ADMIN_REQUEST_HEADERS(agent)
         )
         response.raise_for_status()
-        revoke_status = response
+        revoke_status = response.json()
     except:
         raise
     finally:
@@ -1530,7 +1551,6 @@ def fetch_revoke_registry(agent, cred_def_id, initialize_agent=False):
         )
         response.raise_for_status()
         revoke_status = response.json()["rev_reg_ids"]
-        print("revoke_status 123->", revoke_status)
     except:
         raise
     finally:
@@ -1559,7 +1579,6 @@ def active_revocation_registry(agent, cred_def_id, initialize_agent=False):
         )
         response.raise_for_status()
         revoke_status = response
-        print(response.json())
     except:
         raise
     finally:
@@ -1629,9 +1648,6 @@ def revoke_patch_registry(agent, cred_def_id, revocation_registry_id, initialize
         revocation_status = response.json()["result"]["revoc_reg_id"]
         revocation_hash = response.json()["result"]["tails_hash"]
         revoke_info = response.json()
-        print("revoke_status======>", revoke_status)
-#       print("revoke_info======>", revoke_info)
-        print("revocation_hash====>", revocation_hash)
 
     except:
         raise
@@ -1666,16 +1682,9 @@ def download_file(revo_reg_def):
 
 def upload_file(revocation_file, revo_reg_def):
 
-    print('file---->', revocation_file)
-    print('revocation_status---->', revo_reg_def)
-
     genesis_url = os.environ.get('GENESIS_URL', settings.ARIES_CONFIG['genesis_url'])
-
     genesis_file = urllib.request.urlopen(genesis_url)
     tails_file = open(revocation_file, 'rb')
-
-#    for line in genesis_file:
-#        print('====>', line)
 
     response = requests.put(
         PUBLIC_TAILS_URL + revo_reg_def,
@@ -1683,17 +1692,6 @@ def upload_file(revocation_file, revo_reg_def):
     )
     response.raise_for_status()
     file_status = response
-
-
-def test_hash(file):
-    BLOCKSIZE = 65536
-    sha256 = hashlib.sha256()
-    with open(file, 'rb') as afile:
-        data = afile.read(BLOCKSIZE)
-        while len(data) > 0:
-            sha256.update(data)
-            data = afile.read(BLOCKSIZE)
-    print(sha256.digest())
 
 
 def revoke_credential(agent, rev_reg_id, cred_rev_id, initialize_agent=False):
@@ -1714,7 +1712,7 @@ def revoke_credential(agent, rev_reg_id, cred_rev_id, initialize_agent=False):
             headers=get_ADMIN_REQUEST_HEADERS(agent)
         )
         response.raise_for_status()
-        revoke_status = response.json()
+        revoke_status = response
 
     except:
         raise

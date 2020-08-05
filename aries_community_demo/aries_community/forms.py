@@ -338,6 +338,14 @@ class RemoveCredentialForm(AgentNameForm):
         self.fields['agent_name'].widget.attrs['readonly'] = True
         self.fields['agent_name'].widget.attrs['hidden'] = True
 
+class RevokeCredentialForm(AgentNameForm):
+    referent = forms.CharField(label=trans('Referent'), max_length=200)
+    def __init__(self, *args, **kwargs):
+        super(RevokeCredentialForm, self).__init__(*args, **kwargs)
+        self.fields['referent'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['hidden'] = True
+
 class CredentialProposalForm(AgentNameForm):
     connection_id = forms.CharField(label=trans('connection_id'), max_length=100)
     partner_name = forms.CharField(label=trans('Partner Name'), max_length=100)
@@ -454,4 +462,19 @@ class CredentialDeleteForm(forms.Form):
                 field_name = 'credential_attr_' + attr
                 self.fields[field_name] = forms.CharField(label=attr, initial=credential_attrs[attr])
                 self.fields[field_name].widget.attrs['readonly'] = True
+
+
+class SendCredentialRevokeForm(SendConversationResponseForm):
+    # a bunch of fields that are read-only to present to the user
+    agent_name = forms.CharField(widget=forms.HiddenInput())
+    cred_rev_id = forms.CharField(label=trans('Cred_rev_id'), max_length=10)
+    rev_reg_id = forms.CharField(widget=forms.HiddenInput())
+    conversation_id = forms.CharField(label=trans('conversation_id'), max_length=120)
+
+    def __init__(self, *args, **kwargs):
+        super(SendCredentialRevokeForm, self).__init__(*args, **kwargs)
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+        self.fields['cred_rev_id'].widget.attrs['readonly'] = True
+        self.fields['conversation_id'].widget.attrs['readonly'] = True
+        self.fields['rev_reg_id'].widget.attrs['hidden'] = True
 
