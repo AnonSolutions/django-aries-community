@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: django\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-03-23 20:42+0100\n"
-"PO-Revision-Date: 2020-05-15 11:10-0300\n"
+"PO-Revision-Date: 2020-08-06 10:25-0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -364,7 +364,7 @@ msgstr "Parceiro"
 msgid "Credential acked"
 msgstr "Credencial recebida"
 
-msgid "Proposal sent" 
+msgid "Proposal sent"
 msgstr "Proposta enviada"
 
 msgid "Offer sent"
@@ -413,7 +413,37 @@ msgid "Request sent"
 msgstr "Pedido enviado"
 
 msgid "Presentation sent"
-msgstr "Dados enviado" 
+msgstr "Dados enviado"
 
 msgid "Presentation acked"
 msgstr "Dados enviados"
+
+msgid "Requester"
+msgstr "Solicitante"
+
+msgid "Revoke"
+msgstr "Revogar"
+
+msgid "Revoked"
+msgstr "Revogada"
+
+msgid "Validates"
+msgstr "Valida"
+
+msgid "Invalid"
+msgstr "Inválida"
+
+msgid "Validation"
+msgstr "Validação"
+
+msgid "Welcome to self Sovereign Identity System"
+msgstr "Bemvindo ao sistema de identidade auto-soberana"
+
+msgid "Signal"
+msgstr "Sinalização"
+
+msgid "Revoked credential"
+msgstr "Credencial revogada"
+
+msgid "Revoke credential"
+msgstr "Revogar credencial"
