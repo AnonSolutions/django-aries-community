@@ -27,7 +27,7 @@ from .indy_utils import *
 
 DEFAULT_INTERNAL_HOST = "127.0.0.1"
 DEFAULT_EXTERNAL_HOST = "localhost"
-PUBLIC_TAILS_URL = "http://36243114aa0b.ngrok.io/"
+PUBLIC_TAILS_URL = "http://09cfd62a37a3.ngrok.io/"
 DUMMY_SEED = "00000000000000000000000000000000"
 MAX_CRED_NUM = "50"
 
@@ -500,9 +500,13 @@ def create_creddef(agent, indy_schema, creddef_name, creddef_template):
     Note that the agent must be running.
     """
 
+    test = settings.REVOCATION
+    
     try:
-        cred_def_request = {"support_revocation": True, "schema_id": indy_schema.ledger_schema_id}
-#       cred_def_request = {"schema_id": indy_schema.ledger_schema_id}
+        if test == True:
+            cred_def_request = {"support_revocation": True, "schema_id": indy_schema.ledger_schema_id}
+        else:
+            cred_def_request = {"schema_id": indy_schema.ledger_schema_id}
         response = agent_post_with_retry(
             agent.admin_endpoint + "/credential-definitions",
             json.dumps(cred_def_request),
@@ -523,7 +527,8 @@ def create_creddef(agent, indy_schema, creddef_name, creddef_template):
     except:
         raise
 
-    revoke_registry_status = create_revoke_registry(agent, cred_def_id["credential_definition_id"])
+    if test == True:
+        revoke_registry_status = create_revoke_registry(agent, cred_def_id["credential_definition_id"])
 
     return indy_creddef
 
@@ -900,7 +905,7 @@ def handle_agent_credentials_callback(agent, topic, payload):
     """
     # handle callbacks during credential exchange protocol handshake
     # - update credential status
-
+    test = settings.REVOCATION
 
     state = payload["state"]
     cred_exch_id = payload["credential_exchange_id"]
@@ -933,15 +938,19 @@ def handle_agent_credentials_callback(agent, topic, payload):
 
     elif state == "credential_acked":
         # issuer receives an acknowledgement that the credential was recevied (no action)
-#       conversation = cred_exches[0]
-        conversation = AgentConversation(
-                connection=connection,
-                conversation_type=CRED_EXCH_CONVERSATION,
-                guid=cred_exch_id,
-                status=state,
-                rev_reg_id = payload["revoc_reg_id"],
-                cred_rev_id = payload["revocation_id"])
-        conversation.save()
+        if test == True:
+            conversation = AgentConversation(
+                    connection=connection,
+                    conversation_type=CRED_EXCH_CONVERSATION,
+                    guid=cred_exch_id,
+                    status=state,
+                    rev_reg_id = payload["revoc_reg_id"],
+                    cred_rev_id = payload["revocation_id"])
+            conversation.save()
+        else:
+            conversation = cred_exches[0]
+            conversation.status = state
+            conversation.save()
         
     elif state == "proposal_received":
         #   holder save a credential propose (no action; "auto store")
@@ -980,7 +989,7 @@ def fetch_credentials(agent, initialize_agent=False):
             headers=get_ADMIN_REQUEST_HEADERS(agent)
         )
         response.raise_for_status()
-        print(response.json())
+
         credentials = response.json()["results"]
     except:
         raise
@@ -1429,8 +1438,6 @@ def get_revoke_registry(agent, revocation_registry_id, initialize_agent=False):
             stop_agent(agent)
     return revoke_status
 
-
-
 def get_revoke_active(agent, cred_def_id, initialize_agent=False):
     """
     Fetch credentials from the agent (wallet).
@@ -1558,7 +1565,6 @@ def fetch_revoke_registry(agent, cred_def_id, initialize_agent=False):
             stop_agent(agent)
     return revoke_status
 
-
 def active_revocation_registry(agent, cred_def_id, initialize_agent=False):
     """
     Fetch active revocation registry
@@ -1613,7 +1619,6 @@ def active_revoke_registry(agent, cred_def_id, initialize_agent=False):
             stop_agent(agent)
     return revoke_status
 
-
 def revoke_patch_registry(agent, cred_def_id, revocation_registry_id, initialize_agent=False):
     """
     Create revogation registry
@@ -1656,43 +1661,6 @@ def revoke_patch_registry(agent, cred_def_id, revocation_registry_id, initialize
             stop_agent(agent)
 
     return revoke_status
-
-
-def download_file(revo_reg_def):
-    """
-    Create revogation registry
-    """
-    file_status = None
-    tails_server_url = "http://127.0.0.1:6543"
-    try:
-
-        response = requests.get(
-            tails_server_url + "/" + revo_reg_def
-        )
-
-        response.raise_for_status()
-        file_status = response
-
-    except:
-        raise
-
-    finally:
-
-        return file_status
-
-def upload_file(revocation_file, revo_reg_def):
-
-    genesis_url = os.environ.get('GENESIS_URL', settings.ARIES_CONFIG['genesis_url'])
-    genesis_file = urllib.request.urlopen(genesis_url)
-    tails_file = open(revocation_file, 'rb')
-
-    response = requests.put(
-        PUBLIC_TAILS_URL + revo_reg_def,
-        data = {"genesis": genesis_file, "tails": tails_file}
-    )
-    response.raise_for_status()
-    file_status = response
-
 
 def revoke_credential(agent, rev_reg_id, cred_rev_id, initialize_agent=False):
     """

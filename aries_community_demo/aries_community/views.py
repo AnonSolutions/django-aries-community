@@ -657,10 +657,7 @@ def list_conversations(
 
     for conversation in conversations:
             msg = AgentConversation.objects.filter(guid=conversation.guid).get()
-#            print(msg.guid)
-#            print(msg.connection)
-#            print(msg.rev_reg_id)
-#            print(msg.cred_rev_id)
+#            print(msg.guid, msg.connection, msg.rev_reg_id, msg.cred_rev_id)
 
     return render(request, template, {'agent_name': agent.agent_name, 'conversations': conversations, 'agent_type': agent_type})
 
@@ -772,12 +769,6 @@ def handle_credential_offer(
 
             # build the credential offer and send
 
-#            revoke_id = fetch_revoke_registry(agent, cred_def_id)
-#            revoke_status = active_revocation_registry(agent, cred_def_id)
-
-#           revocation_status = create_revoke_registry(agent, cred_def_id)
-#           print('create_revoke_registry->', revocation_status)
-
             try:
                 my_conversation = send_credential_offer(agent, my_connection, cred_attrs, cred_def_id)
                 return render(request, template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
@@ -821,7 +812,6 @@ def handle_cred_offer_response(
                 my_conversation = send_credential_request(agent, my_conversation)
                 time.sleep(0.5)
                 credentials = fetch_credentials(agent)
-#               print('credentials->', credentials)
                 return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
             except:
                 # ignore errors for now
@@ -836,7 +826,7 @@ def handle_cred_offer_response(
         # TODO validate conversation id
         conversation = conversations[0]
         agent_conversation = get_agent_conversation(agent, conversation_id, CRED_EXCH_CONVERSATION)
-#       print('agent_conversation->', agent_conversation)
+
 
 
         proposed_attrs = agent_conversation["credential_proposal_dict"]["credential_proposal"]["attributes"]
@@ -902,24 +892,31 @@ def handle_select_proof_request(
                     'proof_attrs': proof_req_attrs,
                     'proof_predicates': proof_req_predicates})
 
+
+
             if proof_req_predicates == '[]':
                 proof_req_attrs = json.loads(proof_req_attrs)
 
                 requested_attrs = {}
 
-#                requested_attrs[referent].update(non_revoked="to: + str(int(time.time()-1))")
-                clk = int(time.time()-1)
-                revoked = {
-                    "to": clk ,
-                    "from": clk
-                }
+                test = settings.REVOCATION
 
-                for requested_attr in proof_req_attrs:
-                    referent = requested_attr["name"] + "_referent"
-                    requested_attrs[referent] = requested_attr
-                    requested_attrs[referent].update(non_revoked = revoked)
+                if test == True:
+                    clk = int(time.time()-1)
+                    revoked = {
+                        "to": clk ,
+                        "from": clk
+                    }
 
-#               print('requested_attrs->', requested_attrs)
+                    for requested_attr in proof_req_attrs:
+                        referent = requested_attr["name"] + "_referent"
+                        requested_attrs[referent] = requested_attr
+                        requested_attrs[referent].update(non_revoked = revoked)
+                else:
+                    for requested_attr in proof_req_attrs:
+                        referent = requested_attr["name"] + "_referent"
+                        requested_attrs[referent] = requested_attr
+
 
                 requested_predicates = {}
 
@@ -1079,7 +1076,6 @@ def handle_proof_req_response(
         # TODO validate connection id
         connection = conversation.connection
         proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
-#       print('proof_request->', proof_request)
 
         for referent in proof_request["presentation_request"]["requested_attributes"]:
 
@@ -1170,20 +1166,18 @@ def handle_view_proof(
     conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
     # TODO validate conversation id
     conversation = conversations[0]
-    print('conversation->', conversation)
 
     requested_proof = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
 
     screen = {}
 
-##### Modificado
-    revoked = requested_proof["verified"]
-    print('requested_proof->', requested_proof)
-#    print('requested_proof->', requested_proof["state"])
+    test = settings.REVOCATION
+    if test == True:
+        revoked = requested_proof["verified"]
 
-    if revoked == 'false':
-        conversation.status = "credential_revoked"
-        conversation.save()
+        if revoked == 'false':
+            conversation.status = "credential_revoked"
+            conversation.save()
 
     if requested_proof["state"] == "request_received":
         name = (requested_proof["presentation_request"]["name"])
@@ -1201,8 +1195,10 @@ def handle_view_proof(
         for attr, value in requested_proof["presentation"]["requested_proof"]["revealed_attrs"].items():
             value["identifier"] = requested_proof["presentation"]["identifiers"][value["sub_proof_index"]]
 
-        return render(request, template, {'conversation': conversation, 'proof': requested_proof, 'screen': screen, 'revoked': revoked})
-
+        if test == True:
+            return render(request, template, {'conversation': conversation, 'proof': requested_proof, 'screen': screen, 'revoked': revoked})
+        else:
+            return render(request, template, {'conversation': conversation, 'proof': requested_proof, 'screen': screen})
 
 
 ######################################################################
@@ -1229,7 +1225,7 @@ def list_wallet_credentials(
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
         credentials = fetch_credentials(agent)
-        print('credentials->', credentials)
+
         count = 0
         for credential in credentials:
             partner_name = credentials[count]['schema_id']
@@ -1267,10 +1263,10 @@ def handle_remove_connection(
             partner_name = cd.get('partner_name')
             agent_name = cd.get('agent_name')
 
-            guid_partner_name = AgentConnection.objects.filter(partner_name=partner_name).get()
+            guid_partner_name = AgentConnection.objects.filter(guid=connection_id).get()
             guid_partner_name.delete()
 
-            guid_partner_agent_owner = AgentConnection.objects.filter(partner_name=agent_owner).get()
+            guid_partner_agent_owner = AgentConnection.objects.filter(partner_name=agent_owner, agent="o_" + partner_name).get()
             guid_partner_agent_owner.delete()
 
             return list_connections(
@@ -1404,7 +1400,6 @@ def handle_revoke_credentials(
             cred_rev_id = credentials[0]['cred_rev_id']
             rev_reg_id = credentials[0]['rev_reg_id']
             revoke_id = revoke_credential(agent, rev_reg_id, cred_rev_id)
-            print('revoke->', revoke_id)
 
             return list_wallet_credentials(
                 request
@@ -1810,7 +1805,6 @@ def handle_cred_revoke(
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
             # find conversation request
-#            print("Revoke->", conversation_id, cred_rev_id, rev_reg_id)
 
             # build the credential request and send
             try:
@@ -1820,12 +1814,12 @@ def handle_cred_revoke(
 
 
                 return render(request, response_template,
-                              {'msg': trans('Credential revoke to') + ' ' + agent.agent_name})
+                              {'msg': trans('Revoked credential') })
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
                 return render(request, 'aries/form_response.html',
-                              {'msg': 'Failed to update conversation for ' + agent.agent_name})
+                              {'msg': trans('Failed to update conversation for ') + agent.agent_name})
 
     else:
         # find conversation request, fill in form details
