@@ -45,11 +45,11 @@
                     <h1><center><i class="fa fa-handshake-o" aria-hidden="true"></center></i></h1>
                 </header>
             <div class="w3-container w3-white" style="font-size: 10px">
-                    <b>{% trans "Name" %}</b>
+                    <b>Nome</b>
                     <h4>{{ connection.partner_name }}</h4>
                     <b>GUID</b>
                     <h4>{{ connection.guid }}</h4>
-                    <b>{% trans "State" %}</b>
+                    <b>Estado</b>
                     <h4>
                         {{ connection.status }}
                         {% if connection.status == 'invitation' %}
