@@ -71,6 +71,7 @@
                                 <a href="{% url 'select_credential_offer' %}?connection_id={{connection.guid}}"><i class="fa fa-id-card" title="{% trans "Send Credential" %}"></i></a>
                                 <a href="{% url 'remove_connection' %}?connection_id={{connection.guid}}"><i class="fa fa-remove" title="{% trans "Remove connection" %}"></i></a>
                                 <a href="{% url 'select_proof_request' %}?connection_id={{connection.guid}}"><i class="fa fa-refresh" title="{% trans "Send Proof Request" %}"></i></a>
+                                <a href="{% url 'send_message' %}?connection_id={{connection.guid}}"><i class="fa fa-envelope" title="{% trans "Send message" %}"></i></a>
                             </center></h4>
                         {% endif %}
                     {% else %}

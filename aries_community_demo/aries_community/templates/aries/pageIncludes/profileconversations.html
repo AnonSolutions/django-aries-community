@@ -10,12 +10,12 @@
 		<table class="blueTable">
 		<thead>
 		<tr>
-			<th style="width:200px"><center>GUID</th></center>
-			<th style="width:50px"><center>{% trans "Partner" %}</th></center>
-			<th style="width:30px"><center>{% trans "Signal" %}</th></center>
-			<th style="width:100px"><center>{% trans "Type" %}</th></center>
-			<th style="width:200px"><center>{% trans "Operation" %}</th></center>
-			<th style="width:200px"><center>{% trans "Status" %}</th></center>
+			<th style="width:10px"><center>GUID</th></center>
+			<th style="width:10px"><center>{% trans "Partner" %}</th></center>
+			<th style="width:10px"><center>{% trans "Signal" %}</th></center>
+			<th style="width:10px"><center>{% trans "Type" %}</th></center>
+			<th style="width:10px"><center>{% trans "Operation" %}</th></center>
+			<th style="width:10px"><center>{% trans "Status" %}</th></center>
 		</tr>
 		</thead>
 		<tbody>
@@ -70,6 +70,14 @@
 						<td>{{ conversation.conversation_type }}</td>
 						<td><center><i class="fa fa-stop-circle" aria-hidden="true" style="color:red" title="Nothing"></i></center></td>
 						<td>{% trans "Proposal sent" %}</td>
+					{% endif %}
+					{% if conversation.status == 'credential_revoked' %}
+						<td><i class="fa fa-eye-slash" aria-hidden="true">&nbsp;</i>{{ conversation.connection.guid }}</a></td>
+						<td>{{ conversation.connection.partner_name }}</td>
+						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="proposal_sent"></i></center></td>
+						<td>{{ conversation.conversation_type }}</td>
+						<td><center><i class="fa fa-exclamation-triangle" aria-hidden="true" style="color:red" title="Nothing"></i></center></td>
+						<td>{% trans "Revoked credential" %} {{ conversation.revoked }}</td>
 					{% endif %}
 					{% if conversation.status == 'credential_acked' %}
 						{% if agent_type == 'org' %}
@@ -196,6 +204,37 @@
 				</tr>
 			{% endif %}
 
+	{% endfor %}
+	</tbody>
+	</table><br><br><br>
+
+
+	<h4>{% trans "Simple messages" %}</h4><br>
+	<table class="blueTable">
+		<thead>
+		<tr>
+			<th style="width:5px"><center>{% trans "Status" %}</th></center>
+			<th style="width:30px"><center>{% trans "Message Id" %}</th></center>
+			<th style="width:30px"><center>{% trans "Date" %}</th></center>
+
+		</tr>
+		</thead>
+
+	<tbody>
+	{% for message in messages %}
+		<tr>
+
+			<td>
+				{% if message.state == 'received' %}
+					<center><i class="fa fa-envelope" style="color:red"></i></a></center>
+				{% endif %}
+				{% if message.state == 'read' %}
+					<center><i class="fa fa-envelope-open" style="color:green"></i></a></center>
+				{% endif %}
+			</td>
+			<td><i class="fa fa-eye" aria-hidden="true">&nbsp;</i><a href={% url 'message_show' %}?message_id={{message.message_id}}>{{ message.message_id }}</a></td>
+			<td>{{ message.date }}</td>
+		</tr>
 	{% endfor %}
 	</tbody>
 	</table>
