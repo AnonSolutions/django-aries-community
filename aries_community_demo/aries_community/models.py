@@ -222,6 +222,19 @@ class AgentConversation(models.Model):
     status = models.CharField(max_length=80, blank=True)
     rev_reg_id = models.CharField(max_length=80, blank=True)
     cred_rev_id = models.CharField(max_length=80, blank=True)
+    revoked = models.CharField(max_length=10, blank=True)
 
     def __str__(self):
         return self.connection.agent.agent_name + ":" + self.connection.partner_name + ":" + self.conversation_type + ", " +  self.guid
+
+
+class AgentMessage(models.Model):
+    guid = models.CharField(max_length=120)
+    connection = models.ForeignKey(AgentConnection, on_delete=models.CASCADE)
+    message_id = models.CharField(max_length=40, primary_key=True)
+    content = models.TextField(max_length=500, blank=True)
+    state = models.CharField(max_length=20, blank=True)
+    date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.connection.agent.agent_name + ":" + self.connection.partner_name + ":" + ", " +  self.message_id

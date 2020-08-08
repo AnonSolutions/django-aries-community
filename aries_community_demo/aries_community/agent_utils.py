@@ -910,6 +910,7 @@ def handle_agent_credentials_callback(agent, topic, payload):
     state = payload["state"]
     cred_exch_id = payload["credential_exchange_id"]
     connection_id = payload["connection_id"]
+
     print(">>> callback:", agent.agent_name, topic, state, cred_exch_id)
 
     connection = AgentConnection.objects.filter(agent=agent, guid=connection_id).get()
@@ -923,6 +924,10 @@ def handle_agent_credentials_callback(agent, topic, payload):
             guid = cred_exch_id,
             status = state)
         conversation.save()
+
+    elif state == "basicmessages":
+        # issuer receives a credential request (no action, we have "auto submit")
+        conversation = cred_exches[0]
 
     elif state == "request_received":
         # issuer receives a credential request (no action, we have "auto submit")
@@ -970,6 +975,31 @@ def handle_agent_credentials_callback(agent, topic, payload):
 
     return Response("{}")
 
+def handle_message_callback(agent, topic, payload):
+    """
+    Handle credential processing callbacks from the agent
+    """
+    # handle callbacks during credential exchange protocol handshake
+    # - update credential status
+    test = settings.REVOCATION
+
+    connection_id = payload["connection_id"]
+    message_id = payload["message_id"]
+    content = payload["content"]
+    state = payload["state"]
+
+    connection = AgentConnection.objects.filter(agent=agent, guid=connection_id).get()
+
+    if state == "received":
+        conversation = AgentMessage(
+            guid = connection_id,
+            connection = connection,
+            message_id = message_id,
+            content = content,
+            state = state)
+        conversation.save()
+
+    return Response("{}")
 
 def fetch_credentials(agent, initialize_agent=False):
     """
@@ -1753,3 +1783,35 @@ def revoke_credential_search(agent, cred_rev_id, initialize_agent=False):
         if agent_started:
             stop_agent(agent)
     return revoke_status
+
+def send_simple_message(agent, conn_id, message, initialize_agent=False):
+    """
+    Send simple message
+    """
+
+    # start the agent if requested (and necessary)
+    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
+
+    message_status = None
+
+    message = {"content": message }
+    connection = AgentConnection.objects.filter(agent=agent, guid=conn_id).get()
+
+    # create connection and check status
+    try:
+        response = requests.post(
+            agent.admin_endpoint
+            + "/connections/" + conn_id + "/send-message",
+            json.dumps(message),
+            headers=get_ADMIN_REQUEST_HEADERS(agent)
+        )
+        response.raise_for_status()
+        message_status = response
+
+    except:
+        raise
+    finally:
+        if agent_started:
+            stop_agent(agent)
+
+    return message_status

@@ -124,6 +124,7 @@ TOPIC_PRESENTATIONS = "present_proof"
 TOPIC_GET_ACTIVE_MENU = "get-active-menu"
 TOPIC_PERFORM_MENU_ACTION = "perform-menu-action"
 TOPIC_PROBLEM_REPORT = "problem-report"
+TOPIC_MESSAGE = "basicmessages"
 
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
@@ -138,6 +139,7 @@ def agent_cb_view(
     cb_key maps the callback to a specific agent.
     """
     payload = request.data
+
     agent = AriesAgent.objects.filter(callback_key=cb_key).get()
 
     if topic == TOPIC_CONNECTIONS:
@@ -155,6 +157,11 @@ def agent_cb_view(
     elif topic == TOPIC_PRESENTATIONS:
         # handle credentials callbacks
         return handle_agent_proof_callback(agent, topic, payload)
+
+    elif topic == TOPIC_MESSAGE:
+        # handle credentials callbacks
+        return handle_message_callback(agent, topic, payload)
+
 
     # not yet handled message types
     print(">>> unhandled callback:", agent.agent_name, topic)
@@ -652,15 +659,11 @@ def list_conversations(
     # expects a wallet to be opened in the current session
     (agent, agent_type, agent_owner) = agent_for_current_session(request)
     conversations = AgentConversation.objects.filter(connection__agent=agent).all()
+    messages = AgentMessage.objects.filter(connection__agent=agent).all()
 
     agent_type = request.session['agent_type']
 
-    for conversation in conversations:
-            msg = AgentConversation.objects.filter(guid=conversation.guid).get()
-#            print(msg.guid, msg.connection, msg.rev_reg_id, msg.cred_rev_id)
-
-    return render(request, template, {'agent_name': agent.agent_name, 'conversations': conversations, 'agent_type': agent_type})
-
+    return render(request, template, {'agent_name': agent.agent_name, 'conversations': conversations, 'agent_type': agent_type, 'messages': messages})
 
 def handle_select_credential_offer(
     request,
@@ -1226,12 +1229,19 @@ def list_wallet_credentials(
 
         credentials = fetch_credentials(agent)
 
+        connection = AgentConnection.objects.filter(agent=agent).get()
+
         count = 0
         for credential in credentials:
             partner_name = credentials[count]['schema_id']
             partner_name = partner_name.split(":")
             partner_name = partner_name[2]
             credentials[count]['schema_id'] = partner_name
+            cred_rev_id = credentials[count]['cred_rev_id']
+            rev_reg_id = credentials[count]['rev_reg_id']
+            state = AgentConversation.objects.filter(connection=connection, cred_rev_id=cred_rev_id, rev_reg_id=rev_reg_id).get()
+            credentials[count]['state'] = state.status
+            credentials[count]['revoked'] = state.revoked
             count += 1
         return render(request, 'aries/credential/list.html', {'agent_name': agent.agent_name, 'credentials': credentials})
     except:
@@ -1414,7 +1424,42 @@ def handle_revoke_credentials(
                                                'agent_name': connection_id})
 
         return render(request, form_template, {'form': form})
-    
+
+
+def handle_send_message(
+     request,
+     form_template='aries/conversation/form_message.html',
+     response_template='aries/connection/list.html'
+):
+    """
+           Send simple message
+    """
+    if request.method=='POST':
+        form = SendMessageForm(request.POST)
+
+        if not form.is_valid():
+            return render(request, form_template, {'msg': 'Form error', 'msg_txt': str(form.errors)})
+        else:
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+            cd = form.cleaned_data
+            connection_id = cd.get('connection_id')
+            message = cd.get('message')
+            message_status = send_simple_message(agent, connection_id, message)
+
+            return list_connections(
+                request
+            )
+    else:
+        # find conversation request
+        (connection, agent_type, agent_owner) = agent_for_current_session(request)
+        connection_id = request.GET.get('connection_id', None)
+
+        form = SendMessageForm(initial={'connection_id': connection_id, 'agent_name': connection_id})
+
+        return render(request, form_template, {'form': form})
+
+
 def handle_credential_proposal(
         request,
         template='aries/form_response.html'
@@ -1658,6 +1703,55 @@ def handle_cred_proposal_show(
         pass
 
 
+def handle_message_show(
+    request
+    ):
+    """
+    List all messages to user.
+    """
+
+    try:
+
+        message_id = request.GET.get('message_id', None)
+
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+        message = AgentMessage.objects.filter(message_id=message_id).get()
+        message_id = message.message_id
+        date = message.date
+        content = message.content
+        state = message.state
+        connection = message.connection
+        message.state = "read"
+        message.save()
+        return render(request, 'aries/conversation/messages.html', {'connection': connection, 'message_id': message_id, 'date': date, 'content': content, 'state': state})
+
+    except:
+        raise
+    finally:
+        pass
+
+def handle_message_remove(
+    request
+    ):
+    """
+    List all messages to user.
+    """
+
+    try:
+
+        message_id = request.GET.get('message_id', None)
+
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+        message = AgentMessage.objects.filter(message_id=message_id).all()
+        conversation = messages[0]
+
+        return render(request, 'aries/conversation/messages.html', {'messages': message})
+    except:
+        raise
+    finally:
+        pass
 
 def handle_cred_proposal_delete(
         request,
@@ -1810,8 +1904,19 @@ def handle_cred_revoke(
             try:
                 revoke_status = revoke_credential(agent, rev_reg_id, cred_rev_id)
                 revoke_status = get_revoke_registry(agent, rev_reg_id)
-#               registry_download_status = revoke_registry_download(agent, rev_reg_id)
+                connections = AgentConversation.objects.filter(guid=conversation_id).get()
+                conversation_id = connections.connection.guid
 
+                message = trans('Revoked credential') + " " + conversation_id + " " + agent_owner + " " + cred_rev_id + " " + rev_reg_id
+                message_status = send_simple_message(agent, conversation_id, message)
+
+                conversations = AgentConversation.objects.filter(rev_reg_id=rev_reg_id, cred_rev_id=cred_rev_id).all()
+
+                for conversation in conversations:
+                    update = AgentConversation.objects.filter(guid=conversation.guid).get()
+                    update.status = "credential_revoked"
+                    update.revoked = datetime.now()
+                    update.save()
 
                 return render(request, response_template,
                               {'msg': trans('Revoked credential') })
@@ -1824,6 +1929,7 @@ def handle_cred_revoke(
     else:
         # find conversation request, fill in form details
         conversation_id = request.GET.get('conversation_id', None)
+
         rev_reg_id = request.GET.get('rev_reg_id', None)
         cred_rev_id = request.GET.get('cred_rev_id', None)
 

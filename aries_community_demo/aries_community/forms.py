@@ -346,6 +346,17 @@ class RevokeCredentialForm(AgentNameForm):
         self.fields['agent_name'].widget.attrs['readonly'] = True
         self.fields['agent_name'].widget.attrs['hidden'] = True
 
+class SendMessageForm(AgentNameForm):
+    connection_id = forms.CharField(label=trans('connection_id'), max_length=50)
+    message = forms.CharField(label=trans('Message'), max_length=500, widget=forms.Textarea())
+
+    def __init__(self, *args, **kwargs):
+        super(SendMessageForm, self).__init__(*args, **kwargs)
+        self.fields['message'].widget.attrs['readonly'] = False
+        self.fields['connection_id'].widget.attrs['readonly'] = True
+        self.fields['agent_name'].widget.attrs['readonly'] = True
+
+
 class CredentialProposalForm(AgentNameForm):
     connection_id = forms.CharField(label=trans('connection_id'), max_length=100)
     partner_name = forms.CharField(label=trans('Partner Name'), max_length=100)
