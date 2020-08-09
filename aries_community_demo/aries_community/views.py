@@ -1024,7 +1024,7 @@ def handle_proof_req_response(
             proof_req_name = cd.get('proof_req_name')
 
             (agent, agent_type, agent_owner) = agent_for_current_session(request)
-
+            test = settings.REVOCATION
             # find conversation request
             conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
             my_conversation = conversations[0]
@@ -1042,11 +1042,27 @@ def handle_proof_req_response(
 
                 proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
 
-                claim_data = get_claims_for_proof_request(agent, my_conversation)
-                size = len(claim_data)
+                credentials = get_claims_for_proof_request(agent, my_conversation)
+                connection = AgentConnection.objects.filter(agent=agent).get()
 
-                for claim in claim_data:
-                    value = claim['cred_info']['referent']
+                for credential in credentials:
+                    value = credential['cred_info']['referent']
+                    # fetch revoked credentials
+                    if test == True:
+                        cred_rev_id = credential['cred_info']['cred_rev_id']
+                        rev_reg_id = credential['cred_info']['rev_reg_id']
+                        state = AgentConversation.objects.filter(connection=connection, cred_rev_id=cred_rev_id, rev_reg_id=rev_reg_id).get()
+                        credential['cred_info']['state'] = state.status
+                        credential['cred_info']['revoked'] = state.revoked
+
+                #Remove revoked from credentials
+                if test == True:
+                    for i in range(len(credentials)):
+                        if credentials[i]['cred_info']['state'] == "credential_revoked":
+                            del credentials[i]
+                            break
+
+                size = len(credentials)
 
                 if size == 1:
                     for referent in proof_request["presentation_request"]["requested_attributes"]:
@@ -1059,7 +1075,7 @@ def handle_proof_req_response(
                         'agent_name': my_connection.agent.agent_name,
                         'from_partner_name': my_connection.partner_name,
                         'proof_req_name': proof_req_name,
-                        'selected_claims': claim_data,
+                        'selected_claims': credentials,
                         'proof_request': proof_request,
                     })
                     return render(request, response_template, {'form': form})
@@ -1274,9 +1290,10 @@ def handle_remove_connection(
             agent_name = cd.get('agent_name')
 
             guid_partner_name = AgentConnection.objects.filter(guid=connection_id).get()
+            invitation = guid_partner_name.invitation
             guid_partner_name.delete()
 
-            guid_partner_agent_owner = AgentConnection.objects.filter(partner_name=agent_owner, agent="o_" + partner_name).get()
+            guid_partner_agent_owner = AgentConnection.objects.filter(invitation=invitation).get()
             guid_partner_agent_owner.delete()
 
             return list_connections(
