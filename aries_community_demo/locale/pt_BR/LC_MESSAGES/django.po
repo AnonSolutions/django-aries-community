@@ -79,8 +79,14 @@ msgstr "Dados do APP"
 msgid "Connections"
 msgstr "Conexões"
 
+msgid "Connection"
+msgstr "Conexão"
+
 msgid "Conversations"
 msgstr "Mensagens"
+
+msgid "User actions"
+msgstr "Ações do usuário"
 
 msgid "Credentials"
 msgstr "Credenciais"
@@ -447,3 +453,6 @@ msgstr "Credencial revogada"
 
 msgid "Revoke credential"
 msgstr "Revogar credencial"
+
+msgid "Simple messages"
+msgstr "Mensagens diretas"
