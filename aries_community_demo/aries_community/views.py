@@ -1037,32 +1037,40 @@ def handle_proof_req_response(
                 val = []
                 attr = []
                 supplied_attrs = {}
+                data = {}
                 supplied_predicates = {}
                 supplied_self_attested_attrs = {}
 
                 proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
 
                 credentials = get_claims_for_proof_request(agent, my_conversation)
-                connection = AgentConnection.objects.filter(agent=agent).get()
+                connections = AgentConnection.objects.filter(agent=agent).all()
 
-                for credential in credentials:
-                    value = credential['cred_info']['referent']
-                    # fetch revoked credentials
-                    if test == True:
-                        cred_rev_id = credential['cred_info']['cred_rev_id']
-                        rev_reg_id = credential['cred_info']['rev_reg_id']
-                        state = AgentConversation.objects.filter(connection=connection, cred_rev_id=cred_rev_id, rev_reg_id=rev_reg_id).get()
-                        credential['cred_info']['state'] = state.status
-                        credential['cred_info']['revoked'] = state.revoked
+                for connection in connections:
+                    print('connection->', connection)
+
+                    for credential in credentials:
+                        value = credential['cred_info']['referent']
+                        # fetch revoked credentials
+
+                        if test == True:
+                            cred_rev_id = credential['cred_info']['cred_rev_id']
+                            rev_reg_id = credential['cred_info']['rev_reg_id']
+                            states = AgentConversation.objects.filter(connection=connection, cred_rev_id=cred_rev_id, rev_reg_id=rev_reg_id).all()
+
+                            for state in states:
+                                tmp = AgentConversation.objects.filter(guid=state.guid).get()
+                                credential['cred_info']['state'] = state.status
+                                credential['cred_info']['revoked'] = state.revoked
+
+                size = 0
 
                 #Remove revoked from credentials
                 if test == True:
                     for i in range(len(credentials)):
-                        if credentials[i]['cred_info']['state'] == "credential_revoked":
-                            del credentials[i]
-                            break
-
-                size = len(credentials)
+                       if credentials[i]['cred_info']['state'] != "credential_revoked":
+                           data = credentials[i]
+                           size = size + 1
 
                 if size == 1:
                     for referent in proof_request["presentation_request"]["requested_attributes"]:
@@ -1075,7 +1083,7 @@ def handle_proof_req_response(
                         'agent_name': my_connection.agent.agent_name,
                         'from_partner_name': my_connection.partner_name,
                         'proof_req_name': proof_req_name,
-                        'selected_claims': credentials,
+                        'selected_claims': data,
                         'proof_request': proof_request,
                     })
                     return render(request, response_template, {'form': form})
@@ -1187,16 +1195,16 @@ def handle_view_proof(
     conversation = conversations[0]
 
     requested_proof = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
-
     screen = {}
 
     test = settings.REVOCATION
-    if test == True:
-        revoked = requested_proof["verified"]
 
-        if revoked == 'false':
-            conversation.status = "credential_revoked"
-            conversation.save()
+ #   if test == True:
+ #       revoked = requested_proof["verified"]
+
+ #       if revoked == 'false':
+ #           conversation.status = "credential_revoked"
+ #           conversation.save()
 
     if requested_proof["state"] == "request_received":
         name = (requested_proof["presentation_request"]["name"])
@@ -1215,7 +1223,8 @@ def handle_view_proof(
             value["identifier"] = requested_proof["presentation"]["identifiers"][value["sub_proof_index"]]
 
         if test == True:
-            return render(request, template, {'conversation': conversation, 'proof': requested_proof, 'screen': screen, 'revoked': revoked})
+#           return render(request, template, {'conversation': conversation, 'proof': requested_proof, 'screen': screen, 'revoked': revoked})
+            return render(request, template, {'conversation': conversation, 'proof': requested_proof, 'screen': screen})
         else:
             return render(request, template, {'conversation': conversation, 'proof': requested_proof, 'screen': screen})
 
@@ -1244,21 +1253,39 @@ def list_wallet_credentials(
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
         credentials = fetch_credentials(agent)
-
-        connection = AgentConnection.objects.filter(agent=agent).get()
+        test = settings.REVOCATION
+        cred = len(credentials)
 
         count = 0
-        for credential in credentials:
-            partner_name = credentials[count]['schema_id']
-            partner_name = partner_name.split(":")
-            partner_name = partner_name[2]
-            credentials[count]['schema_id'] = partner_name
-            cred_rev_id = credentials[count]['cred_rev_id']
-            rev_reg_id = credentials[count]['rev_reg_id']
-            state = AgentConversation.objects.filter(connection=connection, cred_rev_id=cred_rev_id, rev_reg_id=rev_reg_id).get()
-            credentials[count]['state'] = state.status
-            credentials[count]['revoked'] = state.revoked
-            count += 1
+
+        if test == True and cred != 0:
+        # Insert field with information of revocation
+
+            connections = AgentConnection.objects.filter(agent=agent).all()
+
+            for connection in connections:
+                objects = AgentConnection.objects.filter(agent=connection.agent, partner_name=connection.partner_name).get()
+
+                for credential in credentials:
+                    cred_rev_id = credential['cred_rev_id']
+                    rev_reg_id = credential['rev_reg_id']
+                    states = AgentConversation.objects.filter(connection=objects, cred_rev_id=cred_rev_id, rev_reg_id=rev_reg_id).all()
+
+                    for state in states:
+                        tmp = AgentConversation.objects.filter(guid=state.guid).get()
+                        credential['state'] = tmp.status
+                        credential['revoked'] = tmp.revoked
+                        credential['schema_id'] = connection.partner_name
+
+
+        else:
+            credentials = fetch_credentials(agent)
+            for credential in credentials:
+                partner_name = credentials[count]['schema_id']
+                partner_name = partner_name.split(":")
+                partner_name = partner_name[2]
+                credentials[count]['schema_id'] = partner_name
+                count += 1
         return render(request, 'aries/credential/list.html', {'agent_name': agent.agent_name, 'credentials': credentials})
     except:
         raise
