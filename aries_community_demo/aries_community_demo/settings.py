@@ -173,9 +173,14 @@ MODELTRANSLATION_TRANSLATION_REGISTRY = "aries_community.translation"
 STATIC_URL = '/static/'
 
 SITE_ROOT = os.path.dirname(os.path.realpath(__name__))
+
+# Set to anon to default theme or customize theme in django-aries-community/aries_community_demo/aries_community/static folder
+SITE_ORG = 'serpro'
 LOCALE_PATHS = ( os.path.join(SITE_ROOT, 'locale'), )
 
-SITE_ORG = 'anon'
+# Set to True to use credential revocation or to False for not use
+REVOCATION = True
+
 SETTINGS_EXPORT = [
-    'SITE_ORG',
+    'SITE_ORG', 'REVOCATION'
 ]
