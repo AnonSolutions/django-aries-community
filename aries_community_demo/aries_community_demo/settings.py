@@ -175,7 +175,7 @@ STATIC_URL = '/static/'
 SITE_ROOT = os.path.dirname(os.path.realpath(__name__))
 
 # Set to anon to default theme or customize theme in django-aries-community/aries_community_demo/aries_community/static folder
-SITE_ORG = 'serpro'
+SITE_ORG = 'anon'
 LOCALE_PATHS = ( os.path.join(SITE_ROOT, 'locale'), )
 
 # Set to True to use credential revocation or to False for not use
