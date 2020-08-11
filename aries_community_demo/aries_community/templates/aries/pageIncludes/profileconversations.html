@@ -2,19 +2,21 @@
 {% load static %}
 
 <body class="w3-light-grey">
+
         <div class="w3-light-grey" style="margin-left:300px; margin-top: 50px;">
 			<div class="w3-container">
     <body class="w3-light-grey">
-		<h4>{% trans "Messages" %}</h4>
+		<h4>{% trans "User actions" %}</h4>
 		<br>
 		<table class="blueTable">
 		<thead>
 		<tr>
-			<th style="width:200px"><center>GUID</th></center>
-			<th style="width:50px"><center>{% trans "Partner" %}</th></center>
-			<th style="width:30px"><center>{% trans "Status" %}</th></center>
-			<th style="width:100px"><center>{% trans "Type" %}</th></center>
-			<th style="width:200px"><center>{% trans "Operation" %}</th></center>
+			<th style="width:10px"><center>GUID</th></center>
+			<th style="width:10px"><center>{% trans "Partner" %}</th></center>
+			<th style="width:10px"><center>{% trans "Signal" %}</th></center>
+			<th style="width:10px"><center>{% trans "Type" %}</th></center>
+			<th style="width:10px"><center>{% trans "Operation" %}</th></center>
+			<th style="width:10px"><center>{% trans "Status" %}</th></center>
 		</tr>
 		</thead>
 		<tbody>
@@ -27,19 +29,27 @@
 						<td>{{ conversation.connection.partner_name }}</td>
 						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:red" title="offer_received"></i></center></td>
 						<td>{{ conversation.conversation_type }}</td>
-						<td>
-								{% trans "Offer received" %} :
-								<a href="{% url 'cred_offer_response' %}?conversation_id={{conversation.guid}}" class="w3-bar-item w3-button w3-padding">  <i class="fa fa-check" style="color:green"></i>{% trans "Accept" %}</a></td>
+						<td><center><button class="btn">
+								<a href="{% url 'cred_offer_response' %}?conversation_id={{conversation.guid}}"><i class="fa fa-check" title={% trans "Accept" %} style="color:green"></i>{% trans "Accept" %}</a>
+						</center></button></td>
+						<td>{% trans "Offer received" %}</td>
+
 					{% endif %}
 					{% if conversation.status == 'proposal_received' %}
 						<td><i class="fa fa-eye" aria-hidden="true">&nbsp;</i><a href="{% url 'cred_proposal_show' %}?conversation_id={{conversation.guid}}&partner={{ conversation.connection.partner_name }}">{{ conversation.connection.guid }}</a></td>
 						<td>{{ conversation.connection.partner_name }}</td>
 						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:red" title="proposal_received"></i></center></td>
 						<td>{{ conversation.conversation_type }}</td>
+						<td><center>
+							<button class="btn">
+								<a href="{% url 'cred_proposal_response' %}?conversation_id={{conversation.guid}}"><i class="fa fa-check" title={% trans "Accept" %} style="color:green"></i>{% trans "Accept" %}</a>
+							</button>
+							<button class="btn">
+								<a href="{% url 'cred_proposal_delete' %}?conversation_id={{conversation.guid}}"><i class="fa fa-ban" title={% trans "Delete" %} style="color:red"></i>{% trans "Delete" %}</a>
+							</button>
+						</td>
 						<td>
 							{% trans "Proposal acked" %} :
-							<a href="{% url 'cred_proposal_response' %}?conversation_id={{conversation.guid}}" class="w3-bar-item w3-button w3-padding">  <i class="fa fa-check" style="color:green"></i>{% trans "Accept" %}</a>
-							<a href="{% url 'cred_proposal_delete' %}?conversation_id={{conversation.guid}}" class="w3-bar-item w3-button w3-padding">  <i class="fa fa-ban" style="color:red"></i>{% trans "Delete" %}</a>
 						</td>
 					{% endif %}
 					{% if conversation.status == 'proposal_acked' %}
@@ -47,14 +57,15 @@
 						<td>{{ conversation.connection.partner_name }}</td>
 						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="proposal_acked"></i></center></td>
 						<td>{{ conversation.conversation_type }}</td>
-						<td>{% trans "Proposal acked" %}
-						</td>
+						<td><center><i class="fa fa-stop-circle" aria-hidden="true" style="color:red" title="Nothing"></i></center></td>
+						<td>{% trans "Proposal acked" %}</td>
 					{% endif %}
 					{% if conversation.status == 'offer_sent' %}
 						<td><i class="fa fa-eye-slash" aria-hidden="true">&nbsp;</i>{{ conversation.connection.guid }}</td>
 						<td>{{ conversation.connection.partner_name }}</td>
 						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:yellow" title="offer_sent"></i></center></td>
 						<td>{{ conversation.conversation_type }}</td>
+						<td><center><i class="fa fa-stop-circle" aria-hidden="true" style="color:red" title="Nothing"></i></center></td>
 						<td>{% trans "Offer sent" %}</td>
 					{% endif %}
 					{% if conversation.status == 'proposal_sent' %}
@@ -62,14 +73,43 @@
 						<td>{{ conversation.connection.partner_name }}</td>
 						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="proposal_sent"></i></center></td>
 						<td>{{ conversation.conversation_type }}</td>
+						<td><center><i class="fa fa-stop-circle" aria-hidden="true" style="color:red" title="Nothing"></i></center></td>
 						<td>{% trans "Proposal sent" %}</td>
 					{% endif %}
-					{% if conversation.status == 'credential_acked' %}
-						<td><i class="fa fa-eye-slash" aria-hidden="true"></i>{{ conversation.connection.guid }}</td>
+					{% if conversation.status == 'credential_revoked' %}
+						<td><i class="fa fa-eye-slash" aria-hidden="true">&nbsp;</i>{{ conversation.connection.guid }}</a></td>
 						<td>{{ conversation.connection.partner_name }}</td>
-						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="credential_acked"></i></center></td>
+						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="proposal_sent"></i></center></td>
 						<td>{{ conversation.conversation_type }}</td>
-						<td>{% trans "Credential acked" %}</td>
+						<td><center><i class="fa fa-exclamation-triangle" aria-hidden="true" style="color:red" title="Nothing"></i></center></td>
+						<td>{% trans "Revoked credential" %} {{ conversation.revoked }}</td>
+					{% endif %}
+					{% if conversation.status == 'credential_acked' %}
+						{% if agent_type == 'org' %}
+							<td><i class="fa fa-eye-slash" aria-hidden="true"></i>{{ conversation.connection.guid }}</td>
+							<td>{{ conversation.connection.partner_name }}</td>
+							<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="credential_acked"></i></center></td>
+							<td>{{ conversation.conversation_type }}</td>
+							<td>
+								{% if settings.REVOCATION == True %}
+									<center><button class="btn">
+									<a href="{% url 'cred_revoke' %}?conversation_id={{conversation.guid}}&rev_reg_id={{ conversation.rev_reg_id }}&cred_rev_id={{ conversation.cred_rev_id }}">  <i class="fa fa-ban" title={% trans "Revoke" %} style="color:red"></i>{% trans "Revoke" %}</a>
+									</center></button>
+								{% else %}
+									<center><i class="fa fa-stop-circle" aria-hidden="true" style="color:red" title="Nothing"></i></center>
+								{% endif %}
+							</td>
+							<td>
+								{% trans "Credential acked" %}
+							</td>
+						{% else %}
+							<td><i class="fa fa-eye-slash" aria-hidden="true"></i>{{ conversation.connection.guid }}</td>
+							<td>{{ conversation.connection.partner_name }}</td>
+							<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="credential_acked"></i></center></td>
+							<td>{{ conversation.conversation_type }}</td>
+							<td><center><i class="fa fa-stop-circle" aria-hidden="true" style="color:red" title="Nothing"></i></center></td>
+							<td>{% trans "Credential acked" %}</td>
+						{% endif %}
 					{% endif %}
 					</tr>
 				{% endif %}
@@ -83,9 +123,10 @@
 		<tr>
 			<th style="width:200px"><center>GUID</th></center>
 			<th style="width:50px"><center>{% trans "Partner" %}</th></center>
-			<th style="width:30px"><center>{% trans "Status" %}</th></center>
+			<th style="width:30px"><center>{% trans "Signal" %}</th></center>
 			<th style="width:100px"><center>{% trans "Type" %}</th></center>
 			<th style="width:200px"><center>{% trans "Operation" %}</th></center>
+			<th style="width:200px"><center>{% trans "Status" %}</th></center>
 		</tr>
 		</thead>
 
@@ -94,20 +135,24 @@
 			{% if conversation.conversation_type == 'ProofRequest' %}
 				<tr>
 					{% if conversation.status == 'request_received' %}
-						<td><i class="fa fa-eye-slash" aria-hidden="true">&nbsp;</i>{{ conversation.connection.guid }}</td>
+						<td><i class="fa fa-eye" aria-hidden="true">
+							<a href="{% url 'view_proof' %}?conversation_id={{conversation.guid}}">
+							</i>{{ conversation.connection.guid }}</a>
+						</td>
 						<td>{{ conversation.connection.partner_name }}</td>
 						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="request_received"></i></center></td>
 						<td>{{ conversation.conversation_type }}</td>
-						<td>
-							{% trans "Offer received" %} :
-							<a href="{% url 'proof_req_response' %}?conversation_id={{conversation.guid}}" class="w3-bar-item w3-button w3-padding">  <i class="fa fa-check" style="color:green"></i>{% trans "Accept" %}</a>
-						</td>
+						<td><center><button class="btn">
+							<a href="{% url 'proof_req_response' %}?conversation_id={{conversation.guid}}">  <i class="fa fa-check" title={% trans "Accept" %} style="color:green"></i>{% trans "Accept" %}</a>
+						</td></button></center>
+						<td>{% trans "Request received" %}</td>
 		          	{% endif %}
 					{% if conversation.status == 'request_sent' %}
 						<td><i class="fa fa-eye-slash" aria-hidden="true">&nbsp;</i>{{ conversation.connection.guid }}</td>
 						<td>{{ conversation.connection.partner_name }}</td>
 						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="request_sent"></i></center></td>
 						<td>{{ conversation.conversation_type }}</td>
+						<td><center><i class="fa fa-stop-circle" aria-hidden="true" style="color:red" title="Nothing"></center></td>
 						<td>{% trans "Request sent" %}</td>
 		          	{% endif %}
 					{% if conversation.status == 'verified' %}
@@ -118,27 +163,35 @@
 						<td>{{ conversation.connection.partner_name }}</td>
 						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="verified"></i></center></td>
 						<td>{{ conversation.conversation_type }}</td>
-						<td>
-							<i class="fa fa-check" style="color:green"></i>{% trans "Verified" %}
+						<td><center><i class="fa fa-stop-circle" aria-hidden="true" style="color:red" title="Nothing"></i></center></td>
+						<td>{% trans "Verified" %}</td>
+		          	{% endif %}
+					{% if conversation.status == 'credential_revoked' %}
+						<td><i class="fa fa-eye" aria-hidden="true">
+							<a href="{% url 'view_proof' %}?conversation_id={{conversation.guid}}">
+							</i>{{ conversation.connection.guid }}</a>
 						</td>
+						<td>{{ conversation.connection.partner_name }}</td>
+						<td><center><i class="fa fa-exclamation-triangle" style="color:red"></i></center></td>
+						<td>{{ conversation.conversation_type }}</td>
+						<td><center><i class="fa fa-stop-circle" aria-hidden="true" style="color:red" title="Nothing"></i></center></td>
+						<td>{% trans "Revoked" %}</td>
 		          	{% endif %}
 					{% if conversation.status == 'presentation_acked' %}
 						<td><i class="fa fa-eye-slash" aria-hidden="true">&nbsp;</i>{{ conversation.connection.guid }}</td>
 						<td>{{ conversation.connection.partner_name }}</td>
 						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="Presentation acked"></i></center></td>
 						<td>{{ conversation.conversation_type }}</td>
-						<td>
-							{% trans "Verified" %}
-						</td>
+						<td><center><i class="fa fa-stop-circle" aria-hidden="true" style="color:red" title="Nothing"></i></center></td>
+						<td>{% trans "Presentation acked" %}</td>
 		          	{% endif %}
 					{% if conversation.status == 'presentation_sent' %}
 						<td><i class="fa fa-eye-slash" aria-hidden="true">&nbsp;</i>{{ conversation.connection.guid }}</td>
 						<td>{{ conversation.connection.partner_name }}</td>
 						<td><center><i class="fa fa-circle" aria-hidden="true" style="color:green" title="Presentation acked"></i></center></td>
 						<td>{{ conversation.conversation_type }}</td>
-						<td>
-							{% trans "Presentation sent" %}
-						</td>
+						<td><center><i class="fa fa-stop-circle" aria-hidden="true" style="color:red" title="Nothing"></i></center></td>
+						<td>{% trans "Presentation sent" %}</td>
 		          	{% endif %}
 					{% if conversation.status == 'Accepted' %}
 						{% if conversation.conversation_type == 'ProofRequest' %}
@@ -150,11 +203,43 @@
 								{% trans "Completed" %} :
 								<a href=""{% url 'view_proof' %}?conversation_id={{conversation.guid}}" class="w3-bar-item w3-button w3-padding">  <i class="fa fa-check" style="color:green"></i>{% trans "Completed" %}</a>
 							</td>
+							<td>{% trans "Accepted" %}</td>
 						{% endif %}
 		      		{% endif %}
 				</tr>
 			{% endif %}
 
+	{% endfor %}
+	</tbody>
+	</table><br><br><br>
+
+
+	<h4>{% trans "Simple messages" %}</h4><br>
+	<table class="blueTable">
+		<thead>
+		<tr>
+			<th style="width:5px"><center>{% trans "Status" %}</th></center>
+			<th style="width:30px"><center>{% trans "Message Id" %}</th></center>
+			<th style="width:30px"><center>{% trans "Date" %}</th></center>
+
+		</tr>
+		</thead>
+
+	<tbody>
+	{% for message in messages %}
+		<tr>
+
+			<td>
+				{% if message.state == 'received' %}
+					<center><i class="fa fa-envelope" style="color:red"></i></a></center>
+				{% endif %}
+				{% if message.state == 'read' %}
+					<center><i class="fa fa-envelope-open" style="color:green"></i></a></center>
+				{% endif %}
+			</td>
+			<td><i class="fa fa-eye" aria-hidden="true">&nbsp;</i><a href={% url 'message_show' %}?message_id={{message.message_id}}>{{ message.message_id }}</a></td>
+			<td>{{ message.date }}</td>
+		</tr>
 	{% endfor %}
 	</tbody>
 	</table>

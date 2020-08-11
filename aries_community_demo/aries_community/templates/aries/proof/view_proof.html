@@ -23,9 +23,16 @@
                   <h4><b>{{ attr }} :</b> {{ value.raw }}</h4>
                 {% endfor %}
                 {% if conversation.status == 'verified' %}
-                    <h4><b>{% trans "State" %} :</b> {% trans "Verified" %}</h4>
+                    <h4><b>{% trans "Validation" %} :</b> {% trans "Verified" %}</h4>
                 {% else %}
-                    <h4><b>{% trans "State" %} :</b> {% trans "Not verified" %}</h4>
+                    <h4><b>{% trans "Validation" %} :</b> {% trans "Not verified" %}</h4>
+                {% endif %}
+                {% if revoked == 'true' %}
+                    <h4><b>{% trans "State" %} :</b> {% trans "Validates" %}</h4>
+                    <center><i class="fa fa-check-square w3-xxlarge" aria-hidden="true" style="color:green" title="% trans "Validates" %}"></i></center>
+                {% elif revoked == 'false' %}
+                    <h4><b>{% trans "State" %} :</b> {% trans "Revoked" %}</h4>
+                    <center><i class="fa fa-exclamation-triangle w3-xxlarge" aria-hidden="true" style="color:red" title="% trans "Revoked" %}"></i></center>
                 {% endif %}
               </div><br>
 

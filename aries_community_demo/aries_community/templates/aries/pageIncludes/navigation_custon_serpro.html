@@ -1,0 +1,9 @@
+{% if request.session.agent_name == "o_receita" %}
+    <div class="w3-bar w3-top w3-blue w3-large" style="z-index:4">
+{% elif request.session.agent_name == "o_serpro" %}
+    <div class="w3-bar w3-top w3-gray w3-large" style="z-index:4">
+{% elif request.session.agent_name == "o_banco" %}
+    <div class="w3-bar w3-top w3-yellow w3-large" style="z-index:4">
+{% else %}
+    <div class="w3-bar w3-top w3-gray w3-large" style="z-index:4">
+{% endif %}

@@ -1,0 +1,30 @@
+{% extends request.session.ARIES_PROFILE %}
+
+{% load i18n %}
+{% load static %}
+{% block profile_content %}
+
+<body class="w3-light-grey">
+        <div class="w3-light-grey" style="margin-left:400px; margin-top: 50px;">
+          <div class="w3-container">
+
+    <div class="w3-card-4" style="width:50%">
+        <header class="w3-container w3-light-blue">
+            <h1><center><i class="fa fa-tasks" aria-hidden="true"></center></i></h1>
+        </header>
+
+        <div class="w3-container w3-white" style="font-size: 12px">
+            <div class='form-cont' style="width: 100%">
+                <center><b><h3>{% trans "Revealed:" %}</h3></center></b>
+                            <h4><b>{% trans "Proof" %} :</b> {{ conversation.guid }}</h4>
+
+              <div><br>
+                <h4><b>{% trans "Requested attributes" %}:</b></h4>
+                {% for attr, value in screen.items %}
+                  <h4>- {{ attr }}</h4>
+                {% endfor %}
+              </div><br>
+
+            </div>
+        </div>
+{% endblock %}

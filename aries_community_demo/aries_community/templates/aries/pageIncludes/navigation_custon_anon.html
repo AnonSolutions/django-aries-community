@@ -1,0 +1,13 @@
+{% if request.session.agent_name == "o_province_of_bc" %}
+    <div class="w3-bar w3-top w3-light-blue w3-large" style="z-index:4">
+{% elif request.session.agent_name == "o_acme_inc" %}
+    <div class="w3-bar w3-top w3-red w3-large" style="z-index:4">
+{% elif request.session.agent_name == "o_faber_college" %}
+    <div class="w3-bar w3-top w3-blue w3-large" style="z-index:4">
+{% elif request.session.agent_name == "o_anon_solutions_inc" %}
+    <div class="w3-bar w3-top w3-green w3-large" style="z-index:4">
+{% elif request.session.agent_name == "o_thrift_bank" %}
+    <div class="w3-bar w3-top w3-orange w3-large" style="z-index:4">
+{% else %}
+    <div class="w3-bar w3-top w3-gray w3-large" style="z-index:4">
+{% endif %}
