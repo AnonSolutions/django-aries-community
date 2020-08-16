@@ -1,19 +1,28 @@
 {% load i18n %}
 {% load static %}
 
-<div class="w3-bar w3-top w3-blue w3-large" style="z-index:4">
-  <button class="w3-bar-item w3-button w3-hide-large w3-hover-none w3-hover-text-light-grey" onclick="w3_open();"><i class="fa fa-bars"></i>  Menu</button>
-  <span class="w3-bar-item w3-right">
+{% if settings.SITE_ORG == "serpro" %}
+    {% include "aries/pageIncludes/navigation_custon_serpro.html" %}
+{% elif settings.SITE_ORG == "anon" %}
+    {% include "aries/pageIncludes/navigation_custon_anon.html" %}
+{% else %}
+    <div class="w3-bar w3-top w3-gray w3-large" style="z-index:4">
+{% endif %}
+
+    <button class="w3-bar-item w3-button w3-hide-large w3-hover-none w3-hover-text-light-grey" onclick="w3_open();"><i class="fa fa-bars"></i>Menu</button>
+    <span class="w3-bar-item w3-right">
         {% if request.user.is_authenticated %}
                 {% if request.session.ACTIVE_ORG %}
                         <a href="{% url 'aries_profile' %}">
                             {% with '/'|add:settings.SITE_ORG|add:'/'|add:request.session.agent_name|add:'.png' as image_static %}
-                                <img src="{% static image_static %}" title = "{{ request.session.agent_name }}"  alt = "{{ request.session.agent_name }}" tyle="width:50%"/>
+                                <img src="{% static image_static %}" title = "{{ request.session.agent_name }}"  alt = "{{ request.session.agent_name }}"/>
                             {% endwith %}
                         </a>
                 {% else %}
                        <h4><i class="fa fa-user" aria-hidden="true"></i>{{ request.user }}</h4>
                 {% endif %}
         {% endif %}
-</span>
+    </span>
+
 </div>
+
