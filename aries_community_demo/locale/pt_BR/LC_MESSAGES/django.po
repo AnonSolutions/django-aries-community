@@ -22,6 +22,9 @@ msgstr "Pessoa"
 msgid "Organization"
 msgstr "Organização"
 
+msgid "Proofs"
+msgstr "Provas"
+
 msgid "Welcome to Anon.world"
 msgstr "Benvindo a página"
 
@@ -436,6 +439,9 @@ msgstr "Revogada"
 msgid "Validates"
 msgstr "Valida"
 
+msgid "Valid"
+msgstr "Válida"
+
 msgid "Invalid"
 msgstr "Inválida"
 
@@ -456,3 +462,6 @@ msgstr "Revogar credencial"
 
 msgid "Simple messages"
 msgstr "Mensagens diretas"
+
+msgid "You have a revoked credential, please check"
+msgstr "Sua credencial está revogada, por favor verifique!" 
