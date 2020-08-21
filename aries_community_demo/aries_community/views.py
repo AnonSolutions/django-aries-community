@@ -728,8 +728,6 @@ def handle_select_credential_offer(
 
             return render(request, form_template, {'form': form})
 
-
-
 def handle_credential_offer(
     request,
     template='aries/form_response.html'
@@ -772,18 +770,30 @@ def handle_credential_offer(
 
             # build the credential offer and send
 
+            msg = {"type" : "success", "title" : "Success Title", "message" : "Success Message", "buttonText" : "Okay"
+                }
             try:
+                print(my_connection)
                 my_conversation = send_credential_offer(agent, my_connection, cred_attrs, cred_def_id)
-                return render(request, template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
+                handle_alert(request, message=trans('Updated conversation'), type='success')
+                return redirect('/connections/')
+
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
                 return render(request, 'aries/form_response.html', {'msg': 'Failed to update conversation for ' + agent.agent_name})
+                handle_alert(request, message=trans('Failed to update conversation'), type='error')
+                return redirect('/connections/')
 
     else:
         return render(request, 'aries/form_response.html', {'msg': 'Method not allowed'})
 
 
+def handle_alert(request, message, type):
+    if type == 'success':
+        sweetify.success(request, title='', text=message, persistent=True, backdrop=False,icon='success')
+    if type == 'error':
+        sweetify.success(request, title='', text=message, persistent=True, backdrop=False,icon='error')
 
 def handle_cred_offer_response(
     request,
