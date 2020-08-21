@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'sweetify',
     'rest_framework',
     'aries_api',
     'aries_community',
@@ -51,6 +52,7 @@ ARIES_CONFIG = {
     'aca_py_bin_path': '../venv/bin/',
 }
 
+SWEETIFY_SWEETALERT_LIBRARY = 'sweetalert2'
 ARIES_PROFILE_VIEW = 'aries_community.views.profile_view'
 ARIES_DATA_VIEW = 'aries_community.views.data_view'
 ARIES_WALLET_VIEW = 'aries_community.views.wallet_view'
