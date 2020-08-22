@@ -331,8 +331,8 @@ msgstr "Último login"
 msgid "Update user profile"
 msgstr "Atualizar perfil"
 
-msgid "Updated conversation"
-msgstr "Credencial enviada"
+msgid "Updated conversation for"
+msgstr "Credencial enviada para"
 
 msgid "Send Credential Offer"
 msgstr "Envia oferta de credencial"
@@ -466,8 +466,8 @@ msgstr "Mensagens diretas"
 msgid "You have a revoked credential, please check"
 msgstr "Sua credencial está revogada, por favor verifique!"
 
-msgid "Failed to update conversation"
-msgstr "Falha ao enviar credencial"
+msgid "Send message"
+msgstr "Envia mensagem" 
 
-msgid "Connection removed"
-msgstr "Conexão removida" 
+msgid "Message sent"
+msgstr "Mensagem enviada"
