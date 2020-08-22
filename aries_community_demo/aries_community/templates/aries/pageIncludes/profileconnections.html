@@ -1,8 +1,8 @@
 {% load i18n %}
 {% load static %}
 
-<body class="w3-light-grey">
-        <div class="w3-light-grey" style="margin-left:300px; margin-top: 50px;">
+<body class="w3-white">
+        <div class="w3-light-gray" style="margin-left:300px; margin-top: 50px;">
                 <!-- <b>{% trans "Agent Connections" %}</b><BR><BR> -->
                 <div>
                 {% if request.session.ACTIVE_ORG %}
@@ -16,7 +16,7 @@
                         <a href="{% url 'connection_response' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-user-secret"></i>{% trans "External" %}</a>
                 </div>
         </div>
-        <div class="w3-light-grey">
+        <div class="w3-white">
                     <br><br>
         {% for invitation in invitations %}
             <div class="w3-card-4" style="margin-left:350px;width:35%">
