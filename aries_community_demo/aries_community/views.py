@@ -1472,38 +1472,20 @@ def handle_revoke_credentials(
         return render(request, form_template, {'form': form})
 
 
-def handle_send_message(
-     request,
-     form_template='aries/conversation/form_message.html',
-     response_template='aries/connection/list.html'
-):
+def handle_send_message(request):
     """
            Send simple message
     """
-    if request.method=='POST':
-        form = SendMessageForm(request.POST)
 
-        if not form.is_valid():
-            return render(request, form_template, {'msg': 'Form error', 'msg_txt': str(form.errors)})
-        else:
-            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
-            cd = form.cleaned_data
-            connection_id = cd.get('connection_id')
-            message = cd.get('message')
-            message_status = send_simple_message(agent, connection_id, message)
-
-            return list_connections(
-                request
-            )
-    else:
-        # find conversation request
-        (connection, agent_type, agent_owner) = agent_for_current_session(request)
-        connection_id = request.GET.get('connection_id', None)
-
-        form = SendMessageForm(initial={'connection_id': connection_id, 'agent_name': connection_id})
-
-        return render(request, form_template, {'form': form})
+    connection_id = request.GET.get('connection_id', None)
+    message = request.GET.get('message')
+    print('message->', message)
+    print('connection_id->', connection_id)
+    message_status = send_simple_message(agent, connection_id, message)
+    handle_alert(request, message=trans('Message sent'), type='success')
+    return redirect('/connections/')
 
 
 def handle_credential_proposal(
