@@ -76,7 +76,7 @@
                         {% endif %}
                     {% else %}
                         <h4><center>
-                            <a href="{% url 'remove_connection' %}?connection_id={{connection.guid}}"><i class="fa fa-remove" title="{% trans "Remove" %}"></i></a>
+                            <a onclick="removeConnection('connection_id={{connection.guid}}')"> <i class="fa fa-remove" title="{% trans "Remove connection" %}"></i></a>
                             <a href="{% url 'select_credential_proposal' %}?connection_id={{connection.guid}}&connection_partner_name={{connection.partner_name}}"><i class="fa fa-id-card" title="{% trans "Credential proposal" %}"></i></a>
                         </h4></center>
                     {% endif %}
