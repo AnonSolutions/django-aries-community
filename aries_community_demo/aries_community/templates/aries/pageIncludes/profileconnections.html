@@ -71,7 +71,7 @@
                                 <a href="{% url 'select_credential_offer' %}?connection_id={{connection.guid}}"><i class="fa fa-id-card" title="{% trans "Send Credential" %}"></i></a>
                                 <a onclick="removeConnection('connection_id={{connection.guid}}')"> <i class="fa fa-remove" title="{% trans "Remove connection" %}"></i></a>
                                 <a href="{% url 'select_proof_request' %}?connection_id={{connection.guid}}"><i class="fa fa-refresh" title="{% trans "Send Proof Request" %}"></i></a>
-                                <a href="{% url 'send_message' %}?connection_id={{connection.guid}}"><i class="fa fa-envelope" title="{% trans "Send message" %}"></i></a>
+                                <a onclick="sendMessage('connection_id={{connection.guid}}')"> <i class="fa fa-envelope" title="{% trans "Send message" %}"></i></a>
                             </center></h4>
                         {% endif %}
                     {% else %}
@@ -102,6 +102,20 @@
         }).then((result) => {
             if (result.value) {
                  window.location = "{% url 'remove_connection' %}?" + connection_id;
+        }
+    })
+    }
+   function sendMessage(connection_id) {
+        Swal.fire({
+            input: 'textarea',
+            inputPlaceholder: '{% trans "Send message" %}',
+            inputAttributes: {
+            'aria-label': '{% trans "Send message" %}'
+            },
+            showCancelButton: true
+        }).then((result) => {
+            if (result.value) {
+                window.location = "{% url 'send_message' %}?" + connection_id +"&message=" + result.value;
         }
     })
     }
