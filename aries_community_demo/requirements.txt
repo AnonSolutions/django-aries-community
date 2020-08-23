@@ -13,5 +13,6 @@ pyqrcode
 pypng
 requests
 pillow
+sweetify
 django-settings-export
 git+https://github.com/ianco/aries-cloudagent-python#egg=aries-cloudagent
