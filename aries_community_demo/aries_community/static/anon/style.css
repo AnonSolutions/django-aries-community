@@ -1631,3 +1631,38 @@ table.blueTable tfoot .links a{
 }
 
 .footer-logos{padding:25px 0;background:#0041b2}
+
+.o_receita {
+    top:0
+    background: #3399ff;
+    font-size:18px;
+    display:inline-block;
+    width:auto;
+}
+
+/* Float four columns side by side */
+.column {
+  float: left;
+  width: 50%;
+  padding: 0 5px;
+}
+
+/* Remove extra left and right margins, due to padding */
+.row {margin: 0;}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+  padding: 0 20px;
+}
+
+/* Responsive columns */
+@media screen and (max-width: 800px) {
+  .column {
+    width: 100%;
+    display: block;
+    margin-bottom: 20px;
+  }
+}
