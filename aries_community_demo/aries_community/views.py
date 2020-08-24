@@ -494,7 +494,10 @@ def handle_connection_response(
                 invitation.connecion_guid = my_connection.guid
                 invitation.save()
 
-                return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
+#                return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
+                handle_alert(request, message=trans('Updated conversation'), type='success')
+                return redirect('/connections/')
+
             except IndyError:
                 # ignore errors for now
                 print(" >>> Failed to update request for", agent.agent_name)
@@ -781,8 +784,6 @@ def handle_credential_offer(
 
             except:
                 # ignore errors for now
-                print(" >>> Failed to update conversation for", agent.agent_name)
-                return render(request, 'aries/form_response.html', {'msg': 'Failed to update conversation for ' + agent.agent_name})
                 handle_alert(request, message=trans('Failed to update conversation'), type='error')
                 return redirect('/connections/')
 
@@ -796,69 +797,26 @@ def handle_alert(request, message, type):
     if type == 'error':
         sweetify.success(request, title='', text=message, persistent=True, backdrop=False,icon='error')
 
-def handle_cred_offer_response(
-    request,
-    form_template='aries/credential/offer_response.html',
-    response_template='aries/form_response.html'
-    ):
+def handle_cred_offer_response(request):
     """
     Respond to a Credential Offer by sending a Credential Request.
     """
 
-    if request.method=='POST':
-        form = SendCredentialResponseForm(request.POST)
-        if not form.is_valid():
-            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
-        else:
-            cd = form.cleaned_data
-            conversation_id = cd.get('conversation_id')
+    conversation_id = request.GET.get('conversation_id', None)
 
-            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
     
-            # find conversation request
-            conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
-            my_conversation = conversations[0]
-            # TODO validate conversation id
-            my_connection = my_conversation.connection
+    # find conversation request
+    conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
+    my_conversation = conversations[0]
+    # TODO validate conversation id
+    my_connection = my_conversation.connection
 
-            # build the credential request and send
-            try:
-                my_conversation = send_credential_request(agent, my_conversation)
-                time.sleep(0.5)
-                credentials = fetch_credentials(agent)
-                return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
-            except:
-                # ignore errors for now
-                print(" >>> Failed to update conversation for", agent.agent_name)
-                return render(request, 'aries/form_response.html', {'msg': 'Failed to update conversation for ' + agent.agent_name})
-
-    else:
-        # find conversation request, fill in form details
-        conversation_id = request.GET.get('conversation_id', None)
-        (agent, agent_type, agent_owner) = agent_for_current_session(request)
-        conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
-        # TODO validate conversation id
-        conversation = conversations[0]
-        agent_conversation = get_agent_conversation(agent, conversation_id, CRED_EXCH_CONVERSATION)
-
-
-
-        proposed_attrs = agent_conversation["credential_proposal_dict"]["credential_proposal"]["attributes"]
-        cred_attrs = {}
-        for i in range(len(proposed_attrs)):
-            cred_attrs[proposed_attrs[i]["name"]] = proposed_attrs[i]["value"]
-        # TODO validate connection id
-        connection = conversation.connection
-        form = SendCredentialResponseForm(initial={ 
-                                                 'conversation_id': conversation_id,
-                                                 'agent_name': connection.agent.agent_name,
-                                                 'from_partner_name': connection.partner_name,
-                                                 'claim_name': agent_conversation['credential_definition_id'],
-                                                 'credential_attrs': cred_attrs,
-                                                 'libindy_offer_schema_id': agent_conversation['schema_id']
-                                                })
-
-        return render(request, form_template, {'form': form})
+    my_conversation = send_credential_request(agent, my_conversation)
+    time.sleep(0.5)
+    credentials = fetch_credentials(agent)
+    handle_alert(request, message=trans('accepted credential'), type='success')
+    return redirect('/connections/')
 
 
 ######################################################################
@@ -1004,7 +962,10 @@ def handle_send_proof_request(
             try:
                 conversation = send_proof_request(agent, my_connection, proof_name, requested_attrs, requested_predicates)
 
-                return render(request, template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
+#               return render(request, template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
+                handle_alert(request, message=trans('Proof request was sent to'), type='success')
+                return redirect('/connections/')
+
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
@@ -1341,7 +1302,7 @@ def handle_remove_connection(request):
         guid_partner_agent_owner.delete()
         handle_alert(request, message=trans('Connection removed'), type='success')
         return redirect('/connections/')
-    
+
 #Function created to allow updating of information in the user's profile
 def handle_update_user(
     request,
@@ -1531,7 +1492,9 @@ def handle_credential_proposal(
 
             try:
                 my_conversation = send_credential_proposal(agent, my_connection, cred_attrs, cred_def_id, schema, connection_id)
-                return render(request, template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
+#               return render(request, template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
+                handle_alert(request, message=trans('Credential proposal sent'), type='success')
+                return redirect('/connections/')
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
@@ -1658,7 +1621,9 @@ def handle_cred_proposal_response(
 
             try:
                 my_conversation = send_credential_offer_proposal(conversation_id, agent, my_connection[0], cred_attrs, claim_name)
-                return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
+#               return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
+                handle_alert(request, message=trans('Credential sent'), type='success')
+                return redirect('/conversations/')
             except:
                 # ignore errors for now
                 print(" >>> Failed to update conversation for", agent.agent_name)
@@ -1781,64 +1746,18 @@ def handle_message_remove(
     finally:
         pass
 
-def handle_cred_proposal_delete(
-        request,
-        form_template='aries/credential/proposal_delete.html',
-        response_template='aries/form_response.html'
-        ):
-    """
-    Respond to a Credential Offer by sending a Credential Request.
-    """
+def handle_cred_proposal_delete(request):
+#    """
+#    Respond to a Credential Offer by sending a Credential Request.
+#    """
 
-    if request.method == 'POST':
-        form = CredentialDeleteForm(request.POST)
-        if not form.is_valid():
-            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
-        else:
-            cd = form.cleaned_data
-            conversation_id = cd.get('conversation_id')
-            credential_attrs = cd.get('credential_attrs')
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
-            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+    conversation_id = request.GET.get('conversation_id', None)
+    credentials = remove_issue_credential(agent, conversation_id)
+    conversations = AgentConversation.objects.filter(guid=conversation_id).delete()
 
-            try:
-                credentials = remove_issue_credential(agent, conversation_id)
-                conversations = AgentConversation.objects.filter(guid=conversation_id).delete()
-                return render(request, response_template, {'msg': trans('Deleted credential proposal for') + ' ' + agent.agent_name})
-            except:
-                # ignore errors for now
-                print(" >>> Failed to update conversation for", agent.agent_name)
-                return render(request, 'aries/form_response.html',
-                              {'msg': 'Failed to update conversation for' + ' ' + agent.agent_name})
 
-    else:
-        # find conversation request, fill in form details
-        conversation_id = request.GET.get('conversation_id', None)
-        (agent, agent_type, agent_owner) = agent_for_current_session(request)
-
-        conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
-        # TODO validate conversation id
-        conversation = conversations[0]
-        agent_conversation = get_agent_conversation(agent, conversation_id, CRED_EXCH_CONVERSATION)
-        proposed_attrs = agent_conversation["credential_proposal_dict"]["credential_proposal"]["attributes"]
-
-        cred_attrs = {}
-        for i in range(len(proposed_attrs)):
-            cred_attrs[proposed_attrs[i]["name"]] = proposed_attrs[i]["value"]
-        # TODO validate connection id
-
-        connection = conversation.connection
-
-        cred_def_id = agent_conversation['credential_proposal_dict']['cred_def_id']
-        schema_id = agent_conversation['credential_proposal_dict']['schema_id']
-
-        form = CredentialDeleteForm(initial={
-            'agent_name': connection.agent.agent_name,
-            'conversation_id': conversation_id,
-            'credential_attrs': cred_attrs
-        })
-
-        return render(request, form_template, {'form': form})
 
 def handle_view_dashboard(
     request,
@@ -1905,69 +1824,35 @@ def handle_view_dashboard(
                                       'count_credentials': count_credentials})
 
 
-def handle_cred_revoke(
-        request,
-        form_template='aries/credential/revoke_response.html',
-        response_template='aries/form_response.html'
-):
+def handle_cred_revoke(request):
     """
-    Respond to a Credential Offer by sending a Credential Request.
+    Revoke credential
     """
 
-    if request.method == 'POST':
-        form = SendCredentialRevokeForm(request.POST)
-        if not form.is_valid():
-            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
-        else:
-            cd = form.cleaned_data
-            conversation_id = cd.get('conversation_id')
-            cred_rev_id = cd.get('cred_rev_id', None)
-            rev_reg_id = cd.get('rev_reg_id', None)
+    conversation_id = request.GET.get('conversation_id', None)
+    print(conversation_id)
+    cred_rev_id = request.GET.get('cred_rev_id', None)
+    print(cred_rev_id)
+    rev_reg_id = request.GET.get('rev_reg_id', None)
+    print(rev_reg_id)
 
-            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
-            # find conversation request
+    revoke_status = revoke_credential(agent, rev_reg_id, cred_rev_id)
+    revoke_status = get_revoke_registry(agent, rev_reg_id)
+    connections = AgentConversation.objects.filter(guid=conversation_id).get()
+    conversation_id = connections.connection.guid
 
-            # build the credential request and send
-            try:
-                revoke_status = revoke_credential(agent, rev_reg_id, cred_rev_id)
-                revoke_status = get_revoke_registry(agent, rev_reg_id)
-                connections = AgentConversation.objects.filter(guid=conversation_id).get()
-                conversation_id = connections.connection.guid
+    message = trans('Revoked credential') + " " + conversation_id + " " + agent_owner + " " + cred_rev_id + " " + rev_reg_id
+    message_status = send_simple_message(agent, conversation_id, message)
 
-                message = trans('Revoked credential') + " " + conversation_id + " " + agent_owner + " " + cred_rev_id + " " + rev_reg_id
-                message_status = send_simple_message(agent, conversation_id, message)
+    conversations = AgentConversation.objects.filter(rev_reg_id=rev_reg_id, cred_rev_id=cred_rev_id).all()
 
-                conversations = AgentConversation.objects.filter(rev_reg_id=rev_reg_id, cred_rev_id=cred_rev_id).all()
+    for conversation in conversations:
+        update = AgentConversation.objects.filter(guid=conversation.guid).get()
+        update.status = "credential_revoked"
+        update.revoked = datetime.now()
+        update.save()
 
-                for conversation in conversations:
-                    update = AgentConversation.objects.filter(guid=conversation.guid).get()
-                    update.status = "credential_revoked"
-                    update.revoked = datetime.now()
-                    update.save()
-
-                return render(request, response_template,
-                              {'msg': trans('Revoked credential') })
-            except:
-                # ignore errors for now
-                print(" >>> Failed to update conversation for", agent.agent_name)
-                return render(request, 'aries/form_response.html',
-                              {'msg': trans('Failed to update conversation for ') + agent.agent_name})
-
-    else:
-        # find conversation request, fill in form details
-        conversation_id = request.GET.get('conversation_id', None)
-
-        rev_reg_id = request.GET.get('rev_reg_id', None)
-        cred_rev_id = request.GET.get('cred_rev_id', None)
-
-        (agent, agent_type, agent_owner) = agent_for_current_session(request)
-
-        form = SendCredentialRevokeForm(initial={
-            'agent_name': agent.agent_name,
-            'conversation_id': conversation_id,
-            'rev_reg_id': rev_reg_id,
-            'cred_rev_id': cred_rev_id
-        })
-
-        return render(request, form_template, {'form': form})
+    handle_alert(request, message=trans('Credential revoked'), type='success')
+    return redirect('/conversations/')
