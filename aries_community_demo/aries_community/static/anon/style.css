@@ -1632,14 +1632,6 @@ table.blueTable tfoot .links a{
 
 .footer-logos{padding:25px 0;background:#0041b2}
 
-.o_receita {
-    top:0
-    background: #3399ff;
-    font-size:18px;
-    display:inline-block;
-    width:auto;
-}
-
 /* Float four columns side by side */
 .column {
   float: left;
