@@ -1598,7 +1598,6 @@ def handle_select_credential_proposal(
 
             return render(request, form_template, {'form': form})
 
- 
 def handle_cred_proposal_response(
         request,
         form_template='aries/credential/proposal_response.html',
@@ -1779,10 +1778,16 @@ def handle_cred_proposal_delete(request):
 
     (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
-    conversation_id = request.GET.get('conversation_id', None)
-    credentials = remove_issue_credential(agent, conversation_id)
-    conversations = AgentConversation.objects.filter(guid=conversation_id).delete()
-
+    try:
+        conversation_id = request.GET.get('conversation_id', None)
+        credentials = remove_issue_credential(agent, conversation_id)
+        conversations = AgentConversation.objects.filter(guid=conversation_id).delete()
+        handle_alert(request, message=trans('Credential proposal remove'), type='success')
+        return redirect('/conversations/')
+    except:
+        raise
+    finally:
+        pass
 
 
 def handle_view_dashboard(
