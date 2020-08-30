@@ -4,6 +4,8 @@ from django.contrib.auth import authenticate, get_user_model, login
 from django.urls import reverse
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as trans
+from django.http import HttpResponseRedirect
+
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -15,6 +17,7 @@ import string
 import ast
 import time
 import sweetify
+import pkce
 
 from .forms import *
 from .models import *
@@ -212,17 +215,17 @@ def profile_view(
 
 # expects a agent to be opened in the current session
     (agent, agent_type, agent_owner) = agent_for_current_session(request)  
-    
+    print('agent_type->', agent, agent_type, agent_owner)
+
     if agent_type == 'user':
         connections = AriesUser.objects.filter(email=agent_owner).all()
     else:
         name = agent_owner.split()
         first_name = name[0]
-        last_name = name[1]
-        connections = AriesUser.objects.filter(first_name=first_name, last_name=last_name).all()
+        connections = AriesUser.objects.filter(first_name=first_name).all()
+        print('connections->', connections)
     return render(request, template,
         {'agent_name': agent.agent_name, 'connections': connections})
-
 
 
 def data_view(
@@ -279,9 +282,43 @@ def list_connections(
 
     # expects a agent to be opened in the current session
     (agent, agent_type, agent_owner) = agent_for_current_session(request)
+    data_source = "["
+    data_source += "[{'v':'" + agent_owner + "', 'f':'" + agent_owner + "<div>" \
+                   + \
+                   '<a href="../send_invitation_org" class="w3-bar-item w3-button w3-padding"><i class="fa fa-university"></i>Org</a>' \
+                   '<a href="../connection_response" class="w3-bar-item w3-button w3-padding"><i class="fa fa-user-secret"></i>Ext</a>' \
+                   + "</div>'},'','']"
+
     connections = AgentConnection.objects.filter(agent=agent).all()
     invitations = AgentInvitation.objects.filter(agent=agent, connecion_guid='').all()
-    return render(request, template, {'agent_name': agent.agent_name, 'connections': connections, 'invitations': invitations})
+
+    print('agent->', agent_owner)
+
+
+    for connection in connections:
+        print('->', connection.guid)
+        #        data_source += "['" + connection.partner_name + "','" + agent_owner + "', ''],"
+        data_source += ",[{'v':'" + connection.partner_name + "', 'f':'" + connection.partner_name + "<div>" + \
+                       '<a href="../select_credential_proposal?connection_id='+ connection.guid  +'&connection_partner_name='+connection.partner_name+'"    class="w3-bar-item w3-button w3-padding"><i class="fa fa-id-card"></i></a>' \
+                       '<a href="../remove_connection?connection_id='+ connection.guid +'"                                                                  class="w3-bar-item w3-button w3-padding"><i class="fa fa-remove"></i></a>' \
+                       + "</div>'},'" + agent_owner + "','']"
+
+    data_source += "]"
+    print('data_source->', data_source)
+
+    #   <a onclick = "removeConnection('connection_id={{connection.guid}}')" >
+
+    #    'v': 'teste1', 'f': '<br><b>Teste<b><br><br>'
+    #    '<a href="removeConnection(' + connection + ')" class="w3-bar-item w3-button w3-padding"><i class="fa fa-id-card"></i></a>'
+    #    '<a href="" class="w3-bar-item w3-button w3-padding"><i class="fa fa-remove"></i></a>'
+    #    '<a href="" class="w3-bar-item w3-button w3-padding"><i class="fa fa-refresh"></i></a>'
+    #    '<a href="" class="w3-bar-item w3-button w3-padding"><i class="fa fa-envelope"></i></a>'
+
+    data = data_source
+
+    return render(request, template,{'agent_name': agent.agent_name, 'connections': connections, 'invitations': invitations,'data': data})
+
+
 
 
 def handle_connection_request_organization(
@@ -381,6 +418,10 @@ def handle_connection_request_organization(
     else:
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
         form = SendConnectionInvitationFormList(initial={'agent_name': agent.agent_name})
+        html = '<h4><p style="text-align:left;">'
+
+        html += '</p>'
+        sweetify.success(request, title='', html=html, persistent=True, backdrop=False, icon='info', width=600)
         return render(request, form_template, {'form': form})
     
 
@@ -713,12 +754,40 @@ def handle_select_credential_offer(
 
     else:
         # find conversation request
+
         connection_id = request.GET.get('connection_id', None)
+        print(connection_id)
+
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
         connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
 
+        partner_name = connections[0].partner_name
+        print(connections)
+
+        connection = connections[0]
+        partner_credentials = AgentConversation.objects.filter(connection=connection, revoked='').all()
+        test = len(partner_credentials)
+        print('test->', test)
+
+        if test > 0:
+            print('test->', test)
+            for partner_credential in partner_credentials:
+                guid = partner_credential.guid
+                cred = AgentConversation.objects.filter(guid=guid).get()
+                print('cred->', cred.status)
+
+                if cred.status == 'credential_acked':
+                    handle_alert(request, message=trans('Recipient already has an active credential'), type='error')
+                    return redirect('/connections/')
+                elif cred.status == 'offer_sent':
+                    handle_alert(request, message=trans('Recipient have credencial waiting to aprove'), type='error')
+                    return redirect('/connections/')
+
         #If number of IndyCredentialDefinition equal one don't need to choose
+
         credential = IndyCredentialDefinition.objects.filter(agent__agent_name=agent.agent_name).all()
+        print('credential->', credential)
+
         cont = len(credential)
 
         if cont == 1:
@@ -783,6 +852,7 @@ def handle_credential_offer(
                 }
             try:
                 print(my_connection)
+                print('---->', agent, my_connection, cred_attrs, cred_def_id)
                 my_conversation = send_credential_offer(agent, my_connection, cred_attrs, cred_def_id)
                 handle_alert(request, message=trans('Updated conversation'), type='success')
                 return redirect('/connections/')
@@ -986,7 +1056,6 @@ def handle_send_proof_request(
     else:
         return render(request, 'aries/form_response.html', {'msg': 'Method not allowed'})
 
-
 def handle_proof_req_response(
         request,
         form_template='aries/proof/send_response.html',
@@ -996,102 +1065,124 @@ def handle_proof_req_response(
     """
     First stage in responding to a Proof Request - confirm to search for claims.
     """
-    (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
-    conversation_id = request.GET.get('conversation_id', None)
-    conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
-    conversation = conversations[0]
-    connection = conversation.connection
-    proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
-    proof_req_name = proof_request['presentation_request']['name']
-
-    test = settings.REVOCATION
-    # find conversation request
-    conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
-    my_conversation = conversations[0]
-    # TODO validate conversation id
-    # TODO validate connection id
-    my_connection = my_conversation.connection
-
-    # find claims for this proof request and display for the user
-    try:
-        val = []
-        attr = []
-        supplied_attrs = {}
-        data = {}
-        supplied_predicates = {}
-        supplied_self_attested_attrs = {}
-
-        proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
-
-        credentials = get_claims_for_proof_request(agent, my_conversation)
-
-        if len(credentials) == 0:
-            return render(request, 'aries/form_response.html',
-                          {'msg': 'No credential with valid data ' + agent.agent_name})
+    if request.method == 'POST':
+        form = SendProofReqResponseForm(request.POST)
+        if not form.is_valid():
+            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
         else:
-            connections = AgentConnection.objects.filter(agent=agent).all()
 
-            for connection in connections:
+            cd = form.cleaned_data
+            conversation_id = cd.get('conversation_id')
+            proof_req_name = cd.get('proof_req_name')
 
-                for credential in credentials:
-                    value = credential['cred_info']['referent']
-                    # fetch revoked credentials
+            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+            test = settings.REVOCATION
+            # find conversation request
+            conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
+            my_conversation = conversations[0]
+            # TODO validate conversation id
+            # TODO validate connection id
+            my_connection = my_conversation.connection
+
+            # find claims for this proof request and display for the user
+            try:
+                val = []
+                attr = []
+                supplied_attrs = {}
+                data = {}
+                supplied_predicates = {}
+                supplied_self_attested_attrs = {}
+
+                proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
+
+                credentials = get_claims_for_proof_request(agent, my_conversation)
+
+                if len(credentials) == 0:
+                    return render(request, 'aries/form_response.html',{'msg': 'No credential with valid data ' + agent.agent_name})
+                else:
+                    connections = AgentConnection.objects.filter(agent=agent).all()
+
+
+                    for connection in connections:
+
+                        for credential in credentials:
+                            value = credential['cred_info']['referent']
+                            # fetch revoked credentials
+
+                            if test == True:
+                                cred_rev_id = credential['cred_info']['cred_rev_id']
+                                rev_reg_id = credential['cred_info']['rev_reg_id']
+                                states = AgentConversation.objects.filter(connection=connection, cred_rev_id=cred_rev_id, rev_reg_id=rev_reg_id).all()
+
+                                for state in states:
+                                    tmp = AgentConversation.objects.filter(guid=state.guid).get()
+                                    credential['cred_info']['state'] = state.status
+                                    credential['cred_info']['revoked'] = state.revoked
+
+                    size = 0
+
+                    #Remove revoked from credentials
 
                     if test == True:
-                        cred_rev_id = credential['cred_info']['cred_rev_id']
-                        rev_reg_id = credential['cred_info']['rev_reg_id']
-                        states = AgentConversation.objects.filter(connection=connection, cred_rev_id=cred_rev_id,
-                                                                  rev_reg_id=rev_reg_id).all()
-
-                        for state in states:
-                            tmp = AgentConversation.objects.filter(guid=state.guid).get()
-                            credential['cred_info']['state'] = state.status
-                            credential['cred_info']['revoked'] = state.revoked
-
-            size = 0
-
-            # Remove revoked from credentials
-
-            if test == True:
-                if settings.ALERT_REVOKED_CREDENTIALS == True:
-                    for i in range(len(credentials)):
-                        if credentials[i]['cred_info']['state'] != "credential_revoked":
-                            data = credentials[i]
+                        if settings.ALERT_REVOKED_CREDENTIALS == True:
+                            for i in range(len(credentials)):
+                               if credentials[i]['cred_info']['state'] != "credential_revoked":
+                                   data = credentials[i]
+                                   size = size + 1
+                        else:
+                            data = credentials
                             size = size + 1
-                else:
-                    data = credentials
-                    size = size + 1
 
-            if len(data) == 0:
-                handle_alert(request, message=trans('You have a revoked credential, please check'), type='error')
-                return redirect('/conversations/')
-            else:
-                if size == 1:
-                    for referent in proof_request["presentation_request"]["requested_attributes"]:
-                        supplied_attrs[referent] = {"cred_id": value, "revealed": True}
+                    if len(data) == 0:
+                        handle_alert(request, message=trans('You have a revoked credential, please check'),type='error')
+                        return redirect('/conversations/')
+                    else:
+                        if size == 1:
+                            for referent in proof_request["presentation_request"]["requested_attributes"]:
+                                supplied_attrs[referent] = {"cred_id": value, "revealed": True}
 
-                    proof_data = send_claims_for_proof_request(agent, my_conversation, supplied_attrs,
-                                                               supplied_predicates, supplied_self_attested_attrs)
-                    handle_alert(request, message=trans('Sent proof request'), type='success')
-                    return redirect('/conversations/')
+                            proof_data = send_claims_for_proof_request(agent, my_conversation, supplied_attrs, supplied_predicates, supplied_self_attested_attrs)
+                            handle_alert(request, message=trans('Sent proof request'), type='success')
+                            return redirect('/conversations/')
 
-                else:
-                    form = SelectProofReqClaimsForm(initial={
-                        'conversation_id': conversation_id,
-                        'agent_name': my_connection.agent.agent_name,
-                        'from_partner_name': my_connection.partner_name,
-                        'proof_req_name': proof_req_name,
-                        'selected_claims': data,
-                        'proof_request': proof_request,
-                    })
-                    return render(request, response_template, {'form': form})
-    except Exception as e:
-        # ignore errors for now
-        print(" >>> Failed to find claims for", agent.agent_name, e)
-        handle_alert(request, message=trans('Failed to find claims'), type='error')
-        return redirect('/conversations/')
+                        else:
+                            form = SelectProofReqClaimsForm(initial={
+                                'conversation_id': conversation_id,
+                                'agent_name': my_connection.agent.agent_name,
+                                'from_partner_name': my_connection.partner_name,
+                                'proof_req_name': proof_req_name,
+                                'selected_claims': data,
+                                'proof_request': proof_request,
+                            })
+                            return render(request, response_template, {'form': form})
+            except Exception as e:
+                # ignore errors for now
+                print(" >>> Failed to find claims for", agent.agent_name, e)
+                return render(request, 'aries/form_response.html',
+                                {'msg': 'Failed to find claims for ' + agent.agent_name})
 
+    else:
+        # find conversation request, fill in form details
+        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+        conversation_id = request.GET.get('conversation_id', None)
+        conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
+        # TODO validate conversation id
+        conversation = conversations[0]
+        # TODO validate connection id
+        connection = conversation.connection
+        proof_request = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
+
+        for referent in proof_request["presentation_request"]["requested_attributes"]:
+
+            form = SendProofReqResponseForm(initial={
+                'conversation_id': conversation_id,
+                'agent_name': agent.agent_name,
+                'from_partner_name': connection.partner_name,
+                'proof_req_name': proof_request['presentation_request']['name'],
+            })
+
+    return render(request, form_template, {'form': form})
 
 def handle_proof_select_claims(
     request,
@@ -1172,7 +1263,6 @@ def handle_view_proof(
     conversation = conversations[0]
 
     requested_proof = get_agent_conversation(agent, conversation_id, PROOF_REQ_CONVERSATION)
-    print('requested_proof->', requested_proof)
 
     screen = {}
 
@@ -1190,8 +1280,6 @@ def handle_view_proof(
         for attr, value in requested_proof["presentation_request"]["requested_attributes"].items():
             attr = attr.replace('_referent', '')
             screen[attr] = value
-
-        print(screen)
 
         html = '<h4><p style="text-align:left;">'
         for x, y in screen.items():
@@ -1334,7 +1422,6 @@ def handle_update_user(
     else:
         name = agent_owner.split()
         first_name = name[0]
-        last_name = name[1]
         connections = AriesUser.objects.get(first_name=first_name)
         define = AriesUser.objects.filter(first_name=first_name).get()
         
@@ -1598,82 +1685,54 @@ def handle_select_credential_proposal(
 
             return render(request, form_template, {'form': form})
 
-def handle_cred_proposal_response(
-        request,
-        form_template='aries/credential/proposal_response.html',
-        response_template='aries/form_response.html'
-        ):
+def handle_cred_proposal_response(request):
     """
     Respond to a Credential Offer by sending a Credential Request.
     """
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
-    if request.method == 'POST':
-        form = SendCredentialResponseFormProposal(request.POST)
-        if not form.is_valid():
-            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
-        else:
-            cd = form.cleaned_data
-            conversation_id = cd.get('conversation_id')
-            claim_name =  cd.get('claim_name')
-            partner_name = cd.get('from_partner_name')
-            credential_attrs = cd.get('credential_attrs')
-            libindy_offer_schema_id = cd.get('libindy_offer_schema_id')
+    conversation_id = request.GET.get('conversation_id', None)
+    conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
 
-            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+    # TODO validate conversation id
+    conversation = conversations[0]
+    agent_conversation = get_agent_conversation(agent, conversation_id, CRED_EXCH_CONVERSATION)
+    proposed_attrs = agent_conversation["credential_proposal_dict"]["credential_proposal"]["attributes"]
 
+    cred_attrs = {}
 
-            # find conversation request
+    for i in range(len(proposed_attrs)):
+        cred_attrs[proposed_attrs[i]["name"]] = proposed_attrs[i]["value"]
+    # TODO validate connection id
 
-            my_connection = AgentConnection.objects.filter(agent=agent, partner_name=partner_name).all()
+    connection = conversation.connection
+    cred_def_id = agent_conversation['credential_proposal_dict']['cred_def_id']
+    schema_id = agent_conversation['credential_proposal_dict']['schema_id']
 
+    my_connection = AgentConnection.objects.filter(agent=agent, partner_name=connection.partner_name).all()
 
-            schema_attrs = cd.get('credential_attrs')
-            res = ast.literal_eval(schema_attrs)
-            cred_attrs = []
-            for attr in res:
-                cred_attrs.append({"name": attr, "value": res[attr]})
+    schema_attrs = cred_attrs
+    cred_attrs_tmp = []
+    for attr in schema_attrs:
+        cred_attrs_tmp.append({"name": attr, "value": schema_attrs[attr]})
 
-            try:
-                my_conversation = send_credential_offer_proposal(conversation_id, agent, my_connection[0], cred_attrs, claim_name)
-#               return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
-                handle_alert(request, message=trans('Credential sent'), type='success')
-                return redirect('/conversations/')
-            except:
-                # ignore errors for now
-                print(" >>> Failed to update conversation for", agent.agent_name)
-                return render(request, 'aries/form_response.html',
-                              {'msg': 'Failed to update conversation for' + ' ' + agent.agent_name})
+    try:
+        my_conversation = send_credential_offer(agent, my_connection[0], cred_attrs_tmp, cred_def_id)
+        
+        #Remove credential proposal
+        clean_credentials_prop = remove_issue_credential(agent, conversation_id)
+        clean_conversations_prop = AgentConversation.objects.filter(guid=conversation_id).delete()
 
-    else:
-        # find conversation request, fill in form details
-        conversation_id = request.GET.get('conversation_id', None)
-        (agent, agent_type, agent_owner) = agent_for_current_session(request)
+        handle_alert(request, message=trans('Credential sent'), type='success')
+        return redirect('/conversations/')
+    except:
+        # ignore errors for now
+        print(" >>> Failed to update conversation for", agent.agent_name)
+        handle_alert(request, message=trans('Credential not sent'), type='error')
+        return redirect('/conversations/')
+    finally:
+        pass
 
-        conversations = AgentConversation.objects.filter(guid=conversation_id, connection__agent=agent).all()
-        # TODO validate conversation id
-        conversation = conversations[0]
-        agent_conversation = get_agent_conversation(agent, conversation_id, CRED_EXCH_CONVERSATION)
-        proposed_attrs = agent_conversation["credential_proposal_dict"]["credential_proposal"]["attributes"]
-
-        cred_attrs = {}
-        for i in range(len(proposed_attrs)):
-            cred_attrs[proposed_attrs[i]["name"]] = proposed_attrs[i]["value"]
-        # TODO validate connection id
-
-        connection = conversation.connection
-
-        cred_def_id = agent_conversation['credential_proposal_dict']['cred_def_id']
-        schema_id = agent_conversation['credential_proposal_dict']['schema_id']
-
-        form = SendCredentialResponseFormProposal(initial={
-            'agent_name': connection.agent.agent_name,
-            'conversation_id': conversation_id,
-            'from_partner_name': connection.partner_name,
-            'claim_name': cred_def_id,
-            'credential_attrs': cred_attrs,
-            'libindy_offer_schema_id': schema_id
-        })
-        return render(request, form_template, {'form': form})
 
 def handle_cred_proposal_show(
     request
@@ -1896,3 +1955,36 @@ def handle_cred_revoke(request):
         return redirect('/conversations/')
     finally:
         pass
+
+
+def neoid(
+    request
+    ):
+    """
+    Create a user account with a managed agent.
+    """
+    code_verifier = pkce.generate_code_verifier(length=128)
+    print('code_verifier->', code_verifier)
+    headers = {'Content-type': 'application/x-www-form-urlencoded'}
+
+    client_id = "70e17ae0-30fb-456b-be68-bea32573a9e2"
+    code_challenge = pkce.get_code_challenge(code_verifier)
+    print('code_challenge->', code_challenge)
+    code_challenge_method = "S256"
+    redirect_uri = "http://localhost:8000/"
+    scope = "single_signature"
+    state = "aut"
+    login_hint = "45637962049"
+
+    url = 'https://homneoid.estaleiro.serpro.gov.br/smartcert-api/v0/oauth/authorize/?response_type=code' \
+          + '&client_id=' + client_id \
+          + '&code_challenge=' + code_challenge \
+          + '&code_challenge_method=' + code_challenge_method \
+          + '&redirect_uri=' + redirect_uri \
+          + '&scope=' + scope \
+          + '&state=' + state \
+          + '&login_hint=' + login_hint
+
+    response = redirect(url, headers=headers, verify=False, is_redirect=True)
+
+    return response
