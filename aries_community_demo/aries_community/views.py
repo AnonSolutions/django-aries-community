@@ -5,7 +5,8 @@ from django.urls import reverse
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as trans
 from django.http import HttpResponseRedirect
-
+from importlib import import_module
+from django.conf import settings
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -18,6 +19,7 @@ import ast
 import time
 import sweetify
 import pkce
+import datetime
 
 from .forms import *
 from .models import *
@@ -214,8 +216,7 @@ def profile_view(
     """
 
 # expects a agent to be opened in the current session
-    (agent, agent_type, agent_owner) = agent_for_current_session(request)  
-    print('agent_type->', agent, agent_type, agent_owner)
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
     if agent_type == 'user':
         connections = AriesUser.objects.filter(email=agent_owner).all()
@@ -223,7 +224,6 @@ def profile_view(
         name = agent_owner.split()
         first_name = name[0]
         connections = AriesUser.objects.filter(first_name=first_name).all()
-        print('connections->', connections)
     return render(request, template,
         {'agent_name': agent.agent_name, 'connections': connections})
 
@@ -282,148 +282,150 @@ def list_connections(
 
     # expects a agent to be opened in the current session
     (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
     data_source = "["
-    data_source += "[{'v':'" + agent_owner + "', 'f':'" + agent_owner + "<div>" \
-                   + \
-                   '<a href="../send_invitation_org" class="w3-bar-item w3-button w3-padding"><i class="fa fa-university"></i>Org</a>' \
-                   '<a href="../connection_response" class="w3-bar-item w3-button w3-padding"><i class="fa fa-user-secret"></i>Ext</a>' \
-                   + "</div>'},'','']"
 
-    connections = AgentConnection.objects.filter(agent=agent).all()
-    invitations = AgentInvitation.objects.filter(agent=agent, connecion_guid='').all()
+    if agent_type == 'user':
+        data_source += "[{'v':'" + agent_owner + "', 'f':'" + agent_owner + "<div><br>" \
+                       + \
+                       '<a onclick="listOrg()" class="w3-bar-item w3-button w3-padding"><i class="fa fa-university"></i>Organização</a>' \
+                       '<a href="../connection_response" class="w3-bar-item w3-button w3-padding"><i class="fa fa-user-secret"></i>Externo</a>' \
+                       + "</div>'},'','']"
 
-    print('agent->', agent_owner)
+        connections = AgentConnection.objects.filter(agent=agent).all()
+        invitations = AgentInvitation.objects.filter(agent=agent, connecion_guid='').all()
+
+        exclude_filter = AgentConnection.objects.filter(agent=agent).values_list('partner_name', flat=True)
+        list = AriesOrganization.objects.values_list('org_name', flat=True)
+        size = len(list)
+        org = {}
+        for organization in list:
+            org[organization] = organization
+
+        for connection in connections:
+            img = "/static/serpro/o_" + connection.partner_name + ".png"
+
+            #        data_source += "['" + connection.partner_name + "','" + agent_owner + "', ''],"
+            data_source += ",[{'v':'" + connection.partner_name + "', 'f':'Organização<div><br>" + \
+                           '<img src ='+ img +' title = "o_serpro" alt = "o_serpro" /><br><br>' \
+                           '<a href="../select_credential_proposal?connection_id='+ connection.guid  +'&connection_partner_name='+connection.partner_name+'"    class="w3-bar-item w3-button w3-padding"><i class="fa fa-id-card"></i></a>' \
+                           '<a href="../remove_connection?connection_id='+ connection.guid +'"                                                                  class="w3-bar-item w3-button w3-padding"><i class="fa fa-remove"></i></a>' \
+                           + "</div>'},'" + agent_owner + "','']"
+
+        data_source += "]"
+    else:
+        data_source += "[{'v':'" + agent_owner + "', 'f':'" + agent_owner + "<div><br>" \
+                       + \
+                       '<a id='+ agent_owner +' onclick="invitePerson()" class="w3-bar-item w3-button w3-padding"><i class="fa fa-user"></i>Pessoa</a>' \
+                       '<a href="../connection_response" class="w3-bar-item w3-button w3-padding"><i class="fa fa-user-secret"></i>Externo</a>' \
+                       + "</div>'},'','']"
+
+        connections = AgentConnection.objects.filter(agent=agent).all()
+        invitations = AgentInvitation.objects.filter(agent=agent, connecion_guid='').all()
+
+        exclude_filter = AgentConnection.objects.filter(agent=agent).values_list('partner_name', flat=True)
+        list = AriesOrganization.objects.values_list('org_name', flat=True)
 
 
-    for connection in connections:
-        print('->', connection.guid)
-        #        data_source += "['" + connection.partner_name + "','" + agent_owner + "', ''],"
-        data_source += ",[{'v':'" + connection.partner_name + "', 'f':'" + connection.partner_name + "<div>" + \
-                       '<a href="../select_credential_proposal?connection_id='+ connection.guid  +'&connection_partner_name='+connection.partner_name+'"    class="w3-bar-item w3-button w3-padding"><i class="fa fa-id-card"></i></a>' \
-                       '<a href="../remove_connection?connection_id='+ connection.guid +'"                                                                  class="w3-bar-item w3-button w3-padding"><i class="fa fa-remove"></i></a>' \
-                       + "</div>'},'" + agent_owner + "','']"
+        size = len(list)
 
-    data_source += "]"
-    print('data_source->', data_source)
+        org = {}
+        for organization in list:
+            org[organization] = organization
 
-    #   <a onclick = "removeConnection('connection_id={{connection.guid}}')" >
+        for connection in connections:
+            #        data_source += "['" + connection.partner_name + "','" + agent_owner + "', ''],"
+            data_source += ",[{'v':'" + connection.partner_name + "', 'f':'" + connection.partner_name + "<div><br>" + \
+                           '<a href="../select_credential_offer?connection_id=' + connection.guid + '&connection_partner_name=' + connection.partner_name + '"    class="w3-bar-item w3-button w3-padding"><i class="fa fa-id-card"></i></a>' \
+                           '<a href="../remove_connection?connection_id=' + connection.guid + '" class="w3-bar-item w3-button w3-padding"><i class="fa fa-remove"></i></a>' \
+                           '<a href="../select_proof_request?connection_id=' + connection.guid + '" class="w3-bar-item w3-button w3-padding"><i class="fa fa-refresh"></i></a>' \
+                           '<button  id='+ connection.guid +' onclick="sendMessage(this.id)"> <class="w3-bar-item w3-button w3-padding"><i class="fa fa-envelope"></i></button >' \
+                           + "</div>'},'" + agent_owner + "','']"
 
-    #    'v': 'teste1', 'f': '<br><b>Teste<b><br><br>'
-    #    '<a href="removeConnection(' + connection + ')" class="w3-bar-item w3-button w3-padding"><i class="fa fa-id-card"></i></a>'
-    #    '<a href="" class="w3-bar-item w3-button w3-padding"><i class="fa fa-remove"></i></a>'
-    #    '<a href="" class="w3-bar-item w3-button w3-padding"><i class="fa fa-refresh"></i></a>'
-    #    '<a href="" class="w3-bar-item w3-button w3-padding"><i class="fa fa-envelope"></i></a>'
+        data_source += "]"
 
     data = data_source
 
-    return render(request, template,{'agent_name': agent.agent_name, 'connections': connections, 'invitations': invitations,'data': data})
+    return render(request, template,{'agent_name': agent.agent_name, 'connections': connections, 'invitations': invitations,'data': data, 'org': org})
 
 
 
 
-def handle_connection_request_organization(
-    request,
-    form_template='aries/connection/request_org.html',
-    response_template='aries/connection/form_connection_info_org.html'
-    ):
+def handle_connection_request_organization(request):
     """
     Send a Connection request and approves automatic invitation from person to organization
     """
 
-    if request.method=='POST':
-        form = SendConnectionInvitationForm(request.POST)
-        if not form.is_valid():
-            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
-        else:
-            cd = form.cleaned_data
-            id = cd.get('partner_name')
-            partner_name_tmp = AriesOrganization.objects.filter(id=id).get()
-            partner_name = partner_name_tmp
+    id = request.GET.get('org')
+    partner_name_tmp = AriesOrganization.objects.filter(org_name=id).get()
+    partner_name = partner_name_tmp
 
-            # get user or org associated with this agent
-            (agent, agent_type, agent_owner) = agent_for_current_session(request)
+    # get user or org associated with this agent
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
-            org = AriesOrganization.objects.filter(org_name=partner_name).get()
-            partner_name = agent_owner
+    org = AriesOrganization.objects.filter(org_name=partner_name).get()
+    partner_name = agent_owner
 
-            target_user = get_user_model().objects.filter(email=partner_name).all()
-            target_org = AriesOrganization.objects.filter(org_name=partner_name).all()
+    target_user = get_user_model().objects.filter(email=partner_name).all()
+    target_org = AriesOrganization.objects.filter(org_name=id).all()
 
+    their_agent = target_org[0].agent
 
-            if 0 < len(target_user):
-                their_agent = target_user[0].agent
-            elif 0 < len(target_org):
-                their_agent = target_org[0].agent
-            else:
-                their_agent = None
+    try:
+        my_connection = request_connection_invitation(org, partner_name)
+        connecion_guid = my_connection.guid
 
-            # set agent password
-            # TODO vcx_config['something'] = raw_password
-
-            # build the connection and get the invitation data back
-
-            try:
-                my_connection = request_connection_invitation(org, partner_name)
-                connecion_guid = my_connection.guid
-
-                if their_agent is not None:
-
-                    their_invitation = AgentInvitation(
-                        agent = their_agent,
-                        partner_name = partner_name_tmp,
-                        invitation = my_connection.invitation,
-                        invitation_url = my_connection.invitation_url,
-                        )
-                    their_invitation.save()
-
-                invitations = AgentInvitation.objects.filter(id=their_invitation.id, agent=agent).all()
-                agent_name = invitations[0].agent.agent_name
-
-                # approves automatic invitation from person to organization
-                partner_name = invitations[0].partner_name
-                invitation_details = invitations[0].invitation
-                (agent, agent_type, agent_owner) = agent_for_current_session(request)
-
-                orgazinational_connection = receive_connection_invitation(agent, partner_name, invitation_details)
-                time.sleep(0.5)
-
-                connecion_guid = orgazinational_connection.guid
-                invitation = AgentInvitation.objects.filter(id=their_invitation.id, agent=agent).get()
-
-                invitation.connecion_guid = orgazinational_connection.guid
-                invitation.save()
+        if their_agent is not None:
+            their_invitation = AgentInvitation(
+                agent=their_agent,
+                partner_name=partner_name_tmp,
+                invitation=my_connection.invitation,
+                invitation_url=my_connection.invitation_url,
+            )
+            their_invitation.save()
 
 
-                if my_connection.agent.agent_org.get():
-                    source_name = my_connection.agent.agent_org.get().org_name
-                    time.sleep(0.5)
-                else:
-                    source_name = my_connection.agent.agent_user.get().email
-                    time.sleep(0.5)
+        invitations = AgentInvitation.objects.filter(id=their_invitation.id).all()
 
-                target_name = my_connection.partner_name
+        agent_name = invitations[0].agent.agent_name
 
-#               institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
+        # approves automatic invitation from person to organization
+        partner_name = invitations[0].partner_name
 
-                handle_alert(request, message=trans('Created connection'), type='success')
-                return redirect('/connections/')
+        invitation_details = invitations[0].invitation
 
-            except Exception as e:
-                # ignore errors for now
-                print(" >>> Failed to create request for", agent.agent_name)
-                print(e)
-                handle_alert(request, message=trans('Failed to create connection'), type='error')
-                return redirect('/connections/')
-
-    else:
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
-        form = SendConnectionInvitationFormList(initial={'agent_name': agent.agent_name})
-        html = '<h4><p style="text-align:left;">'
 
-        html += '</p>'
-        sweetify.success(request, title='', html=html, persistent=True, backdrop=False, icon='info', width=600)
-        return render(request, form_template, {'form': form})
-    
+        orgazinational_connection = receive_connection_invitation(agent, partner_name, invitation_details)
+        time.sleep(0.5)
+
+        connecion_guid = orgazinational_connection.guid
+        invitation = AgentInvitation.objects.filter(id=their_invitation.id).get()
+
+        invitation.connecion_guid = orgazinational_connection.guid
+        invitation.save()
+
+        if my_connection.agent.agent_org.get():
+            source_name = my_connection.agent.agent_org.get().org_name
+            time.sleep(0.5)
+        else:
+            source_name = my_connection.agent.agent_user.get().email
+            time.sleep(0.5)
+
+        target_name = my_connection.partner_name
+
+        #               institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
+
+        handle_alert(request, message=trans('Created connection'), type='success')
+        return redirect('/connections/')
+
+    except Exception as e:
+        # ignore errors for now
+        print(" >>> Failed to create request for", agent.agent_name)
+        print(e)
+        handle_alert(request, message=trans('Failed to create connection'), type='error')
+        return redirect('/connections/')
+
 
 def handle_connection_request(
     request,
@@ -434,71 +436,48 @@ def handle_connection_request(
     Send a Connection request (i.e. an Invitation).
     """
 
-    if request.method=='POST':
-        form = SendConnectionInvitationForm(request.POST)
-        if not form.is_valid():
-            return render(request, 'aries/form_response.html', {'msg': 'Form error', 'msg_txt': str(form.errors)})
+    email = request.GET.get('email')
+
+    target_user = get_user_model().objects.filter(email=email).all()
+
+
+    # get user or org associated with this agent
+    (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+    their_agent = target_user[0].agent
+    org = AriesOrganization.objects.filter(org_name=agent_owner).get()
+
+    try:
+        my_connection = request_connection_invitation(org, email)
+
+        if their_agent is not None:
+            their_invitation = AgentInvitation(
+                agent=their_agent,
+                partner_name=agent_owner,
+                invitation=my_connection.invitation,
+                invitation_url=my_connection.invitation_url,
+            )
+            their_invitation.save()
+
+        if my_connection.agent.agent_org.get():
+            source_name = my_connection.agent.agent_org.get().org_name
         else:
-            cd = form.cleaned_data
-            partner_name = cd.get('partner_name')
+            source_name = my_connection.agent.agent_user.get().email
+        target_name = my_connection.partner_name
+        #               institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
 
-            # get user or org associated with this agent
-            (agent, agent_type, agent_owner) = agent_for_current_session(request)
-            if agent_type == 'org':
-                org = AriesOrganization.objects.filter(org_name=agent_owner).get()
-            else:
-                return render(request, response_template, {'msg': 'Invitations are available for org only', 'msg_txt': 'You are logged in as ' + agent_owner })
+        handle_alert(request, message=trans('Invitation created') , type='success')
+        return redirect('/connections/')
 
-            # get user or org associated with target partner
-            target_user = get_user_model().objects.filter(email=partner_name).all()
-            target_org = AriesOrganization.objects.filter(org_name=partner_name).all()
+    except Exception as e:
+        # ignore errors for now
+        print(" >>> Failed to create request for", agent.agent_name)
+        print(e)
+        handle_alert(request, message=trans('Invitation not created'), type='error')
+        return redirect('/connections/')
 
-            if 0 < len(target_user):
-                their_agent = target_user[0].agent
-            elif 0 < len(target_org):
-                their_agent = target_org[0].agent
-            else:
-                their_agent = None
 
-            # set agent password
-            # TODO vcx_config['something'] = raw_password
 
-            # build the connection and get the invitation data back
-            try:
-                my_connection = request_connection_invitation(org, partner_name)
-
-                if their_agent is not None:
-                    their_invitation = AgentInvitation(
-                        agent = their_agent,
-                        partner_name = agent_owner,
-                        invitation = my_connection.invitation,
-                        invitation_url = my_connection.invitation_url,
-                        )
-                    their_invitation.save()
-
-                if my_connection.agent.agent_org.get():
-                    source_name = my_connection.agent.agent_org.get().org_name
-                else:
-                    source_name = my_connection.agent.agent_user.get().email
-                target_name = my_connection.partner_name
-#               institution_logo_url = 'https://anon-solutions.ca/favicon.ico'
-                return render(request, response_template, {
-                    'msg':  trans('Created invitation for') + ' ' + target_name,
-                    'msg_txt': my_connection.invitation,
-                    'msg_txt2': their_invitation.id,
-                    })
-            except Exception as e:
-                # ignore errors for now
-                print(" >>> Failed to create request for", agent.agent_name)
-                print(e)
-                return render(request, 'aries/form_response.html', {'msg': trans('Failed to create invitation for')  + ' ' + agent.agent_name})
-
-    else:
-        (agent, agent_type, agent_owner) = agent_for_current_session(request)
-        form = SendConnectionInvitationForm(initial={'agent_name': agent.agent_name})
-
-        return render(request, form_template, {'form': form})
-    
 
 def handle_connection_response(
     request,
@@ -534,7 +513,7 @@ def handle_connection_response(
                 invitation.connecion_guid = my_connection.guid
                 invitation.save()
 
-#                return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
+#               return render(request, response_template, {'msg': trans('Updated conversation for') + ' ' + agent.agent_name})
                 handle_alert(request, message=trans('Updated conversation'), type='success')
                 return redirect('/connections/')
 
@@ -622,8 +601,6 @@ def connection_qr_code(
     Display a QR code for the given invitation.
     """
 
-    print('token->', token)
-
     # find connection for requested token
     connections = AgentInvitation.objects.filter(id=token).all()
     if 0 == len(connections):
@@ -632,7 +609,6 @@ def connection_qr_code(
     connection = connections[0]
     qr = pyqrcode.create(connection.invitation_url)
     path_to_image = '/tmp/'+token+'-qr-offer.png'
-    print('path_to_image->', path_to_image)
     qr.png(path_to_image, scale=2, module_color=[0, 0, 0, 128], background=[0xff, 0xff, 0xff])
     image_data = open(path_to_image, "rb").read()
 
@@ -756,25 +732,23 @@ def handle_select_credential_offer(
         # find conversation request
 
         connection_id = request.GET.get('connection_id', None)
-        print(connection_id)
 
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
         connections = AgentConnection.objects.filter(guid=connection_id, agent=agent).all()
 
         partner_name = connections[0].partner_name
-        print(connections)
+
 
         connection = connections[0]
         partner_credentials = AgentConversation.objects.filter(connection=connection, revoked='').all()
         test = len(partner_credentials)
-        print('test->', test)
+
 
         if test > 0:
-            print('test->', test)
+
             for partner_credential in partner_credentials:
                 guid = partner_credential.guid
                 cred = AgentConversation.objects.filter(guid=guid).get()
-                print('cred->', cred.status)
 
                 if cred.status == 'credential_acked':
                     handle_alert(request, message=trans('Recipient already has an active credential'), type='error')
@@ -786,7 +760,6 @@ def handle_select_credential_offer(
         #If number of IndyCredentialDefinition equal one don't need to choose
 
         credential = IndyCredentialDefinition.objects.filter(agent__agent_name=agent.agent_name).all()
-        print('credential->', credential)
 
         cont = len(credential)
 
@@ -851,8 +824,7 @@ def handle_credential_offer(
             msg = {"type" : "success", "title" : "Success Title", "message" : "Success Message", "buttonText" : "Okay"
                 }
             try:
-                print(my_connection)
-                print('---->', agent, my_connection, cred_attrs, cred_def_id)
+
                 my_conversation = send_credential_offer(agent, my_connection, cred_attrs, cred_def_id)
                 handle_alert(request, message=trans('Updated conversation'), type='success')
                 return redirect('/connections/')
@@ -978,7 +950,7 @@ def handle_select_proof_request(
                 try:
                     conversation = send_proof_request(agent, connection, proof_request.proof_req_name, requested_attrs, requested_predicates)
                     handle_alert(request, message=trans('Proof request was sent'), type='success')
-                    return redirect('/conversations/')
+                    return redirect('/connections/')
                 except:
                     # ignore errors for now
                     print(" >>> Failed to update conversation for", agent.agent_name)
@@ -1758,11 +1730,19 @@ def handle_cred_proposal_show(
             cred_attrs[proposed_attrs[i]["name"]] = proposed_attrs[i]["value"]
         # TODO validate connection id
 
+        html = '<h4><p style="text-align:left;">'
+        for x, y in cred_attrs.items():
+            html += '<b>' + x + '</b>' + ' : ' + y + '<br>'
+        html += '</p>'
+
+        sweetify.success(request, title='', html=html, persistent=True, backdrop=False, icon='info', width=600)
+        return redirect('/conversations/')
 
         connection = conversation.connection
         cred_def_id = agent_conversation['credential_proposal_dict']['cred_def_id']
         schema_id = agent_conversation['credential_proposal_dict']['schema_id']
-        return render(request, 'aries/credential/list_view.html', {'conversation_id': conversation_id, 'partner_name': connection.partner_name, 'proposed_attrs' : proposed_attrs})
+
+#       return render(request, 'aries/credential/list_view.html', {'conversation_id': conversation_id, 'partner_name': connection.partner_name, 'proposed_attrs' : proposed_attrs})
     except:
         raise
     finally:
@@ -1858,7 +1838,14 @@ def handle_view_dashboard(
     """
 
     # expects a wallet to be opened in the current session
+
     (agent, agent_type, agent_owner) = agent_for_current_session(request)
+
+    print(agent)
+    print(agent_type)
+    print(agent_owner)
+    print(agent_for_current_session(request))
+
     conversations = AgentConversation.objects.filter(connection__agent=agent).all()
 
     proposal_sent = 0
@@ -1922,11 +1909,8 @@ def handle_cred_revoke(request):
     conversation_id = request.GET.get('conversation_id', None)
 
     try:
-        print(conversation_id)
         cred_rev_id = request.GET.get('cred_rev_id', None)
-        print(cred_rev_id)
         rev_reg_id = request.GET.get('rev_reg_id', None)
-        print(rev_reg_id)
 
         (agent, agent_type, agent_owner) = agent_for_current_session(request)
 
@@ -1935,8 +1919,7 @@ def handle_cred_revoke(request):
         connections = AgentConversation.objects.filter(guid=conversation_id).get()
         conversation_id = connections.connection.guid
 
-        message = trans(
-            'Revoked credential') + " " + conversation_id + " " + agent_owner + " " + cred_rev_id + " " + rev_reg_id
+        message = trans('Revoked credential') + " " + conversation_id + " " + agent_owner + " " + cred_rev_id + " " + rev_reg_id
         message_status = send_simple_message(agent, conversation_id, message)
 
         conversations = AgentConversation.objects.filter(rev_reg_id=rev_reg_id, cred_rev_id=cred_rev_id).all()
@@ -1957,25 +1940,22 @@ def handle_cred_revoke(request):
         pass
 
 
-def neoid(
-    request
-    ):
+def neoid(request):
     """
     Create a user account with a managed agent.
     """
     code_verifier = pkce.generate_code_verifier(length=128)
-    print('code_verifier->', code_verifier)
     headers = {'Content-type': 'application/x-www-form-urlencoded'}
 
     client_id = "70e17ae0-30fb-456b-be68-bea32573a9e2"
     code_challenge = pkce.get_code_challenge(code_verifier)
-    print('code_challenge->', code_challenge)
     code_challenge_method = "S256"
-    redirect_uri = "http://localhost:8000/"
+    redirect_uri = "http://localhost:8000/view_dashboard/"
     scope = "single_signature"
-    state = "aut"
     login_hint = "45637962049"
+    request.session['username'] = "bob@mail.com"
 
+    state = code
     url = 'https://homneoid.estaleiro.serpro.gov.br/smartcert-api/v0/oauth/authorize/?response_type=code' \
           + '&client_id=' + client_id \
           + '&code_challenge=' + code_challenge \
