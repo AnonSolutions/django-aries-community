@@ -406,11 +406,11 @@ msgstr "Estado"
 msgid "Verified"
 msgstr "Verificado"
 
-msgid "Proof request was sent to"
+msgid "Proof request was sent"
 msgstr "Pedido de prova foi enviado"
 
-msgid "Sent proof request for"
-msgstr "Requisição de prova enviada por"
+msgid "Sent proof request"
+msgstr "Requisição de prova enviada"
 
 msgid "Requested attributes"
 msgstr "Atributos solicitados"
@@ -495,3 +495,49 @@ msgstr "Credencial aceita"
 
 msgid "Credential revoked"
 msgstr "Credencial revogada"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "Sender"
+msgstr "Remetente"
+
+msgid "Failed to find claims"
+msgstr "Falha ao encontrar reivindicações"
+
+msgid "Accept proof"
+msgstr "Aceitar prova"
+
+msgid "Created connection"
+msgstr "Conexão criada"
+
+msgid "Failed to create connection"
+msgstr "Falha ao criar conexão"
+
+msgid "Remove credential"
+msgstr "Remover credencial"
+
+msgid "Credential removed"
+msgstr "Credencial removida"
+
+msgid "Credential not removed"
+msgstr "Credencial não removida"
+
+msgid "Credential proposal remove"
+msgstr "Credencial proposta removida"
+
+msgid "More than one credential from the same organization"
+msgstr "Prova tem mais uma credencial de uma mesma organização"
+
+msgid "Recipient already has an active credential"
+msgstr "Destinatário já tem uma credencial ativa"
+
+msgid "Recipient have credencial waiting to aprove"
+msgstr "Destinatário já tem credencial aguardando aprovação"
+
+msgid "Invitation created"
+msgstr "Convite criado"
+
+msgid "Invitation not created"
+msgstr "Convite não foi criado"
+
