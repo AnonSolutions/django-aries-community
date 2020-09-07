@@ -11,8 +11,11 @@ aiohttp~=3.3.0
 pyyaml
 pyqrcode
 pypng
+pkce
 requests
 pillow
 sweetify
+python-oauth2
+requests_oauthlib
 django-settings-export
 git+https://github.com/ianco/aries-cloudagent-python#egg=aries-cloudagent
