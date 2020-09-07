@@ -1,28 +1,25 @@
 {% load i18n %}
 {% load static %}
-{% autoescape off %}
 
 <body class="w3-white">
 
- <div class="w3-white" style="margin-left:300px; margin-top: 50px;">
 
-        <!-- <b>{% trans "Agent Connections" %}</b><BR><BR> -->
-
-        <div>
-            <!--
+ <div class="w3-light-gray" style="margin-left:300px; margin-top: 50px;">
+                <!-- <b>{% trans "Agent Connections" %}</b><BR><BR> -->
+                <div>
                 {% if request.session.ACTIVE_ORG %}
                 {% trans "Connection Invite" %} :
                         <a href="{% url 'send_invitation' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-user"></i>{% trans "Personal" %}</a>
                         <a href="{% url 'send_invitation_org' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-university"></i>{% trans "Organization" %}</a>
-
+                {% else %}
+                {% trans "Connection Invite" %}:
+                        <a href="{% url 'send_invitation_org' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-university"></i>{% trans "Organization" %}</a>
                 {% endif %}
-            -->
+                        <a href="{% url 'connection_response' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-user-secret"></i>{% trans "External" %}</a>
+                </div>
         </div>
-
         <div class="w3-white">
-            <br>
-        <div id="chart_div" style="margin-left:200px; margin-top: 50px;"></div>
-        <br><br>
+                    <br><br>
         {% for invitation in invitations %}
             <div class="w3-card-4" style="margin-left:350px;width:35%">
                 <header class="w3-container w3-light-blue">
@@ -44,14 +41,11 @@
         </div>
         <br>
         {% endfor %}
-            {% for connection in connections %}
-            {% if request.session.ACTIVE_ORG %}
-            <!--
+         {% for connection in connections %}
             <div class="w3-card-4" style="margin-left:350px;width:35%">
                 <header class="w3-container w3-light-blue">
                     <h1><center><i class="fa fa-handshake-o" aria-hidden="true"></center></i></h1>
                 </header>
-
             <div class="w3-container w3-white" style="font-size: 10px">
                     <b>Nome</b>
                     <h4>{{ connection.partner_name }}</h4>
@@ -71,43 +65,53 @@
                         {% endif %}
                     </h4>
             </div>
-
             <div class="w3-container w3-light-blue">
 
                     {% if request.session.ACTIVE_ORG %}
                         {% if connection.status == 'active' or connection.status == 'response' %}
                             <h4><center>
                                 <a href="{% url 'select_credential_offer' %}?connection_id={{connection.guid}}"><i class="fa fa-id-card" title="{% trans "Send Credential" %}"></i></a>
-                                <a href="{% url 'remove_connection' %}?connection_id={{connection.guid}}"><i class="fa fa-remove" title="{% trans "Remove" %}"></i></a>
+                                <a onclick="removeConnection('connection_id={{connection.guid}}')"> <i class="fa fa-remove" title="{% trans "Remove connection" %}"></i></a>
                                 <a href="{% url 'select_proof_request' %}?connection_id={{connection.guid}}"><i class="fa fa-refresh" title="{% trans "Send Proof Request" %}"></i></a>
                                 <a onclick="sendMessage('connection_id={{connection.guid}}')"> <i class="fa fa-envelope" title="{% trans "Send message" %}"></i></a>
                             </center></h4>
                         {% endif %}
                     {% else %}
                         <h4><center>
-                            <a href="{% url 'remove_connection' %}?connection_id={{connection.guid}}"><i class="fa fa-remove" title="{% trans "Remove" %}"></i></a>
+                            <a onclick="removeConnection('connection_id={{connection.guid}}')"> <i class="fa fa-remove" title="{% trans "Remove connection" %}"></i></a>
                             <a href="{% url 'select_credential_proposal' %}?connection_id={{connection.guid}}&connection_partner_name={{connection.partner_name}}"><i class="fa fa-id-card" title="{% trans "Credential proposal" %}"></i></a>
                         </h4></center>
                     {% endif %}
 
             </div>
-            -->
-            </div>
+        </div>
                 </div>
 </div>
- <br>
-{% endif %}
+        <br>
 {% endfor %}
-{% endautoescape %}
- 
- <body onload="draw()">
+
+
 
 <script type="text/javascript">
+    google.charts.load('current', {packages:["orgchart"]});
     google.charts.setOnLoadCallback(drawChart);
-
-    function sendMessage(clicked_id) {
-        connection_id = clicked_id
-
+    function removeConnection(connection_id) {
+        Swal.fire({
+            title: '{% trans "Remove connection" %}',
+            text: connection_id,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            cancelButtonText: '{% trans "No" %}',
+            confirmButtonText: '{% trans "Yes" %}'
+        }).then((result) => {
+            if (result.value) {
+                 window.location = "{% url 'remove_connection' %}?" + connection_id;
+        }
+    })
+    }
+   function sendMessage(connection_id) {
         Swal.fire({
             input: 'textarea',
             inputPlaceholder: '{% trans "Send message" %}',
@@ -117,53 +121,22 @@
             showCancelButton: true
         }).then((result) => {
             if (result.value) {
-                window.location = "{% url 'send_message' %}?connection_id=" + connection_id +"&message=" + result.value;
+                window.location = "{% url 'send_message' %}?" + connection_id +"&message=" + result.value;
         }
     })
     }
-    function invitePerson(clicked_id) {
+   function drawChart() {
         Swal.fire({
-            input: 'email',
-            title: 'Input email address',
-            inputPlaceholder: '{% trans "Enter email address" %}',
+            input: 'textarea',
+            inputPlaceholder: '{% trans "Send message" %}',
+            inputAttributes: {
+            'aria-label': '{% trans "Send message" %}'
+            },
             showCancelButton: true
         }).then((result) => {
             if (result.value) {
-                window.location = "{% url 'send_invitation' %}?email=" + result.value;
+                window.location = "{% url 'send_message' %}?" + connection_id +"&message=" + result.value;
         }
     })
-    }
-    function drawChart() {
-        var data = new google.visualization.DataTable();
-        data.addColumn('string', 'Name');
-        data.addColumn('string', 'Manager');
-        data.addColumn('string', 'ToolTip');
-
-        // For each orgchart box, provide the name, manager, and tooltip to show.
-        var var1 = '{{ connection.partner_name }}';
-
-
-        data.addRows( {{ data|safe }} );
-
-        // Create the chart.
-        var chart = new google.visualization.OrgChart(document.getElementById('chart_div'));
-        // Draw the chart, setting the allowHtml option to true for the tooltips.
-        chart.draw(data, {'allowHtml':true, 'allowCollapse':true,
-                                            nodeClass: 'myNodeClass',
-                                            selectedNodeClass: 'mySelectedNodeClass'} );
-     }
-     function listOrg(connection_id) {
-        my_data = {{ org|safe }};
-
-        Swal.fire({
-            input: 'select',
-            inputOptions: my_data,
-            inputPlaceholder: '{% trans "Organization" %}',
-            showCancelButton: true
-        }).then((result) => {
-            if (result.value) {
-                window.location = "{% url 'send_invitation_org' %}?org=" + result.value;
-            }
-        })
     }
 </script>
