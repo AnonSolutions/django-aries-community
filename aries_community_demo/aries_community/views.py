@@ -307,7 +307,7 @@ def list_connections(
 
             #        data_source += "['" + connection.partner_name + "','" + agent_owner + "', ''],"
             data_source += ",[{'v':'" + connection.partner_name + "', 'f':'Organização<div><br>" + \
-                           '<img src ='+ img +' title = "o_serpro" alt = "o_serpro" /><br><br>' \
+                           '<img src ='+ img +' title = "org" alt = "org" /><br><br>' \
                            '<a href="../select_credential_proposal?connection_id='+ connection.guid  +'&connection_partner_name='+connection.partner_name+'"    class="w3-bar-item w3-button w3-padding"><i class="fa fa-id-card"></i></a>' \
                            '<a href="../remove_connection?connection_id='+ connection.guid +'"                                                                  class="w3-bar-item w3-button w3-padding"><i class="fa fa-remove"></i></a>' \
                            + "</div>'},'" + agent_owner + "','']"
