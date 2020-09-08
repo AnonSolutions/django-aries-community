@@ -406,11 +406,11 @@ msgstr "Estado"
 msgid "Verified"
 msgstr "Verificado"
 
-msgid "Proof request was sent"
+msgid "Proof request was sent to"
 msgstr "Pedido de prova foi enviado"
 
-msgid "Sent proof request"
-msgstr "Requisição de prova enviada"
+msgid "Sent proof request for"
+msgstr "Requisição de prova enviada por"
 
 msgid "Requested attributes"
 msgstr "Atributos solicitados"
@@ -471,73 +471,3 @@ msgstr "Envia mensagem"
 
 msgid "Message sent"
 msgstr "Mensagem enviada"
-
-msgid "Credential proposal sent"
-msgstr "Proposta de credencial enviada"
-
-msgid "Connection removed"
-msgstr "Conexão removida"
-
-msgid "Credential sent"
-msgstr "Credencial enviada"
-
-msgid "Delete credential proposal"
-msgstr "Excluir credencial proposta"
-
-msgid "Credential proposal deleted"
-msgstr "Proposta de credencial excluida"
-
-msgid "Accept credential"
-msgstr "Aceitar credencial"
-
-msgid "accepted credential"
-msgstr "Credencial aceita" 
-
-msgid "Credential revoked"
-msgstr "Credencial revogada"
-
-msgid "Date"
-msgstr "Data"
-
-msgid "Sender"
-msgstr "Remetente"
-
-msgid "Failed to find claims"
-msgstr "Falha ao encontrar reivindicações"
-
-msgid "Accept proof"
-msgstr "Aceitar prova"
-
-msgid "Created connection"
-msgstr "Conexão criada"
-
-msgid "Failed to create connection"
-msgstr "Falha ao criar conexão"
-
-msgid "Remove credential"
-msgstr "Remover credencial"
-
-msgid "Credential removed"
-msgstr "Credencial removida"
-
-msgid "Credential not removed"
-msgstr "Credencial não removida"
-
-msgid "Credential proposal remove"
-msgstr "Credencial proposta removida"
-
-msgid "More than one credential from the same organization"
-msgstr "Prova tem mais uma credencial de uma mesma organização"
-
-msgid "Recipient already has an active credential"
-msgstr "Destinatário já tem uma credencial ativa"
-
-msgid "Recipient have credencial waiting to aprove"
-msgstr "Destinatário já tem credencial aguardando aprovação"
-
-msgid "Invitation created"
-msgstr "Convite criado"
-
-msgid "Invitation not created"
-msgstr "Convite não foi criado"
-

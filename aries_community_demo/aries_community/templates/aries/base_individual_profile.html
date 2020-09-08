@@ -6,7 +6,7 @@
 {% block main_content %}
 <!-- Sidebar/menu -->
 
-<nav class="w3-sidebar w3-collapse w3-white" style="z-index:3;width:300px;margin-top:0px;" id="mySidebar">
+<nav class="w3-sidebar w3-collapse w3-light-gray" style="z-index:3;width:300px;margin-top:0px;" id="mySidebar">
     <div class="w3-container w3-row">
     <div class="w3-col s4">
       <img src="/media/{{ request.user.photo }}" class="w3-circle w3-margin-right" style="width:86px">
@@ -23,7 +23,6 @@
 		<a href="{% url 'connections' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-retweet"></i>  {% trans "Connections" %}</a>
 		<a href="{% url 'conversations' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-commenting"></i>  {% trans "Conversations" %}</a>
 		<a href="{% url 'credentials' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-id-card"></i> {% trans "Credentials" %}</a>
-		<a href="{% url 'aries_wallet' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-wallet"></i> {% trans "Wallet" %}</a>
 		<a href="{% url 'logout' %}?next={% url 'login' %}" class="w3-bar-item w3-button w3-padding"><i class="fa fa-times"></i> {% trans "Exit" %}</a>
 	</div>
 </nav>

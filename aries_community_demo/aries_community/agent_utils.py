@@ -908,13 +908,19 @@ def handle_agent_credentials_callback(agent, topic, payload):
     test = settings.REVOCATION
 
     state = payload["state"]
+    print('state-->', state)
+
     cred_exch_id = payload["credential_exchange_id"]
+    print('cred_exch_id->', cred_exch_id)
+
     connection_id = payload["connection_id"]
 
     print(">>> callback:", agent.agent_name, topic, state, cred_exch_id)
 
     connection = AgentConnection.objects.filter(agent=agent, guid=connection_id).get()
+
     cred_exches = AgentConversation.objects.filter(connection__agent=agent, guid=cred_exch_id).all()
+    print('cred_exches->', cred_exches)
 
     if state == "offer_received":
         # holder receives a credential offer - create a new AgentConversation
@@ -929,11 +935,12 @@ def handle_agent_credentials_callback(agent, topic, payload):
         # issuer receives a credential request (no action, we have "auto submit")
         conversation = cred_exches[0]
 
-    elif state == "request_received":
-        # issuer receives a credential request (no action, we have "auto submit")
-        conversation = cred_exches[0]
-        conversation.status = state
-        conversation.save()
+#    elif state == "request_received":
+#        # issuer receives a credential request (no action, we have "auto submit")
+#        print('request_received', cred_exches)
+#        conversation = cred_exches[0]
+#        conversation.status = state
+#        conversation.save()
 
     elif state == "credential_received":
         # holder receives a credential (no action; "auto store")
@@ -941,8 +948,15 @@ def handle_agent_credentials_callback(agent, topic, payload):
         conversation.status = state
         conversation.save()
 
+    elif state == "credential_issued":
+        # holder receives a credential (no action; "auto store")
+        conversation = cred_exches[0]
+        conversation.status = state
+        conversation.save()
+
     elif state == "credential_acked":
         # issuer receives an acknowledgement that the credential was recevied (no action)
+
         if test == True:
             conversation = AgentConversation(
                     connection=connection,
@@ -1317,6 +1331,7 @@ def remove_issue_credential(agent, connection_id, initialize_agent=False):
             + "/issue-credential/records/" + connection_id + "/remove",
             headers=get_ADMIN_REQUEST_HEADERS(agent)
         )
+        credentials = response
     except:
         raise
     finally:
@@ -1324,39 +1339,6 @@ def remove_issue_credential(agent, connection_id, initialize_agent=False):
             stop_agent(agent)
     return credentials
 
-def send_credential_offer_proposal(conversation_id, agent, connection, credential_attrs, cred_def_id, initialize_agent=False):
-    """
-    Send a Credential Offer.
-    """
-
-    # start the agent if requested (and necessary)
-    (agent, agent_started) = start_agent_if_necessary(agent, initialize_agent)
-
-    try:
-        credential_offer = build_credential_offer(agent, connection, credential_attrs, cred_def_id)
-
-        response = requests.post(
-            agent.admin_endpoint
-            + "/issue-credential/send-offer",
-            json.dumps(credential_offer),
-            headers=get_ADMIN_REQUEST_HEADERS(agent)
-        )
-        response.raise_for_status()
-        my_cred_exchange = "proposal_acked"
-
-        conversation = AgentConversation(
-            connection=connection,
-            conversation_type=CRED_EXCH_CONVERSATION,
-            guid=conversation_id,
-            status=my_cred_exchange)
-        conversation.save()
-    except:
-        raise
-    finally:
-        if agent_started:
-            stop_agent(agent)
-
-    return conversation
 
 def remove_issue_credential(agent, connection_id, initialize_agent=False):
     """
