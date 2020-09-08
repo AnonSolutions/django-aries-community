@@ -184,7 +184,7 @@ LOCALE_PATHS = ( os.path.join(SITE_ROOT, 'locale'), )
 REVOCATION = True
 
 # Set to False to don't alert and to block proofs to revoked credentials, you don't need to restart django
-ALERT_REVOKED_CREDENTIALS = False
+ALERT_REVOKED_CREDENTIALS = True
 
 SETTINGS_EXPORT = [
     'SITE_ORG', 'REVOCATION', 'ALERT_REVOKED_CREDENTIALS',
