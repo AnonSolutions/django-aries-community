@@ -303,7 +303,7 @@ def list_connections(
             org[organization] = organization
 
         for connection in connections:
-            img = "/static/serpro/o_" + connection.partner_name + ".png"
+            img = "/static/" + settings.SITE_ORG + "/o_" + connection.partner_name + ".png"
 
             #        data_source += "['" + connection.partner_name + "','" + agent_owner + "', ''],"
             data_source += ",[{'v':'" + connection.partner_name + "', 'f':'Organização<div><br>" + \
