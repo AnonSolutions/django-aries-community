@@ -304,6 +304,9 @@ def list_connections(
 
         for connection in connections:
             img = "/static/" + settings.SITE_ORG + "/o_" + connection.partner_name + ".png"
+            img = img.replace(" ","_")
+            img = img.lower()
+
 
             #        data_source += "['" + connection.partner_name + "','" + agent_owner + "', ''],"
             data_source += ",[{'v':'" + connection.partner_name + "', 'f':'Organização<div><br>" + \
