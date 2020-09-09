@@ -10,6 +10,7 @@ from .views import *
 urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('signup/', user_signup_view, name='signup'),
+    path('neoid/', neoid, name='neoid'),
     path('org_signup/', org_signup_view, name='org_signup'),
     #path('mobile_request/', mobile_request_connection, name='mobile_request'),
     path('send_invitation/', handle_connection_request, name='send_invitation'),

@@ -279,17 +279,24 @@ class SelectProofReqClaimsForm(SendProofReqResponseForm):
         initial = kwargs.get('initial')
         if initial:
             available_claims = initial.get('selected_claims', '{}')
+
             proof_request = initial.get('proof_request', '{}')
+
+            print('proof_request ->', proof_request)
 
             for attr in proof_request['presentation_request']['requested_attributes']:
                 field_name = 'proof_req_attr_' + attr
                 choices = []
                 claim_no = 0
 
-                for claim in available_claims:
-                    if attr in claim['presentation_referents']:
-                        choices.append(('ref::'+claim['cred_info']['referent'], json.dumps(claim['cred_info']['attrs'])))
-                        claim_no = claim_no + 1
+                print('>>>>>>>>', available_claims['presentation_referents'])
+                size = len(available_claims)
+
+            for claim in available_claims:
+                if attr in claim['presentation_referents']:
+                    choices.append(('ref::'+claim['cred_info']['referent'], json.dumps(claim['cred_info']['attrs'])))
+                    claim_no = claim_no + 1
+
                 if 0 < len(choices):
                     self.fields[field_name] = forms.MultipleChoiceField(label=attr, choices=tuple(choices), widget=forms.RadioSelect(attrs={"checked":""}))
                 else:

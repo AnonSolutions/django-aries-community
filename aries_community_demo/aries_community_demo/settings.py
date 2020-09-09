@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'sweetify',
     'rest_framework',
     'aries_api',
     'aries_community',
@@ -51,6 +52,7 @@ ARIES_CONFIG = {
     'aca_py_bin_path': '../venv/bin/',
 }
 
+SWEETIFY_SWEETALERT_LIBRARY = 'sweetalert2'
 ARIES_PROFILE_VIEW = 'aries_community.views.profile_view'
 ARIES_DATA_VIEW = 'aries_community.views.data_view'
 ARIES_WALLET_VIEW = 'aries_community.views.wallet_view'
@@ -181,6 +183,9 @@ LOCALE_PATHS = ( os.path.join(SITE_ROOT, 'locale'), )
 # Set to True to use credential revocation or to False for not use
 REVOCATION = True
 
+# Set to False to don't alert and to block proofs to revoked credentials, you don't need to restart django
+ALERT_REVOKED_CREDENTIALS = True
+
 SETTINGS_EXPORT = [
-    'SITE_ORG', 'REVOCATION'
+    'SITE_ORG', 'REVOCATION', 'ALERT_REVOKED_CREDENTIALS',
 ]
