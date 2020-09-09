@@ -289,8 +289,8 @@ def list_connections(
     if agent_type == 'user':
         data_source += "[{'v':'" + agent_owner + "', 'f':'" + agent_owner + "<div><br>" \
                        + \
-                       '<a onclick="listOrg()" class="w3-bar-item w3-button w3-padding"><i class="fa fa-university"></i>Organização</a>' \
-                       '<a href="../connection_response" class="w3-bar-item w3-button w3-padding"><i class="fa fa-user-secret"></i>Externo</a>' \
+                       '<a onclick="listOrg()" class="w3-bar-item w3-button w3-padding"><i class="fa fa-university"></i>Organization</a>' \
+                       '<a href="../connection_response" class="w3-bar-item w3-button w3-padding"><i class="fa fa-user-secret"></i>External</a>' \
                        + "</div>'},'','']"
 
         connections = AgentConnection.objects.filter(agent=agent).all()
@@ -311,7 +311,7 @@ def list_connections(
             img = img.replace(" ","_")
             img = img.lower()
             #        data_source += "['" + connection.partner_name + "','" + agent_owner + "', ''],"
-            data_source += ",[{'v':'" + connection.partner_name + "', 'f':'Organização<div><br>" + \
+            data_source += ",[{'v':'" + connection.partner_name + "', 'f':'Organization<div><br>" + \
                            '<img src ='+ img +' title = "org" alt = "org" width="30%" height="30%"/><br><br>' \
                            '<a href="../select_credential_proposal?connection_id='+ connection.guid  +'&connection_partner_name='+connection.partner_name+'"    class="w3-bar-item w3-button w3-padding"><i class="fa fa-id-card"></i></a>' \
                            '<a href="../remove_connection?connection_id='+ connection.guid +'"                                                                  class="w3-bar-item w3-button w3-padding"><i class="fa fa-remove"></i></a>' \
