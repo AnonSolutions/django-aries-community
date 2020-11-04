@@ -6,16 +6,19 @@ django-filter>=1.1.0
 python-dateutil>=2.7.2
 #-e git+https://github.com/deschler/django-modeltranslation.git#egg=django-modeltranslation
 django-extensions
-markdown
-aiohttp~=3.3.0
+markdown~=3.1.1
+requests~=2.23.0
+aiohttp~=3.6.2
 pyyaml
 pyqrcode
 pypng
 pkce
-requests
+urllib3
 pillow
 sweetify
-python-oauth2
-requests_oauthlib
 django-settings-export
+django_token
+django-widget-tweaks
+django-crispy-forms
+pyopenssl
 git+https://github.com/ianco/aries-cloudagent-python#egg=aries-cloudagent
